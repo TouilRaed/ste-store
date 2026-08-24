@@ -1,0 +1,11 @@
+# Never upload local secrets — Vercel injects env vars from the project settings.
+.env
+.env.*
+
+# The Expo admin app is built and shipped separately (EAS), not by this project.
+mobile/
+
+# Local build/scratch
+.next/
+node_modules/
+tsconfig.tsbuildinfo

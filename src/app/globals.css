@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Palette — white ground, blue signal. Set per client; see src/lib/brand.ts
+   One accent hue does all the work: nav band, links, badges, focus rings.
+--------------------------------------------------------------------------- */
+
+:root {
+  --paper: #ffffff;
+  --paper-deep: #f3f6fc;
+  --paper-sand: #e6edfa;
+  --ink: #0d1526;
+  --ink-soft: #3d4a63;
+  --ink-muted: #74809a;
+  --accent: #1d4ed8;
+  --accent-deep: #1a3fae;
+  --accent-soft: #e8effd;
+  --sage: #2f7a5a;
+  --line: rgba(13, 21, 38, 0.1);
+  --line-strong: rgba(13, 21, 38, 0.18);
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-sand: var(--paper-sand);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-soft: var(--accent-soft);
+  --color-sage: var(--sage);
+  --color-line: var(--line);
+
+  --font-display: var(--font-inter);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-drape: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    /* Everything sized in rem steps up with this. */
+    font-size: 17px;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv05", "ss03";
+    letter-spacing: -0.011em;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  /* Brass hairline focus ring instead of the default blue halo. */
+  :focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .ease-fluid {
+    transition-timing-function: var(--ease-fluid);
+  }
+
+  .ease-drape {
+    transition-timing-function: var(--ease-drape);
+  }
+
+  /* Double-bezel shell: hairline tray with a soft, diffused ambient lift. */
+  .bezel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(232, 239, 253, 0.55));
+    box-shadow:
+      0 1px 1px rgba(13, 21, 38, 0.03),
+      0 18px 50px -28px rgba(13, 21, 38, 0.22);
+  }
+
+  .bezel-core {
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.65);
+  }
+
+  .lift {
+    box-shadow: 0 32px 80px -40px rgba(13, 21, 38, 0.35);
+  }
+}
+
+/* --- Scroll reveal ------------------------------------------------------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 3.5rem, 0);
+  filter: blur(6px);
+  transition:
+    opacity 900ms var(--ease-drape),
+    transform 900ms var(--ease-drape),
+    filter 900ms var(--ease-drape);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+[data-reveal="in"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: blur(0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal="in"] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* --- Spinning mark ------------------------------------------------------- */
+
+@keyframes spin-coin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.spin-coin {
+  animation-name: spin-coin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  transform-style: preserve-3d;
+  /* No backface-visibility: the mark is one-sided, so hiding the back would
+     blank it for half of every turn. Letting it mirror reads as a coin flip. */
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-coin {
+    animation: none;
+  }
+}
+
+/* --- Marquee ------------------------------------------------------------- */
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-drift {
+  animation: drift 42s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift {
+    animation: none;
+  }
+}
+
+/* --- Film grain: fixed, pointer-events-none, never on scrolling content --- */
+
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Hide scrollbars on horizontal rails without losing scroll. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
