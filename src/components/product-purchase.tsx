@@ -61,15 +61,53 @@ export function AddToCart({ product }: { product: Product }) {
   const [size, setSize] = useState<string | null>(product.sizes[0] ?? null);
   const [color, setColor] = useState<string | null>(product.colors[0] ?? null);
   const [quantity, setQuantity] = useState(1);
+  // null = the base price; otherwise the index of the chosen offer.
+  const [offerIndex, setOfferIndex] = useState<number | null>(null);
+
+  const offers = product.offers ?? [];
+  const selectedOffer = offerIndex === null ? null : (offers[offerIndex] ?? null);
+  const unitCents = selectedOffer ? selectedOffer.price_cents : product.price_cents;
 
   const soldOut = product.stock <= 0;
   const max = Math.max(1, Math.min(product.stock, 8));
 
   return (
     <div className="mt-10">
+      {offers.length > 0 ? (
+        <fieldset className="mb-8">
+          <legend className="eyebrow text-ink-muted">Offres</legend>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setOfferIndex(null)}
+              className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
+                offerIndex === null
+                  ? "border-transparent bg-accent text-white"
+                  : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
+              }`}
+            >
+              Prix unitaire — {formatMoney(product.price_cents, product.currency)}
+            </button>
+            {offers.map((offer, index) => (
+              <button
+                key={`${offer.name}-${index}`}
+                type="button"
+                onClick={() => setOfferIndex(index)}
+                className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
+                  offerIndex === index
+                    ? "border-transparent bg-accent text-white"
+                    : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
+                }`}
+              >
+                {offer.name} — {formatMoney(offer.price_cents, product.currency)}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
       {product.sizes.length > 0 ? (
         <fieldset>
-          <legend className="eyebrow text-ink-muted">Size</legend>
+          <legend className="eyebrow text-ink-muted">Taille</legend>
           <div className="mt-4 flex flex-wrap gap-2">
             {product.sizes.map((s) => (
               <button
@@ -91,7 +129,7 @@ export function AddToCart({ product }: { product: Product }) {
 
       {product.colors.length > 0 ? (
         <fieldset className="mt-8">
-          <legend className="eyebrow text-ink-muted">Colour</legend>
+          <legend className="eyebrow text-ink-muted">Couleur</legend>
           <div className="mt-4 flex flex-wrap gap-2">
             {product.colors.map((c) => (
               <button
@@ -115,7 +153,7 @@ export function AddToCart({ product }: { product: Product }) {
         <div className="flex items-center gap-1 rounded-full border border-[color:var(--line-strong)] bg-white/60 p-1">
           <button
             type="button"
-            aria-label="Decrease quantity"
+            aria-label="Diminuer la quantité"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             className="h-8 w-8 rounded-full text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep"
           >
@@ -124,7 +162,7 @@ export function AddToCart({ product }: { product: Product }) {
           <span className="w-6 text-center text-base tabular-nums">{quantity}</span>
           <button
             type="button"
-            aria-label="Increase quantity"
+            aria-label="Augmenter la quantité"
             onClick={() => setQuantity((q) => Math.min(max, q + 1))}
             className="h-8 w-8 rounded-full text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep"
           >
@@ -142,13 +180,14 @@ export function AddToCart({ product }: { product: Product }) {
               image: product.images[0] ?? null,
               size,
               color,
-              unitCents: product.price_cents,
+              offerName: selectedOffer?.name ?? null,
+              unitCents,
               quantity,
             })
           }
           className="min-w-[15rem] flex-1"
         >
-          {soldOut ? "Sold out" : `Add to bag — ${formatMoney(product.price_cents * quantity, product.currency)}`}
+          {soldOut ? "Épuisé" : `Ajouter au panier — ${formatMoney(unitCents * quantity, product.currency)}`}
         </PillButton>
       </div>
 

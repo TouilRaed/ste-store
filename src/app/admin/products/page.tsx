@@ -6,7 +6,7 @@ import { requireAdminPage } from "@/lib/admin/guard";
 import { isAdminDataReady, listProducts } from "@/lib/admin/repo";
 import { formatMoney } from "@/lib/format";
 
-export const metadata = { title: "Products" };
+export const metadata = { title: "Produits" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
@@ -15,7 +15,7 @@ export default async function AdminProductsPage() {
   if (!isAdminDataReady()) {
     return (
       <>
-        <PageHeading eyebrow="Catalogue" title="Products" />
+        <PageHeading eyebrow="Catalogue" title="Produits" />
         <SetupNotice />
       </>
     );
@@ -27,13 +27,13 @@ export default async function AdminProductsPage() {
     <>
       <PageHeading
         eyebrow={`${products.length} in the catalogue`}
-        title="Products"
-        action={<PillLink href="/admin/products/new">New piece</PillLink>}
+        title="Produits"
+        action={<PillLink href="/admin/products/new">Nouvelle pièce</PillLink>}
       />
 
       <Panel>
         {products.length === 0 ? (
-          <p className="p-8 text-sm text-ink-soft">No products yet — add the first one.</p>
+          <p className="p-8 text-sm text-ink-soft">Aucun produit — ajoutez le premier.</p>
         ) : (
           <ul className="divide-y divide-[color:var(--line)]">
             {products.map((product) => (
@@ -54,7 +54,7 @@ export default async function AdminProductsPage() {
                   </div>
 
                   {!product.is_active ? (
-                    <span className="eyebrow rounded-full bg-paper-sand px-3 py-1 text-ink-muted">Hidden</span>
+                    <span className="eyebrow rounded-full bg-paper-sand px-3 py-1 text-ink-muted">Masqué</span>
                   ) : null}
                   {product.is_featured ? (
                     <span className="eyebrow rounded-full bg-accent-soft px-3 py-1 text-accent-deep">

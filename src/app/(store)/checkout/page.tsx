@@ -11,13 +11,13 @@ import { useCart } from "@/lib/cart/cart-context";
 import { formatMoney } from "@/lib/format";
 
 const FIELDS = [
-  { name: "full_name", label: "Full name", autoComplete: "name", span: 2 },
+  { name: "full_name", label: "Nom complet", autoComplete: "name", span: 2 },
   { name: "email", label: "Email", autoComplete: "email", type: "email", span: 2 },
-  { name: "phone", label: "Phone (optional)", autoComplete: "tel", span: 2 },
-  { name: "address_line1", label: "Street address", autoComplete: "address-line1", span: 2 },
+  { name: "phone", label: "Téléphone (facultatif)", autoComplete: "tel", span: 2 },
+  { name: "address_line1", label: "Adresse", autoComplete: "address-line1", span: 2 },
   { name: "address_line2", label: "Apartment, floor (optional)", autoComplete: "address-line2", span: 2 },
   { name: "city", label: "City", autoComplete: "address-level2", span: 1 },
-  { name: "postal_code", label: "Postal code", autoComplete: "postal-code", span: 1 },
+  { name: "postal_code", label: "Code postal", autoComplete: "postal-code", span: 1 },
   { name: "country", label: "Country", autoComplete: "country-name", span: 2 },
 ] as const;
 
@@ -58,12 +58,12 @@ export default function CheckoutPage() {
   if (hydrated && lines.length === 0 && !pending) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 pt-32 pb-24 text-center md:pt-48">
-        <Eyebrow>Checkout</Eyebrow>
+        <Eyebrow>Paiement</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
           Your bag is empty
         </h1>
         <div className="mt-10">
-          <PillLink href="/shop">Find something</PillLink>
+          <PillLink href="/shop">Trouver une pièce</PillLink>
         </div>
       </div>
     );
@@ -82,7 +82,7 @@ export default function CheckoutPage() {
         <Reveal>
           <div className="bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)]">
             <div className="bezel-core rounded-[calc(2rem-0.375rem)] bg-white p-6 md:p-8">
-              <p className="eyebrow text-ink-muted">Shipping details</p>
+              <p className="eyebrow text-ink-muted">Informations de livraison</p>
 
               <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {FIELDS.map((field) => (
@@ -131,7 +131,7 @@ export default function CheckoutPage() {
         <Reveal delay={120} className="lg:sticky lg:top-28">
           <div className="bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)]">
             <div className="bezel-core rounded-[calc(2rem-0.375rem)] bg-white p-6">
-              <p className="eyebrow text-ink-muted">Your bag</p>
+              <p className="eyebrow text-ink-muted">Votre panier</p>
 
               <ul className="mt-6 space-y-4">
                 {lines.map((line) => (
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-base">{line.name}</p>
                       <p className="text-sm text-ink-muted">
-                        {[line.size, line.color].filter(Boolean).join(" · ") || "One size"} × {line.quantity}
+                        {[line.size, line.color].filter(Boolean).join(" · ") || "Taille unique"} × {line.quantity}
                       </p>
                     </div>
                     <p className="text-base tabular-nums">{formatMoney(line.unitCents * line.quantity)}</p>
@@ -152,12 +152,12 @@ export default function CheckoutPage() {
 
               <dl className="mt-7 space-y-3 border-t border-[color:var(--line)] pt-6 text-base">
                 <div className="flex justify-between">
-                  <dt className="text-ink-soft">Subtotal</dt>
+                  <dt className="text-ink-soft">Sous-total</dt>
                   <dd className="tabular-nums">{formatMoney(subtotalCents)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-ink-soft">Shipping</dt>
-                  <dd className="tabular-nums">{shippingCents === 0 ? "Free" : formatMoney(shippingCents)}</dd>
+                  <dt className="text-ink-soft">Livraison</dt>
+                  <dd className="tabular-nums">{shippingCents === 0 ? "Offerte" : formatMoney(shippingCents)}</dd>
                 </div>
               </dl>
 
@@ -168,7 +168,7 @@ export default function CheckoutPage() {
 
               <div className="mt-8">
                 <PillButton type="submit" disabled={pending} className="w-full">
-                  {pending ? "Placing order…" : "Place order"}
+                  {pending ? "Envoi en cours…" : "Commander"}
                 </PillButton>
               </div>
 

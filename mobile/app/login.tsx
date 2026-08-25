@@ -22,7 +22,7 @@ export default function LoginScreen() {
       await setToken(token);
       router.replace("/(tabs)/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed");
+      setError(err instanceof Error ? err.message : "Échec de la connexion");
     } finally {
       setPending(false);
     }
@@ -37,11 +37,11 @@ export default function LoginScreen() {
         <Card style={styles.card}>
           <Eyebrow>{BRAND.NAME}</Eyebrow>
           <Title>Admin</Title>
-          <Text style={styles.copy}>Orders and catalogue for the current run.</Text>
+          <Text style={styles.copy}>Commandes et catalogue de la série en cours.</Text>
 
           <View style={styles.form}>
             <Field
-              label="Password"
+              label="Mot de passe"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -54,7 +54,7 @@ export default function LoginScreen() {
 
             {error ? <Message tone="error">{error}</Message> : null}
 
-            <Button label="Sign in" onPress={submit} loading={pending} style={styles.button} />
+            <Button label="Se connecter" onPress={submit} loading={pending} style={styles.button} />
             <Text style={styles.server}>{API_BASE_URL}</Text>
           </View>
         </Card>

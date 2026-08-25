@@ -4,7 +4,7 @@ import { requireAdminPage } from "@/lib/admin/guard";
 import { getStats, isAdminDataReady } from "@/lib/admin/repo";
 import { formatMoney } from "@/lib/format";
 
-export const metadata = { title: "Dashboard" };
+export const metadata = { title: "Tableau de bord" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
@@ -13,7 +13,7 @@ export default async function AdminDashboardPage() {
   if (!isAdminDataReady()) {
     return (
       <>
-        <PageHeading eyebrow="Overview" title="Dashboard" />
+        <PageHeading eyebrow="Aperçu" title="Tableau de bord" />
         <SetupNotice />
       </>
     );
@@ -22,15 +22,15 @@ export default async function AdminDashboardPage() {
   const stats = await getStats();
 
   const tiles = [
-    { label: "Revenue", value: formatMoney(stats.revenueCents, stats.currency), hint: "excl. cancelled" },
-    { label: "Orders", value: String(stats.orders.total), hint: `${stats.orders.pending} pending` },
-    { label: "Products", value: String(stats.products.total), hint: `${stats.products.active} active` },
-    { label: "Low stock", value: String(stats.products.lowStock), hint: "8 or fewer left" },
+    { label: "Chiffre d'affaires", value: formatMoney(stats.revenueCents, stats.currency), hint: "excl. cancelled" },
+    { label: "Commandes", value: String(stats.orders.total), hint: `${stats.orders.pending} pending` },
+    { label: "Produits", value: String(stats.products.total), hint: `${stats.products.active} active` },
+    { label: "Stock faible", value: String(stats.products.lowStock), hint: "8 or fewer left" },
   ];
 
   return (
     <>
-      <PageHeading eyebrow="Overview" title="Dashboard" />
+      <PageHeading eyebrow="Aperçu" title="Tableau de bord" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => (
@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-10">
         <div className="mb-5 flex items-center justify-between">
-          <p className="eyebrow text-ink-muted">Latest orders</p>
+          <p className="eyebrow text-ink-muted">Dernières commandes</p>
           <Link href="/admin/orders" className="text-[13px] text-ink-soft underline underline-offset-4">
             All orders
           </Link>
@@ -54,7 +54,7 @@ export default async function AdminDashboardPage() {
 
         <Panel>
           {stats.recentOrders.length === 0 ? (
-            <p className="p-8 text-sm text-ink-soft">No orders yet.</p>
+            <p className="p-8 text-sm text-ink-soft">Aucune commande pour le moment.</p>
           ) : (
             <ul className="divide-y divide-[color:var(--line)]">
               {stats.recentOrders.map((order) => (

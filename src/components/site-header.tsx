@@ -9,8 +9,8 @@ import { BagIcon } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 
 const NAV = [
-  { href: "/shop", label: "Shop" },
-  { href: "/lookbook", label: "Lookbook" },
+  { href: "/", label: "Accueil" },
+  { href: "/shop", label: "Produits" },
   { href: "/about", label: "À propos" },
 ];
 

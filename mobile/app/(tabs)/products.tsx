@@ -13,7 +13,7 @@ export default function ProductsScreen() {
   return (
     <View style={styles.flex}>
       <View style={styles.head}>
-        <Button label="New piece" onPress={() => router.push("/products/new")} />
+        <Button label="Nouvelle pièce" onPress={() => router.push("/products/new")} />
       </View>
 
       {loading ? (
@@ -53,8 +53,8 @@ export default function ProductsScreen() {
                     </Text>
 
                     <View style={styles.badges}>
-                      {!product.is_active ? <Tag label="Hidden" /> : null}
-                      {product.is_featured ? <Tag label="Featured" tone="accent" /> : null}
+                      {!product.is_active ? <Tag label="Masqué" /> : null}
+                      {product.is_featured ? <Tag label="Mis en avant" tone="accent" /> : null}
                     </View>
                   </View>
 

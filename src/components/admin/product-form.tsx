@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { deleteProductAction, saveProductAction, type ActionResult } from "@/app/admin/actions";
 import { ImageUploader } from "@/components/admin/image-uploader";
+import { OffersEditor } from "@/components/admin/offers-editor";
 import { TagPicker } from "@/components/admin/tag-picker";
 import { Panel } from "@/components/admin/ui";
 import { PillButton } from "@/components/ui";
 import type { AdminProduct } from "@/lib/admin/repo";
+import { minorToMajorInput } from "@/lib/format";
 import type { Collection } from "@/lib/types";
 
 type ProductFormProps = {
@@ -56,13 +58,13 @@ export function ProductForm({ product, collections }: ProductFormProps) {
         <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
           <Panel>
             <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2 md:p-8">
-              <Field label="Name" error={errors.name} className="sm:col-span-2">
+              <Field label="Nom" error={errors.name} className="sm:col-span-2">
                 <input name="name" defaultValue={product?.name} className={inputClass} />
               </Field>
 
               <Field
                 label="Slug"
-                hint="Used in the URL: /product/your-slug"
+                hint="Utilisé dans l'URL : /product/votre-slug"
                 error={errors.slug}
                 className="sm:col-span-2"
               >
@@ -79,8 +81,8 @@ export function ProductForm({ product, collections }: ProductFormProps) {
               </Field>
 
               <Field
-                label="Specification"
-                hint="One line per bullet"
+                label="Caractéristiques"
+                hint="Une ligne par point"
                 error={errors.details}
                 className="sm:col-span-2"
               >
@@ -103,7 +105,21 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 <TagPicker name="tags" defaultValue={product?.tags} />
               </div>
 
-              <Field label="Sizes" hint="One per line" error={errors.sizes}>
+              <div className="sm:col-span-2">
+                <span className="eyebrow text-ink-muted">Offres</span>
+                <p className="mt-1 mb-3 text-xs leading-relaxed text-ink-muted">
+                  Lots optionnels proposés en plus du prix de base — ex. « 3 pièces » à 120 DT.
+                </p>
+                <OffersEditor
+                  defaultOffers={product?.offers}
+                  currency={product?.currency ?? "TND"}
+                />
+                {errors.offers?.length ? (
+                  <span className="mt-2 block text-xs text-accent-deep">{errors.offers[0]}</span>
+                ) : null}
+              </div>
+
+              <Field label="Tailles" hint="Une par ligne" error={errors.sizes}>
                 <textarea
                   name="sizes"
                   rows={4}
@@ -112,7 +128,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 />
               </Field>
 
-              <Field label="Colours" hint="One per line" error={errors.colors}>
+              <Field label="Couleurs" hint="Une par ligne" error={errors.colors}>
                 <textarea
                   name="colors"
                   rows={4}
@@ -126,31 +142,31 @@ export function ProductForm({ product, collections }: ProductFormProps) {
           <div className="flex flex-col gap-6">
             <Panel>
               <div className="grid grid-cols-2 gap-5 p-6">
-                <Field label="Prix (millimes)" hint="1 DT = 1000 millimes — 220 DT = 220000" error={errors.price_cents}>
+                <Field label="Prix (DT)" hint="En dinars — ex : 220 ou 89,500" error={errors.price_cents}>
                   <input
-                    name="price_cents"
-                    type="number"
-                    min={0}
-                    defaultValue={product?.price_cents ?? 0}
+                    name="price_dinars"
+                    type="text"
+                    inputMode="decimal"
+                    defaultValue={minorToMajorInput(product?.price_cents, product?.currency ?? "TND")}
                     className={inputClass}
                   />
                 </Field>
 
-                <Field label="Prix barré" hint="Optionnel" error={errors.compare_at_cents}>
+                <Field label="Prix barré (DT)" hint="Optionnel" error={errors.compare_at_cents}>
                   <input
-                    name="compare_at_cents"
-                    type="number"
-                    min={0}
-                    defaultValue={product?.compare_at_cents ?? ""}
+                    name="compare_at_dinars"
+                    type="text"
+                    inputMode="decimal"
+                    defaultValue={minorToMajorInput(product?.compare_at_cents, product?.currency ?? "TND")}
                     className={inputClass}
                   />
                 </Field>
 
-                <Field label="Currency" error={errors.currency}>
+                <Field label="Devise" error={errors.currency}>
                   <input
                     name="currency"
                     maxLength={3}
-                    defaultValue={product?.currency ?? "USD"}
+                    defaultValue={product?.currency ?? "TND"}
                     className={`${inputClass} uppercase`}
                   />
                 </Field>
@@ -180,11 +196,11 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                   </select>
                 </Field>
 
-                <Field label="Cut for" error={errors.gender} className="col-span-2">
+                <Field label="Coupe pour" error={errors.gender} className="col-span-2">
                   <select name="gender" defaultValue={product?.gender ?? "unisex"} className={inputClass}>
-                    <option value="women">Women</option>
-                    <option value="men">Men</option>
-                    <option value="unisex">Unisex</option>
+                    <option value="women">Femme</option>
+                    <option value="men">Homme</option>
+                    <option value="unisex">Unisexe</option>
                   </select>
                 </Field>
 
@@ -217,7 +233,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
             <div className="flex items-center gap-3">
               <PillButton type="submit" disabled={pending} className="flex-1">
-                {pending ? "Saving…" : product ? "Save changes" : "Create piece"}
+                {pending ? "Enregistrement…" : product ? "Enregistrer" : "Créer la pièce"}
               </PillButton>
               <Link
                 href="/admin/products"

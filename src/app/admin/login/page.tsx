@@ -3,7 +3,7 @@ import { AdminLoginForm } from "@/components/admin/admin-login-form";
 import { hasAdminCookie, isAdminConfigured } from "@/lib/admin/auth";
 import { BRAND } from "@/lib/brand";
 
-export const metadata = { title: "Sign in" };
+export const metadata = { title: "Connexion" };
 
 export default async function AdminLoginPage() {
   if (await hasAdminCookie()) redirect("/admin");
@@ -15,15 +15,15 @@ export default async function AdminLoginPage() {
           <p className="eyebrow text-ink-muted">{BRAND.NAME}</p>
           <h1 className="font-display mt-4 text-4xl leading-tight tracking-[-0.02em]">Admin</h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Orders and catalogue for the current run.
+            Commandes et catalogue de la série en cours.
           </p>
 
           {isAdminConfigured() ? (
             <AdminLoginForm />
           ) : (
             <p className="mt-8 rounded-2xl bg-accent-soft px-4 py-3 text-sm leading-relaxed text-accent-deep">
-              Admin isn&apos;t configured yet. Set <code>ADMIN_PASSWORD</code> and{" "}
-              <code>ADMIN_JWT_SECRET</code> in <code>.env.local</code>, then restart the server.
+              Admin non configuré. Définissez <code>ADMIN_PASSWORD</code> and{" "}
+              <code>ADMIN_JWT_SECRET</code> dans <code>.env.local</code>, puis redémarrez le serveur.
             </p>
           )}
         </div>

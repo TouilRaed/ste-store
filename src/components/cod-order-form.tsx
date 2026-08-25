@@ -19,13 +19,18 @@ export function CodOrderForm({ product }: { product: Product }) {
   const [size, setSize] = useState<string | null>(product.sizes[0] ?? null);
   const [color, setColor] = useState<string | null>(product.colors[0] ?? null);
   const [quantity, setQuantity] = useState(1);
+  const [offerIndex, setOfferIndex] = useState<number | null>(null);
   const [result, setResult] = useState<CodOrderResult | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
   const fieldErrors = result && !result.ok ? (result.fieldErrors ?? {}) : {};
 
-  const subtotal = product.price_cents * quantity;
+  const offers = product.offers ?? [];
+  const selectedOffer = offerIndex === null ? null : (offers[offerIndex] ?? null);
+  const unitCents = selectedOffer ? selectedOffer.price_cents : product.price_cents;
+
+  const subtotal = unitCents * quantity;
   const shipping = shippingFor(subtotal);
   const total = subtotal + shipping;
 
@@ -38,6 +43,7 @@ export function CodOrderForm({ product }: { product: Product }) {
     formData.set("quantity", String(quantity));
     if (size) formData.set("size", size);
     if (color) formData.set("color", color);
+    if (selectedOffer) formData.set("offer_name", selectedOffer.name);
 
     startTransition(async () => {
       const res = await placeCodOrder(formData);
@@ -58,6 +64,39 @@ export function CodOrderForm({ product }: { product: Product }) {
           Vous payez le livreur à la réception. Aucune carte, aucun compte — laissez votre numéro et
           nous vous appelons pour confirmer.
         </p>
+
+        {offers.length > 0 ? (
+          <fieldset className="mt-6">
+            <legend className="eyebrow text-ink-muted">Offres</legend>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setOfferIndex(null)}
+                className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
+                  offerIndex === null
+                    ? "border-transparent bg-accent text-white"
+                    : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
+                }`}
+              >
+                Prix unitaire — {formatMoney(product.price_cents, product.currency)}
+              </button>
+              {offers.map((offer, index) => (
+                <button
+                  key={`${offer.name}-${index}`}
+                  type="button"
+                  onClick={() => setOfferIndex(index)}
+                  className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
+                    offerIndex === index
+                      ? "border-transparent bg-accent text-white"
+                      : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
+                  }`}
+                >
+                  {offer.name} — {formatMoney(offer.price_cents, product.currency)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
 
         {product.sizes.length > 0 ? (
           <fieldset className="mt-6">

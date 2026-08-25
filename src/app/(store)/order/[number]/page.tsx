@@ -9,7 +9,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import type { Order } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Order confirmed",
+  title: "Commande confirmée",
   robots: { index: false },
 };
 
@@ -64,7 +64,7 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
           resend it.
         </p>
         <div className="mt-10">
-          <PillLink href="/shop">Back to the shop</PillLink>
+          <PillLink href="/shop">Retour aux produits</PillLink>
         </div>
       </div>
     );
@@ -97,7 +97,7 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
                   <div className="min-w-0 flex-1">
                     <p className="font-display text-base leading-tight">{item.product_name}</p>
                     <p className="eyebrow mt-2 text-ink-muted">
-                      {[item.size, item.color].filter(Boolean).join(" · ") || "One size"} × {item.quantity}
+                      {[item.size, item.color].filter(Boolean).join(" · ") || "Taille unique"} × {item.quantity}
                     </p>
                   </div>
                   <p className="text-base tabular-nums">
@@ -109,13 +109,13 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
 
             <dl className="mt-8 space-y-3 border-t border-[color:var(--line)] pt-6 text-base">
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Subtotal</dt>
+                <dt className="text-ink-soft">Sous-total</dt>
                 <dd className="tabular-nums">{formatMoney(order.subtotal_cents, order.currency)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Shipping</dt>
+                <dt className="text-ink-soft">Livraison</dt>
                 <dd className="tabular-nums">
-                  {order.shipping_cents === 0 ? "Free" : formatMoney(order.shipping_cents, order.currency)}
+                  {order.shipping_cents === 0 ? "Offerte" : formatMoney(order.shipping_cents, order.currency)}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between border-t border-[color:var(--line)] pt-5">
@@ -127,7 +127,7 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
             </dl>
 
             <div className="mt-8 border-t border-[color:var(--line)] pt-6">
-              <p className="eyebrow text-ink-muted">Shipping to</p>
+              <p className="eyebrow text-ink-muted">Livraison à</p>
               <address className="mt-3 text-base leading-relaxed text-ink-soft not-italic">
                 {order.full_name}
                 <br />

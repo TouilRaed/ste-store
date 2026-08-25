@@ -49,7 +49,7 @@ export function OrderEditor({ order }: { order: Order }) {
         ))}
 
         <label className="block sm:col-span-2">
-          <span className="eyebrow text-ink-muted">Customer note</span>
+          <span className="eyebrow text-ink-muted">Note du client</span>
           <textarea
             name="note"
             rows={2}
@@ -60,7 +60,7 @@ export function OrderEditor({ order }: { order: Order }) {
         </label>
 
         <label className="block sm:col-span-2">
-          <span className="eyebrow text-accent-deep">Staff note</span>
+          <span className="eyebrow text-accent-deep">Note interne</span>
           <textarea
             name="admin_note"
             rows={3}
@@ -77,12 +77,12 @@ export function OrderEditor({ order }: { order: Order }) {
       ) : null}
 
       {state?.ok ? (
-        <p className="mt-5 rounded-2xl bg-[#e7efe4] px-4 py-3 text-sm text-sage">Order updated.</p>
+        <p className="mt-5 rounded-2xl bg-[#e7efe4] px-4 py-3 text-sm text-sage">Commande mise à jour.</p>
       ) : null}
 
       <div className="mt-6">
         <PillButton type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save changes"}
+          {pending ? "Enregistrement…" : "Enregistrer"}
         </PillButton>
       </div>
     </form>

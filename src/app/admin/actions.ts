@@ -28,17 +28,18 @@ import {
   productInputSchema,
   productPatchSchema,
 } from "@/lib/admin/schemas";
+import { majorInputToMinor } from "@/lib/format";
 
 export type ActionResult = { ok: boolean; error?: string; fieldErrors?: Record<string, string[]> };
 
 async function requireAdmin() {
-  if (!(await hasAdminCookie())) throw new AdminError(401, "Unauthorized");
+  if (!(await hasAdminCookie())) throw new AdminError(401, "Non autorisé");
 }
 
 function toMessage(error: unknown): string {
   if (error instanceof AdminError) return error.message;
   console.error("[admin action]", error);
-  return "Unexpected server error";
+  return "Erreur serveur inattendue";
 }
 
 export async function adminLogin(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -49,10 +50,10 @@ export async function adminLogin(_prev: ActionResult | null, formData: FormData)
   // Server actions have no request object; throttle on the session cookie jar
   // identity instead, which still slows down repeated guesses from one client.
   const limit = rateLimit("admin-login:web", 10, 60_000);
-  if (!limit.ok) return { ok: false, error: "Too many attempts. Try again shortly." };
+  if (!limit.ok) return { ok: false, error: "Trop de tentatives. Réessayez dans un instant." };
 
   const password = String(formData.get("password") ?? "");
-  if (!password || !verifyPassword(password)) return { ok: false, error: "Invalid password" };
+  if (!password || !verifyPassword(password)) return { ok: false, error: "Mot de passe incorrect" };
 
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE, await issueToken(), {
@@ -79,13 +80,18 @@ export async function saveProductAction(
     await requireAdmin();
 
     const id = String(formData.get("id") ?? "").trim();
+    // The form asks for dinars; the columns store minor units.
+    const currency = String(formData.get("currency") ?? "TND").trim() || "TND";
+    // Price is required: a blank must fail validation, not coerce to 0.
+    const priceMinor = majorInputToMinor(formData.get("price_dinars"), currency) ?? Number.NaN;
+    const compareMinor = majorInputToMinor(formData.get("compare_at_dinars"), currency);
     const raw = {
       slug: formData.get("slug"),
       name: formData.get("name"),
       description: formData.get("description"),
       details: formData.get("details"),
-      price_cents: formData.get("price_cents"),
-      compare_at_cents: formData.get("compare_at_cents"),
+      price_cents: priceMinor,
+      compare_at_cents: compareMinor,
       currency: formData.get("currency"),
       images: formData.get("images"),
       sizes: formData.get("sizes"),
@@ -96,12 +102,13 @@ export async function saveProductAction(
       tags: formData.get("tags"),
       is_featured: formData.get("is_featured") === "on",
       is_active: formData.get("is_active") === "on",
+      offers: formData.get("offers"),
     };
 
     const schema = id ? productPatchSchema : productInputSchema;
     const parsed = schema.safeParse(raw);
     if (!parsed.success) {
-      return { ok: false, error: "Check the highlighted fields.", fieldErrors: parsed.error.flatten().fieldErrors };
+      return { ok: false, error: "Vérifiez les champs en surbrillance.", fieldErrors: parsed.error.flatten().fieldErrors };
     }
 
     if (id) await updateProduct(id, parsed.data);
@@ -144,7 +151,7 @@ export async function updateOrderAction(
     await requireAdmin();
 
     const id = String(formData.get("id") ?? "").trim();
-    if (!id) return { ok: false, error: "Missing order" };
+    if (!id) return { ok: false, error: "Commande introuvable" };
 
     const text = (key: string) => {
       const value = String(formData.get(key) ?? "").trim();
@@ -167,7 +174,7 @@ export async function updateOrderAction(
     if (!parsed.success) {
       return {
         ok: false,
-        error: "Check the highlighted fields.",
+        error: "Vérifiez les champs en surbrillance.",
         fieldErrors: parsed.error.flatten().fieldErrors,
       };
     }
@@ -193,18 +200,18 @@ export async function updateOrderItemsAction(
     await requireAdmin();
 
     const id = String(formData.get("id") ?? "").trim();
-    if (!id) return { ok: false, error: "Missing order" };
+    if (!id) return { ok: false, error: "Commande introuvable" };
 
     let payload: unknown = null;
     try {
       payload = JSON.parse(String(formData.get("items") ?? "[]"));
     } catch {
-      return { ok: false, error: "Could not read those lines." };
+      return { ok: false, error: "Impossible de lire ces lignes." };
     }
 
     const parsed = orderItemsSchema.safeParse({ items: payload });
     if (!parsed.success) {
-      return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the lines." };
+      return { ok: false, error: parsed.error.issues[0]?.message ?? "Vérifiez les lignes." };
     }
 
     await setOrderItems(id, parsed.data.items);

@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api, ApiError } from "../lib/api";
+import { majorInputToMinor, minorToMajorInput } from "../lib/format";
 import { theme } from "../lib/theme";
 import type { Collection, Product, ProductInput } from "../lib/types";
 import { Button, Card, Chip, Eyebrow, Field, Message, Toggle } from "./ui";
@@ -19,6 +20,8 @@ type Draft = {
   details: string;
   images: string[];
   tags: string[];
+  /** Price kept as the typed dinar string until submit. */
+  offers: { name: string; price: string }[];
   sizes: string;
   colors: string;
   price: string;
@@ -36,7 +39,7 @@ const GENDERS: Product["gender"][] = ["women", "men", "unisex"];
 /** Same one-tap tags as the web admin. */
 const TAG_PRESETS = [
   "Nouveau",
-  "New drop",
+  "Nouveauté",
   "Promotion",
   "Édition limitée",
   "Exclusif",
@@ -52,11 +55,15 @@ function toDraft(product?: Product): Draft {
     details: product?.details.join("\n") ?? "",
     images: product?.images ?? [],
     tags: product?.tags ?? [],
+    offers: (product?.offers ?? []).map((o) => ({
+      name: o.name,
+      price: minorToMajorInput(o.price_cents, product?.currency ?? "TND"),
+    })),
     sizes: product?.sizes.join("\n") ?? "",
     colors: product?.colors.join("\n") ?? "",
-    price: String(product?.price_cents ?? ""),
-    compareAt: product?.compare_at_cents != null ? String(product.compare_at_cents) : "",
-    currency: product?.currency ?? "USD",
+    price: minorToMajorInput(product?.price_cents, product?.currency ?? "TND"),
+    compareAt: minorToMajorInput(product?.compare_at_cents, product?.currency ?? "TND"),
+    currency: product?.currency ?? "TND",
     stock: String(product?.stock ?? "0"),
     collectionId: product?.collection_id ?? null,
     gender: product?.gender ?? "unisex",
@@ -84,7 +91,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
   async function pickImage() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError("Photo library access is needed to add images");
+      setError("L'accès à la photothèque est nécessaire pour ajouter des images");
       return;
     }
 
@@ -105,22 +112,25 @@ export function ProductForm({ product, collections }: ProductFormProps) {
       });
       setDraft((prev) => ({ ...prev, images: [...prev.images, url] }));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Upload failed");
+      setError(err instanceof ApiError ? err.message : "Échec de l'envoi");
     } finally {
       setUploading(false);
     }
   }
 
   function buildPayload(): ProductInput | null {
-    const price = Number(draft.price);
+    // Typed in dinars; the API and columns expect minor units.
+    const currency = draft.currency.trim().toUpperCase() || "TND";
+    const price = majorInputToMinor(draft.price, currency) ?? Number.NaN;
+    const compareAt = majorInputToMinor(draft.compareAt, currency);
     const stock = Number(draft.stock);
 
-    if (!draft.name.trim()) return withError("Name is required");
+    if (!draft.name.trim()) return withError("Le nom est obligatoire");
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.slug.trim())) {
-      return withError("Slug must be lowercase words separated by dashes");
+      return withError("Le slug doit être en minuscules, séparé par des tirets");
     }
-    if (!Number.isInteger(price) || price < 0) return withError("Price must be a whole number of cents");
-    if (!Number.isInteger(stock) || stock < 0) return withError("Stock must be a whole number");
+    if (!Number.isInteger(price) || price < 0) return withError("Prix invalide — ex : 220 ou 89,500");
+    if (!Number.isInteger(stock) || stock < 0) return withError("Le stock doit être un nombre entier");
 
     return {
       name: draft.name.trim(),
@@ -129,11 +139,14 @@ export function ProductForm({ product, collections }: ProductFormProps) {
       details: splitLines(draft.details),
       images: draft.images,
       tags: draft.tags,
+      offers: draft.offers
+        .map((o) => ({ name: o.name.trim(), price_cents: majorInputToMinor(o.price, currency) ?? 0 }))
+        .filter((o) => o.name.length > 0 && !Number.isNaN(o.price_cents)),
       sizes: splitLines(draft.sizes),
       colors: splitLines(draft.colors),
       price_cents: price,
-      compare_at_cents: draft.compareAt.trim() ? Number(draft.compareAt) : null,
-      currency: draft.currency.trim().toUpperCase() || "USD",
+      compare_at_cents: Number.isNaN(compareAt as number) ? null : compareAt,
+      currency: draft.currency.trim().toUpperCase() || "TND",
       stock,
       collection_id: draft.collectionId,
       gender: draft.gender,
@@ -158,7 +171,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
       else await api.createProduct(payload);
       router.back();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't save this piece");
+      setError(err instanceof ApiError ? err.message : "Impossible d'enregistrer cette pièce");
     } finally {
       setSaving(false);
     }
@@ -166,10 +179,10 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
   function confirmDelete() {
     if (!product) return;
-    Alert.alert("Delete this piece?", `${product.name} will be removed from the catalogue.`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert("Supprimer cette pièce ?", `${product.name} will be removed from the catalogue.`, [
+      { text: "Annuler", style: "cancel" },
       {
-        text: "Delete",
+        text: "Supprimer",
         style: "destructive",
         onPress: async () => {
           setDeleting(true);
@@ -177,7 +190,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
             await api.deleteProduct(product.id);
             router.back();
           } catch (err) {
-            setError(err instanceof ApiError ? err.message : "Couldn't delete this piece");
+            setError(err instanceof ApiError ? err.message : "Impossible de supprimer cette pièce");
           } finally {
             setDeleting(false);
           }
@@ -189,13 +202,13 @@ export function ProductForm({ product, collections }: ProductFormProps) {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Card style={styles.card}>
-        <Field label="Name" value={draft.name} onChangeText={(v) => set("name", v)} />
+        <Field label="Nom" value={draft.name} onChangeText={(v) => set("name", v)} />
         <Field
           label="Slug"
           value={draft.slug}
           onChangeText={(v) => set("slug", v)}
           autoCapitalize="none"
-          hint="Used in the URL: /product/your-slug"
+          hint="Utilisé dans l'URL : /product/votre-slug"
         />
         <Field
           label="Description"
@@ -204,11 +217,11 @@ export function ProductForm({ product, collections }: ProductFormProps) {
           multiline
         />
         <Field
-          label="Specification"
+          label="Caractéristiques"
           value={draft.details}
           onChangeText={(v) => set("details", v)}
           multiline
-          hint="One line per bullet"
+          hint="Une ligne par point"
         />
         <Eyebrow>Photos</Eyebrow>
         <View style={styles.photoRow}>
@@ -223,7 +236,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
               <Pressable
                 onPress={() => set("images", draft.images.filter((u) => u !== url))}
                 style={styles.photoRemove}
-                accessibilityLabel="Remove photo"
+                accessibilityLabel="Retirer la photo"
               >
                 <Text style={styles.photoRemoveText}>×</Text>
               </Pressable>
@@ -259,32 +272,32 @@ export function ProductForm({ product, collections }: ProductFormProps) {
             Épuisé, « Plus que N » et la promo sont automatiques — inutile de les cocher.
           </Text>
         </View>
-        <Field label="Sizes" value={draft.sizes} onChangeText={(v) => set("sizes", v)} multiline hint="One per line" />
+        <Field label="Tailles" value={draft.sizes} onChangeText={(v) => set("sizes", v)} multiline hint="Une par ligne" />
         <Field
-          label="Colours"
+          label="Couleurs"
           value={draft.colors}
           onChangeText={(v) => set("colors", v)}
           multiline
-          hint="One per line"
+          hint="Une par ligne"
         />
       </Card>
 
       <Card style={styles.card}>
         <Field
-          label="Prix (millimes)"
+          label="Prix (DT)"
           value={draft.price}
           onChangeText={(v) => set("price", v)}
-          keyboardType="number-pad"
+          keyboardType="decimal-pad"
         />
         <Field
-          label="Prix barré (millimes)"
+          label="Prix barré (DT)"
           value={draft.compareAt}
           onChangeText={(v) => set("compareAt", v)}
-          keyboardType="number-pad"
-          hint="1 DT = 1000 millimes. Ex : 220 DT = 220000"
+          keyboardType="decimal-pad"
+          hint="En dinars — ex : 220 ou 89,500"
         />
         <Field
-          label="Currency"
+          label="Devise"
           value={draft.currency}
           onChangeText={(v) => set("currency", v)}
           autoCapitalize="characters"
@@ -297,9 +310,51 @@ export function ProductForm({ product, collections }: ProductFormProps) {
           keyboardType="number-pad"
         />
 
+        <Eyebrow>Offres</Eyebrow>
+        <Text style={styles.hint}>
+          Lots optionnels proposés en plus du prix de base — ex. « 3 pièces » à 120 DT.
+        </Text>
+        {draft.offers.map((offer, index) => (
+          <View key={index}>
+            <Field
+              label="Nom de l'offre"
+              value={offer.name}
+              placeholder="3 pièces"
+              onChangeText={(v) =>
+                set(
+                  "offers",
+                  draft.offers.map((o, i) => (i === index ? { ...o, name: v } : o)),
+                )
+              }
+            />
+            <Field
+              label="Prix de l'offre (DT)"
+              value={offer.price}
+              placeholder="120"
+              keyboardType="decimal-pad"
+              onChangeText={(v) =>
+                set(
+                  "offers",
+                  draft.offers.map((o, i) => (i === index ? { ...o, price: v } : o)),
+                )
+              }
+            />
+            <Button
+              label="Retirer cette offre"
+              variant="outline"
+              onPress={() => set("offers", draft.offers.filter((_, i) => i !== index))}
+            />
+          </View>
+        ))}
+        <Button
+          label="Ajouter une offre"
+          variant="outline"
+          onPress={() => set("offers", [...draft.offers, { name: "", price: "" }])}
+        />
+
         <Eyebrow>Collection</Eyebrow>
         <View style={styles.chips}>
-          <Chip label="None" active={draft.collectionId === null} onPress={() => set("collectionId", null)} />
+          <Chip label="Aucune" active={draft.collectionId === null} onPress={() => set("collectionId", null)} />
           {collections.map((collection) => (
             <Chip
               key={collection.id}
@@ -326,9 +381,9 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
         <View style={styles.divider} />
 
-        <Toggle label="Visible in the shop" value={draft.isActive} onChange={(v) => set("isActive", v)} />
+        <Toggle label="Visible dans la boutique" value={draft.isActive} onChange={(v) => set("isActive", v)} />
         <Toggle
-          label="Featured on the home page"
+          label="Mis en avant sur l'accueil"
           value={draft.isFeatured}
           onChange={(v) => set("isFeatured", v)}
         />
@@ -337,7 +392,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
       {error ? <Message tone="error">{error}</Message> : null}
 
       <Button
-        label={product ? "Save changes" : "Create piece"}
+        label={product ? "Enregistrer" : "Créer la pièce"}
         onPress={save}
         loading={saving}
         style={styles.save}
@@ -349,7 +404,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
             Past orders keep their own copy of the name and price, so deleting is safe.
           </Text>
           <Button
-            label="Delete this piece"
+            label="Supprimer cette pièce"
             variant="danger"
             onPress={confirmDelete}
             loading={deleting}
@@ -408,4 +463,5 @@ const styles = StyleSheet.create({
   save: { marginTop: 8 },
   deleteHint: { marginTop: 28, fontSize: 12, lineHeight: 18, color: theme.inkMuted, textAlign: "center" },
   delete: { marginTop: 12 },
+  hint: { marginTop: 6, marginBottom: 4, fontSize: 12, lineHeight: 18, color: theme.inkMuted },
 });

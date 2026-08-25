@@ -85,12 +85,19 @@ export function getLoadedServer(): boolean {
   return false;
 }
 
-export function lineKey(productId: string, size: string | null, color: string | null): string {
-  return `${productId}:${size ?? "-"}:${color ?? "-"}`;
+export function lineKey(
+  productId: string,
+  size: string | null,
+  color: string | null,
+  offerName: string | null = null,
+): string {
+  // The offer belongs in the key: the same size/colour bought under two
+  // different offers is two lines at two prices, not one merged line.
+  return `${productId}:${size ?? "-"}:${color ?? "-"}:${offerName ?? "-"}`;
 }
 
 export function addLine(incoming: Omit<CartLine, "key">): CartLine {
-  const key = lineKey(incoming.productId, incoming.size, incoming.color);
+  const key = lineKey(incoming.productId, incoming.size, incoming.color, incoming.offerName);
   const line: CartLine = { ...incoming, key };
   const existing = lines.find((l) => l.key === key);
 

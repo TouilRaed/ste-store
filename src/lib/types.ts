@@ -6,6 +6,13 @@ export type Collection = {
   position: number;
 };
 
+/** An alternative way to buy a product, e.g. { name: "3 pièces", price_cents: 120000 }. */
+export type ProductOffer = {
+  name: string;
+  /** Minor units of the product's own currency, like every other price. */
+  price_cents: number;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -23,10 +30,11 @@ export type Product = {
   stock: number;
   is_featured: boolean;
   tags: string[];
+  offers: ProductOffer[];
 };
 
 export type CartLine = {
-  /** `${productId}:${size}:${color}` — one line per variant. */
+  /** `${productId}:${size}:${color}:${offerName}` — one line per variant. */
   key: string;
   productId: string;
   slug: string;
@@ -34,6 +42,8 @@ export type CartLine = {
   image: string | null;
   size: string | null;
   color: string | null;
+  /** Chosen offer, or null when bought at the base price. */
+  offerName: string | null;
   unitCents: number;
   quantity: number;
 };
@@ -44,6 +54,7 @@ export type OrderItem = {
   image: string | null;
   size: string | null;
   color: string | null;
+  offer_name?: string | null;
   unit_cents: number;
   quantity: number;
 };

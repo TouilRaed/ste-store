@@ -50,7 +50,7 @@ export function SetupNotice() {
   return (
     <Panel>
       <div className="p-8">
-        <p className="font-display text-2xl">Connect Supabase first</p>
+        <p className="font-display text-2xl">Connectez Supabase d&apos;abord</p>
         <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink-soft">
           The admin reads and writes with the service-role key. Add{" "}
           <code className="rounded bg-paper-deep px-1.5 py-0.5">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}

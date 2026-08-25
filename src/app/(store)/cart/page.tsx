@@ -13,7 +13,7 @@ export default function CartPage() {
   if (hydrated && lines.length === 0) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 pt-32 pb-24 text-center md:pt-48">
-        <Eyebrow>Your bag</Eyebrow>
+        <Eyebrow>Votre panier</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
           Nothing in here yet
         </h1>
@@ -21,7 +21,7 @@ export default function CartPage() {
           Twelve pieces are cut and ready. Start with the one you would wear tomorrow.
         </p>
         <div className="mt-10">
-          <PillLink href="/shop">Browse the run</PillLink>
+          <PillLink href="/shop">Voir la série</PillLink>
         </div>
       </div>
     );
@@ -30,7 +30,7 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-16 pb-8 md:px-8 md:pt-28">
       <Reveal>
-        <Eyebrow>{hydrated ? `${count} ${count === 1 ? "piece" : "pieces"}` : "Loading"}</Eyebrow>
+        <Eyebrow>{hydrated ? `${count} ${count === 1 ? "pièce" : "pièces"}` : "Chargement"}</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
           Your bag
         </h1>
@@ -56,7 +56,7 @@ export default function CartPage() {
                         {line.name}
                       </Link>
                       <p className="eyebrow mt-2 text-ink-muted">
-                        {[line.size, line.color].filter(Boolean).join(" · ") || "One size"}
+                        {[line.size, line.color].filter(Boolean).join(" · ") || "Taille unique"}
                       </p>
                     </div>
                     <p className="shrink-0 text-base tabular-nums">
@@ -68,7 +68,7 @@ export default function CartPage() {
                     <div className="flex items-center gap-1 rounded-full border border-[color:var(--line-strong)] bg-white/60 p-1">
                       <button
                         type="button"
-                        aria-label="Decrease quantity"
+                        aria-label="Diminuer la quantité"
                         onClick={() => setQuantity(line.key, line.quantity - 1)}
                         className="h-8 w-8 rounded-full text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep"
                       >
@@ -77,7 +77,7 @@ export default function CartPage() {
                       <span className="w-6 text-center text-base tabular-nums">{line.quantity}</span>
                       <button
                         type="button"
-                        aria-label="Increase quantity"
+                        aria-label="Augmenter la quantité"
                         onClick={() => setQuantity(line.key, line.quantity + 1)}
                         className="h-8 w-8 rounded-full text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep"
                       >
@@ -103,17 +103,17 @@ export default function CartPage() {
         <Reveal delay={120} className="lg:sticky lg:top-28">
           <div className="bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)]">
             <div className="bezel-core rounded-[calc(2rem-0.375rem)] bg-white p-6">
-              <p className="eyebrow text-ink-muted">Summary</p>
+              <p className="eyebrow text-ink-muted">Récapitulatif</p>
 
               <dl className="mt-6 space-y-3 text-base">
                 <div className="flex justify-between">
-                  <dt className="text-ink-soft">Subtotal</dt>
+                  <dt className="text-ink-soft">Sous-total</dt>
                   <dd className="tabular-nums">{formatMoney(subtotalCents)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-ink-soft">Shipping</dt>
+                  <dt className="text-ink-soft">Livraison</dt>
                   <dd className="tabular-nums">
-                    {shippingCents === 0 ? "Free" : formatMoney(shippingCents)}
+                    {shippingCents === 0 ? "Offerte" : formatMoney(shippingCents)}
                   </dd>
                 </div>
               </dl>

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { href: "/admin", label: "Dashboard", glyph: "◈", exact: true },
-  { href: "/admin/orders", label: "Orders", glyph: "▤", exact: false },
-  { href: "/admin/products", label: "Products", glyph: "◇", exact: false },
+  { href: "/admin", label: "Tableau de bord", glyph: "◈", exact: true },
+  { href: "/admin/orders", label: "Commandes", glyph: "▤", exact: false },
+  { href: "/admin/products", label: "Produits", glyph: "◇", exact: false },
 ];
 
 /**

@@ -76,10 +76,7 @@ export default function AboutPage() {
       </section>
 
       <div className="mt-14 flex flex-wrap gap-3">
-        <PillLink href="/shop">Voir la boutique</PillLink>
-        <PillLink href="/lookbook" tone="ghost">
-          Lookbook
-        </PillLink>
+        <PillLink href="/shop">Voir les produits</PillLink>
       </div>
     </div>
   );

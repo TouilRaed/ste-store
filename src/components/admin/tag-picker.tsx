@@ -5,7 +5,7 @@ import { useState, type KeyboardEvent } from "react";
 /** One-click tags. Anything else can be typed. */
 const PRESETS = [
   "Nouveau",
-  "New drop",
+  "Nouveauté",
   "Promotion",
   "Édition limitée",
   "Exclusif",

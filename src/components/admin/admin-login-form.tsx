@@ -10,7 +10,7 @@ export function AdminLoginForm() {
   return (
     <form action={formAction} className="mt-8">
       <label className="block">
-        <span className="eyebrow text-ink-muted">Password</span>
+        <span className="eyebrow text-ink-muted">Mot de passe</span>
         <input
           name="password"
           type="password"
@@ -26,7 +26,7 @@ export function AdminLoginForm() {
       ) : null}
 
       <PillButton type="submit" disabled={pending} className="mt-6 w-full">
-        {pending ? "Checking…" : "Sign in"}
+        {pending ? "Vérification…" : "Se connecter"}
       </PillButton>
     </form>
   );

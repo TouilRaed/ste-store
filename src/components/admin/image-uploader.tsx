@@ -46,7 +46,7 @@ export function ImageUploader({ name, defaultValue = [] }: ImageUploaderProps) {
         const url = await uploadOne(file);
         setUrls((prev) => [...prev, url]);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Upload failed");
+        setError(err instanceof Error ? err.message : "Échec de l'envoi");
       } finally {
         setBusy((n) => n - 1);
       }

@@ -27,28 +27,28 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
+          title: "Tableau de bord",
           tabBarIcon: ({ color }) => <TabGlyph glyph="◈" color={color} />,
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
-          title: "Orders",
+          title: "Commandes",
           tabBarIcon: ({ color }) => <TabGlyph glyph="▤" color={color} />,
         }}
       />
       <Tabs.Screen
         name="products"
         options={{
-          title: "Products",
+          title: "Produits",
           tabBarIcon: ({ color }) => <TabGlyph glyph="◇" color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: "Réglages",
           tabBarIcon: ({ color }) => <TabGlyph glyph="⚙" color={color} />,
         }}
       />

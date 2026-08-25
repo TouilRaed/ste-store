@@ -25,7 +25,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
       </Link>
       <div className="mt-6">
         <PageHeading
-          eyebrow={product.is_active ? "Live in the shop" : "Hidden"}
+          eyebrow={product.is_active ? "En ligne" : "Masqué"}
           title={product.name}
           action={
             <Link

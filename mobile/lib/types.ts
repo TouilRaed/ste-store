@@ -11,6 +11,13 @@ export type Collection = {
   position: number;
 };
 
+/** Mirrors ProductOffer in src/lib/types.ts. */
+export type ProductOffer = {
+  name: string;
+  /** Minor units of the product's own currency. */
+  price_cents: number;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -29,6 +36,7 @@ export type Product = {
   is_featured: boolean;
   is_active: boolean;
   tags: string[];
+  offers: ProductOffer[];
   created_at: string;
 };
 
@@ -40,6 +48,7 @@ export type OrderItem = {
   image: string | null;
   size: string | null;
   color: string | null;
+  offer_name?: string | null;
   unit_cents: number;
   quantity: number;
 };
@@ -96,6 +105,7 @@ export type OrderItemInput = {
   image: string | null;
   size: string | null;
   color: string | null;
+  offer_name?: string | null;
   unit_cents: number;
   quantity: number;
 };

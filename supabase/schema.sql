@@ -176,3 +176,11 @@ alter table public.orders   alter column currency set default 'TND';
 -- Merchandising tags shown as badges on the card and product page
 -- (e.g. Nouveau, Édition limitée, Promo). Free-form so the shop can invent its own.
 alter table public.products add column if not exists tags text[] not null default '{}';
+
+-- Offers: alternative purchase options on a product, e.g. "3 pièces — 120 DT".
+-- Held as jsonb [{ "name": text, "price_cents": int }] so a product carries its
+-- offers without a join. price_cents is minor units, like every money column.
+alter table public.products add column if not exists offers jsonb not null default '[]'::jsonb;
+
+-- Which offer the customer picked; null means they bought at the base price.
+alter table public.order_items add column if not exists offer_name text;

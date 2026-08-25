@@ -35,7 +35,8 @@ const productRows = fallbackProducts
     ${arr(p.images)},
     ${arr(p.sizes)}, ${arr(p.colors)},
     (select id from public.collections where slug = ${q(collectionSlugById.get(p.collection_id))}),
-    ${q(p.gender)}, ${num(p.stock)}, ${p.is_featured}, ${arr(p.tags ?? [])}
+    ${q(p.gender)}, ${num(p.stock)}, ${p.is_featured}, ${arr(p.tags ?? [])},
+    ${q(JSON.stringify(p.offers ?? []))}::jsonb
   )`,
   )
   .join(",\n");
@@ -53,7 +54,7 @@ on conflict (slug) do update
 
 const productsBlock = fallbackProducts.length
   ? `insert into public.products
-  (slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, tags)
+  (slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, tags, offers)
 values
 ${productRows}
 on conflict (slug) do update set
@@ -70,7 +71,8 @@ on conflict (slug) do update set
   gender           = excluded.gender,
   stock            = excluded.stock,
   is_featured      = excluded.is_featured,
-  tags             = excluded.tags;
+  tags             = excluded.tags,
+  offers           = excluded.offers;
 `
   : "-- no products in the catalogue";
 

@@ -30,6 +30,34 @@ const optionalCents = z.preprocess(
 
 const optionalUuid = z.preprocess(blankToNull, z.uuid().nullable());
 
+/**
+ * Offers arrive two ways: the web form posts a JSON string from a hidden
+ * field, the mobile app sends a real array. Anything unparseable falls through
+ * as a string and fails the array check rather than silently becoming [].
+ */
+const offerList = z
+  .preprocess(
+    (value) => {
+      if (typeof value !== "string") return value ?? [];
+      const raw = value.trim();
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return raw;
+      }
+    },
+    z
+      .array(
+        z.object({
+          name: z.string().trim().min(1).max(80),
+          price_cents: z.coerce.number().int().min(0).max(100_000_000),
+        }),
+      )
+      .max(20),
+  )
+  .default([]);
+
 export const productInputSchema = z.object({
   slug,
   name: z.string().trim().min(1).max(120),
@@ -47,6 +75,7 @@ export const productInputSchema = z.object({
   tags: lines.default([]),
   is_featured: z.coerce.boolean().default(false),
   is_active: z.coerce.boolean().default(true),
+  offers: offerList,
 });
 
 export type ProductInput = z.infer<typeof productInputSchema>;

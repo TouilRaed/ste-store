@@ -13,7 +13,7 @@ import { BRAND } from "@/lib/brand";
 export async function generateMetadata({ params }: PageProps<"/product/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "Not found" };
+  if (!product) return { title: "Introuvable" };
   return {
     title: product.name,
     description: product.description,
@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
           </div>
 
           <div className="mt-14 border-t border-[color:var(--line)] pt-8">
-            <p className="eyebrow text-ink-muted">Specification</p>
+            <p className="eyebrow text-ink-muted">Caractéristiques</p>
             <ul className="mt-5 space-y-3">
               {product.details.map((detail) => (
                 <li key={detail} className="flex gap-3 text-base text-ink-soft">

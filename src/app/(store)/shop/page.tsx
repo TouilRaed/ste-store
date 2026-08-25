@@ -7,21 +7,14 @@ import { getCollections, getProducts, type ProductFilters } from "@/lib/catalog/
 import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: "Shop",
-  description: `Every piece in the current ${BRAND.NAME} run — tailoring, essentials, outerwear and knitwear.`,
+  title: "Boutique",
+  description: `Toutes les pièces de la série ${BRAND.NAME} en cours — tailoring, essentiels, vestes et maille.`,
 };
 
 const SORTS = [
-  { value: "", label: "Newest" },
-  { value: "price-asc", label: "Price ↑" },
-  { value: "price-desc", label: "Price ↓" },
-] as const;
-
-const GENDERS = [
-  { value: "", label: "Everyone" },
-  { value: "women", label: "Women" },
-  { value: "men", label: "Men" },
-  { value: "unisex", label: "Unisex" },
+  { value: "", label: "Plus récent" },
+  { value: "price-asc", label: "Prix ↑" },
+  { value: "price-desc", label: "Prix ↓" },
 ] as const;
 
 function first(value: string | string[] | undefined): string | undefined {
@@ -76,7 +69,7 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
       <Reveal>
         <Eyebrow>{products.length} pieces in stock</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,7vw,5.5rem)] leading-[0.92] tracking-[-0.02em]">
-          {activeCollection ? activeCollection.name : "The full run"}
+          {activeCollection ? activeCollection.name : "Toute la série"}
         </h1>
         <p className="mt-6 max-w-lg text-base leading-relaxed text-ink-soft">
           {activeCollection?.tagline ??
@@ -89,34 +82,7 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
         <div className="bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)]">
           <div className="bezel-core flex flex-col gap-5 rounded-[calc(2rem-0.375rem)] bg-white/85 p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="eyebrow mr-2 w-full text-ink-muted md:w-auto">Collection</span>
-              <Chip href={buildHref(current, { collection: undefined })} active={!current.collection}>
-                All
-              </Chip>
-              {collections.map((collection) => (
-                <Chip
-                  key={collection.id}
-                  href={buildHref(current, { collection: collection.slug })}
-                  active={current.collection === collection.slug}
-                >
-                  {collection.name}
-                </Chip>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 border-t border-[color:var(--line)] pt-5">
-              <span className="eyebrow mr-2 w-full text-ink-muted md:w-auto">Cut for</span>
-              {GENDERS.map((g) => (
-                <Chip
-                  key={g.label}
-                  href={buildHref(current, { gender: g.value || undefined })}
-                  active={(current.gender ?? "") === g.value}
-                >
-                  {g.label}
-                </Chip>
-              ))}
-
-              <span className="eyebrow mr-2 ml-0 w-full text-ink-muted md:ml-auto md:w-auto">Sort</span>
+              <span className="eyebrow mr-2 w-full text-ink-muted md:w-auto">Trier</span>
               {SORTS.map((s) => (
                 <Chip
                   key={s.label}

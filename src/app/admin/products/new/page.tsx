@@ -4,7 +4,7 @@ import { ProductForm } from "@/components/admin/product-form";
 import { requireAdminPage } from "@/lib/admin/guard";
 import { isAdminDataReady, listCollections } from "@/lib/admin/repo";
 
-export const metadata = { title: "New product" };
+export const metadata = { title: "Nouveau produit" };
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
@@ -13,7 +13,7 @@ export default async function NewProductPage() {
   if (!isAdminDataReady()) {
     return (
       <>
-        <PageHeading eyebrow="Catalogue" title="New piece" />
+        <PageHeading eyebrow="Catalogue" title="Nouvelle pièce" />
         <SetupNotice />
       </>
     );
@@ -27,7 +27,7 @@ export default async function NewProductPage() {
         ← All products
       </Link>
       <div className="mt-6">
-        <PageHeading eyebrow="Catalogue" title="New piece" />
+        <PageHeading eyebrow="Catalogue" title="Nouvelle pièce" />
       </div>
       <ProductForm collections={collections} />
     </>

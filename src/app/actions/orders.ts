@@ -6,7 +6,7 @@ import { fallbackProducts } from "@/lib/catalog/fallback";
 import { shippingFor } from "@/lib/format";
 import { notifyNewOrder } from "@/lib/admin/push";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
-import type { CartLine } from "@/lib/types";
+import type { CartLine, ProductOffer } from "@/lib/types";
 import { LAST_ORDER_COOKIE } from "@/lib/order-cookie";
 import { GOVERNORATES, normalisePhone } from "@/lib/tunisia";
 
@@ -19,6 +19,8 @@ type IncomingLine = {
   slug: string;
   size: string | null;
   color: string | null;
+  /** Name only — the price behind it is re-read from the product server-side. */
+  offerName: string | null;
   quantity: number;
 };
 
@@ -42,6 +44,22 @@ type ShippingDetails = {
   country: string;
   note: string;
 };
+
+/**
+ * Matches a client-supplied offer name against the product's own offers.
+ * Returns null for an unknown name, so an invented offer silently falls back
+ * to the base price rather than becoming a discount the shop never offered.
+ */
+function resolveOffer(offers: unknown, offerName: string | null | undefined): ProductOffer | null {
+  if (!offerName || !Array.isArray(offers)) return null;
+  const match = (offers as ProductOffer[]).find(
+    (offer) => offer && typeof offer.name === "string" && offer.name === offerName,
+  );
+  if (!match || typeof match.price_cents !== "number" || !Number.isFinite(match.price_cents)) {
+    return null;
+  }
+  return match;
+}
 
 function readShipping(formData: FormData): ShippingDetails {
   const get = (key: string) => String(formData.get(key) ?? "").trim();
@@ -70,6 +88,7 @@ function parseLines(raw: string): IncomingLine[] {
           slug: String(l.slug ?? ""),
           size: l.size ?? null,
           color: l.color ?? null,
+          offerName: l.offerName ?? null,
           quantity: Math.max(1, Math.min(20, Number(l.quantity) || 0)),
         };
       })
@@ -114,7 +133,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
     ? ((
         await supabase
           .from("products")
-          .select("id, slug, name, price_cents, currency, images")
+          .select("id, slug, name, price_cents, currency, images, offers")
           .in("slug", slugs)
           .eq("is_active", true)
       ).data ?? [])
@@ -127,6 +146,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
           price_cents: p.price_cents,
           currency: p.currency,
           images: p.images,
+          offers: p.offers,
         }));
 
   const productIdBySlug = new Map(priced.map((p) => [p.slug, p.id]));
@@ -135,13 +155,17 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
     .map((line) => {
       const product = priced.find((p) => p.slug === line.slug);
       if (!product) return null;
+      // Offers are re-resolved server-side by name, for the same reason the
+      // unit price is: a client may not name its own price.
+      const offer = resolveOffer(product.offers, line.offerName);
       return {
         product_name: product.name,
         product_slug: product.slug,
         image: product.images?.[0] ?? null,
         size: line.size,
         color: line.color,
-        unit_cents: product.price_cents,
+        offer_name: offer?.name ?? null,
+        unit_cents: offer ? offer.price_cents : product.price_cents,
         quantity: line.quantity,
       };
     })
@@ -152,7 +176,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
   const subtotal = items.reduce((sum, i) => sum + i.unit_cents * i.quantity, 0);
   const shippingCents = shippingFor(subtotal);
   const total = subtotal + shippingCents;
-  const currency = priced[0]?.currency ?? "USD";
+  const currency = priced[0]?.currency ?? "TND";
 
   const orderNumber = makeOrderNumber();
 
@@ -263,6 +287,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   const quantity = Math.max(1, Math.min(20, Number(get("quantity")) || 1));
   const size = get("size") || null;
   const color = get("color") || null;
+  const offerName = get("offer_name") || null;
 
   const fullName = get("full_name");
   const rawPhone = get("phone");
@@ -292,7 +317,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
     ? (
         await supabase
           .from("products")
-          .select("id, slug, name, price_cents, currency, images")
+          .select("id, slug, name, price_cents, currency, images, offers")
           .eq("slug", slug)
           .eq("is_active", true)
           .maybeSingle()
@@ -301,10 +326,13 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
 
   if (!product) return { ok: false, error: "That piece is no longer available." };
 
-  const subtotal = product.price_cents * quantity;
+  const codOffer = resolveOffer(product.offers, offerName);
+  const codUnitCents = codOffer ? codOffer.price_cents : product.price_cents;
+
+  const subtotal = codUnitCents * quantity;
   const shippingCents = shippingFor(subtotal);
   const total = subtotal + shippingCents;
-  const currency = product.currency ?? "USD";
+  const currency = product.currency ?? "TND";
   const orderNumber = makeOrderNumber();
 
   const item = {
@@ -313,7 +341,8 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
     image: product.images?.[0] ?? null,
     size,
     color,
-    unit_cents: product.price_cents,
+    offer_name: codOffer?.name ?? null,
+    unit_cents: codUnitCents,
     quantity,
   };
 

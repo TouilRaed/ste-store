@@ -5,7 +5,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { Collection, Product } from "@/lib/types";
 
 const PRODUCT_COLUMNS =
-  "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, tags";
+  "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, tags, offers";
 
 export type ProductFilters = {
   collection?: string;

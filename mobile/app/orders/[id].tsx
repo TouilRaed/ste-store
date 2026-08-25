@@ -2,7 +2,13 @@ import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { Image, Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api, ApiError } from "../../lib/api";
-import { formatDateTime, formatMoney, shippingFor } from "../../lib/format";
+import {
+  formatDateTime,
+  formatMoney,
+  majorInputToMinor,
+  minorToMajorInput,
+  shippingFor,
+} from "../../lib/format";
 import { theme } from "../../lib/theme";
 import {
   ORDER_STATUSES,
@@ -13,6 +19,35 @@ import {
 } from "../../lib/types";
 import { useAsync } from "../../lib/use-async";
 import { Button, Card, Chip, Eyebrow, Field, Loading, Message, StatusBadge } from "../../components/ui";
+
+/**
+ * Price typed in dinars while the line stores minor units. Keeps its own draft
+ * string so a half-typed "89," is not clobbered on the next render.
+ */
+function PriceField({
+  valueMinor,
+  currency,
+  onChangeMinor,
+}: {
+  valueMinor: number;
+  currency: string;
+  onChangeMinor: (minor: number) => void;
+}) {
+  const [draft, setDraft] = useState(() => minorToMajorInput(valueMinor, currency));
+
+  return (
+    <Field
+      label="Prix (DT)"
+      value={draft}
+      keyboardType="decimal-pad"
+      onChangeText={(v) => {
+        setDraft(v);
+        const minor = majorInputToMinor(v, currency);
+        if (minor !== null && !Number.isNaN(minor)) onChangeMinor(Math.max(0, minor));
+      }}
+    />
+  );
+}
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,7 +79,7 @@ export default function OrderDetailScreen() {
       const updated = await api.setOrderStatus(order.id, status);
       setData({ order: { ...order, ...updated.order } });
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.message : "Couldn't update the status");
+      setSaveError(err instanceof ApiError ? err.message : "Impossible de mettre à jour le statut");
     } finally {
       setSaving(null);
     }
@@ -88,7 +123,7 @@ export default function OrderDetailScreen() {
       setEdit(null);
       setSavedAt(Date.now());
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.message : "Couldn't save those details");
+      setSaveError(err instanceof ApiError ? err.message : "Impossible d'enregistrer ces informations");
     } finally {
       setSavingEdit(false);
     }
@@ -136,7 +171,7 @@ export default function OrderDetailScreen() {
       setData({ order: updated.order });
       setLines(null);
     } catch (err) {
-      setLinesError(err instanceof ApiError ? err.message : "Couldn't save those lines");
+      setLinesError(err instanceof ApiError ? err.message : "Impossible d'enregistrer ces lignes");
     } finally {
       setSavingLines(false);
     }
@@ -147,7 +182,7 @@ export default function OrderDetailScreen() {
   if (!order) {
     return (
       <View style={styles.container}>
-        <Message tone="error">{error ?? "Order not found"}</Message>
+        <Message tone="error">{error ?? "Commande introuvable"}</Message>
       </View>
     );
   }
@@ -227,24 +262,23 @@ export default function OrderDetailScreen() {
               </View>
               <View style={styles.lineHalf}>
                 <Field
-                  label="Quantite"
+                  label="Quantité"
                   value={String(line.quantity)}
                   keyboardType="number-pad"
                   onChangeText={(v) => patchLine(index, { quantity: Math.max(1, Number(v) || 1) })}
                 />
               </View>
               <View style={styles.lineHalf}>
-                <Field
-                  label="Prix (millimes)"
-                  value={String(line.unit_cents)}
-                  keyboardType="number-pad"
-                  onChangeText={(v) => patchLine(index, { unit_cents: Math.max(0, Number(v) || 0) })}
+                <PriceField
+                  valueMinor={line.unit_cents}
+                  currency={order.currency}
+                  onChangeMinor={(minor) => patchLine(index, { unit_cents: minor })}
                 />
               </View>
             </View>
 
             <Button
-              label="Retirer cette piece"
+              label="Retirer cette pièce"
               variant="danger"
               onPress={() => dropLine(index)}
               style={styles.lineRemove}
@@ -278,7 +312,7 @@ export default function OrderDetailScreen() {
           </View>
         ) : (
           <Button
-            label="Ajouter une piece"
+            label="Ajouter une pièce"
             variant="outline"
             onPress={() => setPicking(true)}
             style={styles.button}
@@ -318,7 +352,7 @@ export default function OrderDetailScreen() {
         <Eyebrow>Customer &amp; delivery</Eyebrow>
 
         <View style={styles.editBlock}>
-          <Field label="Name" value={draft.full_name ?? ""} onChangeText={(v) => setField("full_name", v)} />
+          <Field label="Nom" value={draft.full_name ?? ""} onChangeText={(v) => setField("full_name", v)} />
           <Field
             label="Email"
             value={draft.email ?? ""}
@@ -327,53 +361,53 @@ export default function OrderDetailScreen() {
             keyboardType="email-address"
           />
           <Field
-            label="Phone"
+            label="Téléphone"
             value={draft.phone ?? ""}
             onChangeText={(v) => setField("phone", v)}
             keyboardType="phone-pad"
           />
           <Field
-            label="Street address"
+            label="Adresse"
             value={draft.address_line1 ?? ""}
             onChangeText={(v) => setField("address_line1", v)}
           />
           <Field
-            label="Apartment, floor"
+            label="Appartement, étage"
             value={draft.address_line2 ?? ""}
             onChangeText={(v) => setField("address_line2", v)}
           />
-          <Field label="City" value={draft.city ?? ""} onChangeText={(v) => setField("city", v)} />
+          <Field label="Ville" value={draft.city ?? ""} onChangeText={(v) => setField("city", v)} />
           <Field
-            label="Postal code"
+            label="Code postal"
             value={draft.postal_code ?? ""}
             onChangeText={(v) => setField("postal_code", v)}
           />
-          <Field label="Country" value={draft.country ?? ""} onChangeText={(v) => setField("country", v)} />
+          <Field label="Pays" value={draft.country ?? ""} onChangeText={(v) => setField("country", v)} />
           <Field
-            label="Customer note"
+            label="Note du client"
             value={draft.note ?? ""}
             onChangeText={(v) => setField("note", v)}
             multiline
           />
           <Field
-            label="Staff note"
+            label="Note interne"
             value={draft.admin_note ?? ""}
             onChangeText={(v) => setField("admin_note", v)}
             multiline
-            hint="Only visible in the admin"
+            hint="Visible uniquement dans l'admin"
           />
 
           {saveError ? <Message tone="error">{saveError}</Message> : null}
           {savedAt > 0 && !edit ? <Message>Order updated.</Message> : null}
 
           <Button
-            label="Save changes"
+            label="Enregistrer"
             onPress={saveDetails}
             loading={savingEdit}
             style={styles.button}
           />
           <Button
-            label="Email customer"
+            label="Envoyer un e-mail au client"
             variant="outline"
             onPress={() => Linking.openURL(`mailto:${order.email}?subject=Order ${order.order_number}`)}
             style={styles.button}

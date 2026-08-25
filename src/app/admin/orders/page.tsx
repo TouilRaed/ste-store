@@ -5,7 +5,7 @@ import { isAdminDataReady, listOrders } from "@/lib/admin/repo";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/admin/schemas";
 import { formatMoney } from "@/lib/format";
 
-export const metadata = { title: "Orders" };
+export const metadata = { title: "Commandes" };
 export const dynamic = "force-dynamic";
 
 function dateLabel(iso: string) {
@@ -18,7 +18,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
   if (!isAdminDataReady()) {
     return (
       <>
-        <PageHeading eyebrow="Fulfilment" title="Orders" />
+        <PageHeading eyebrow="Traitement" title="Commandes" />
         <SetupNotice />
       </>
     );
@@ -34,13 +34,13 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
     <>
       <PageHeading
         eyebrow={`${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
-        title="Orders"
+        title="Commandes"
         action={<StatusFilter current={status} basePath="/admin/orders" />}
       />
 
       <Panel>
         {orders.length === 0 ? (
-          <p className="p-8 text-sm text-ink-soft">Nothing here yet.</p>
+          <p className="p-8 text-sm text-ink-soft">Rien pour le moment.</p>
         ) : (
           <ul className="divide-y divide-[color:var(--line)]">
             {orders.map((order) => (

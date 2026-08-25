@@ -27,7 +27,7 @@ export default function SettingsScreen() {
 
         <Eyebrow>Storefront</Eyebrow>
         <Button
-          label="Open store"
+          label="Ouvrir la boutique"
           variant="outline"
           onPress={() => Linking.openURL(API_BASE_URL)}
           style={styles.button}
@@ -40,7 +40,7 @@ export default function SettingsScreen() {
           The token is kept in the device keychain and expires after 30 days. Signing out also stops
           new-order notifications on this device.
         </Text>
-        <Button label="Sign out" variant="danger" onPress={signOut} style={styles.button} />
+        <Button label="Se déconnecter" variant="danger" onPress={signOut} style={styles.button} />
       </Card>
     </ScrollView>
   );

@@ -5,21 +5,12 @@ import { BRAND, INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/brand";
 
 const COLUMNS = [
   {
-    title: "Boutique",
+    title: "Produits",
     links: [
-      { href: "/shop", label: "Toutes les pièces" },
+      { href: "/shop", label: "Tous les produits" },
       { href: "/shop?gender=women", label: "Femme" },
       { href: "/shop?gender=men", label: "Homme" },
-      { href: "/shop?sort=price-asc", label: "Les moins chères" },
-    ],
-  },
-  {
-    title: "Catégories",
-    links: [
-      { href: "/shop?collection=atelier", label: "Atelier" },
-      { href: "/shop?collection=everyday", label: "Everyday" },
-      { href: "/shop?collection=outerwear", label: "Outerwear" },
-      { href: "/shop?collection=knitwear", label: "Knitwear" },
+      { href: "/shop?sort=price-asc", label: "Les moins chers" },
     ],
   },
 ];
@@ -84,14 +75,6 @@ export function SiteFooter() {
                   className="text-base text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-ink"
                 >
                   À propos
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/lookbook"
-                  className="text-base text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-ink"
-                >
-                  Lookbook
                 </Link>
               </li>
               <li>

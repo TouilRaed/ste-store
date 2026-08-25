@@ -1,23 +1,25 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Palette — white ground, blue signal. Set per client; see src/lib/brand.ts
-   One accent hue does all the work: nav band, links, badges, focus rings.
+   Palette — warm sand ground, near-black signal. Set per client; see
+   src/lib/brand.ts. The accent carries the nav band, links, badges and focus
+   rings; it is an ink rather than a hue, so the clothing photography supplies
+   the only real colour on the page.
 --------------------------------------------------------------------------- */
 
 :root {
-  --paper: #ffffff;
-  --paper-deep: #f3f6fc;
-  --paper-sand: #e6edfa;
-  --ink: #0d1526;
-  --ink-soft: #3d4a63;
-  --ink-muted: #74809a;
-  --accent: #1d4ed8;
-  --accent-deep: #1a3fae;
-  --accent-soft: #e8effd;
-  --sage: #2f7a5a;
-  --line: rgba(13, 21, 38, 0.1);
-  --line-strong: rgba(13, 21, 38, 0.18);
+  --paper: #fdfcfa;
+  --paper-deep: #f4f0e9;
+  --paper-sand: #e8e1d5;
+  --ink: #1a1714;
+  --ink-soft: #4a4239;
+  --ink-muted: #8a7f72;
+  --accent: #1f1b17;
+  --accent-deep: #0f0d0b;
+  --accent-soft: #ece5d9;
+  --sage: #5c6b4f;
+  --line: rgba(26, 23, 20, 0.12);
+  --line-strong: rgba(26, 23, 20, 0.2);
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -37,7 +39,7 @@
   --color-sage: var(--sage);
   --color-line: var(--line);
 
-  --font-display: var(--font-inter);
+  --font-display: var(--font-playfair);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 
@@ -75,9 +77,10 @@
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.03em;
+    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-weight: 500;
+    /* A high-contrast serif does not want the tight tracking a grotesk does. */
+    letter-spacing: -0.015em;
   }
 
   .eyebrow {
@@ -98,10 +101,10 @@
 
   /* Double-bezel shell: hairline tray with a soft, diffused ambient lift. */
   .bezel {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(232, 239, 253, 0.55));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(236, 229, 217, 0.55));
     box-shadow:
-      0 1px 1px rgba(13, 21, 38, 0.03),
-      0 18px 50px -28px rgba(13, 21, 38, 0.22);
+      0 1px 1px rgba(26, 23, 20, 0.03),
+      0 18px 50px -28px rgba(26, 23, 20, 0.22);
   }
 
   .bezel-core {
@@ -109,7 +112,7 @@
   }
 
   .lift {
-    box-shadow: 0 32px 80px -40px rgba(13, 21, 38, 0.35);
+    box-shadow: 0 32px 80px -40px rgba(26, 23, 20, 0.35);
   }
 }
 

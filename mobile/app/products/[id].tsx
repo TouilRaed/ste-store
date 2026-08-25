@@ -17,7 +17,7 @@ export default function EditProductScreen() {
   if (error || !data) {
     return (
       <View style={{ padding: 16 }}>
-        <Message tone="error">{error ?? "Product not found"}</Message>
+        <Message tone="error">{error ?? "Produit introuvable"}</Message>
       </View>
     );
   }

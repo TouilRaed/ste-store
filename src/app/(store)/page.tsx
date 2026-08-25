@@ -74,7 +74,7 @@ export default async function HomePage() {
             Une question sur une taille ou une commande ? Écrivez-nous — on répond avant de vous
             envoyer quoi que ce soit.
           </p>
-          <PillLink href="/shop">Voir la boutique</PillLink>
+          <PillLink href="/shop">Voir les produits</PillLink>
         </div>
       </section>
     </div>

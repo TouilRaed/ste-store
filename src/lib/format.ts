@@ -39,3 +39,22 @@ export function formatMoney(amount: number, currency = "TND"): string {
 export function shippingFor(subtotalCents: number): number {
   return subtotalCents === 0 ? 0 : SHIPPING_FLAT_CENTS;
 }
+
+/**
+ * Admin inputs are typed in DINARS (the major unit) while every column stores
+ * minor units. These two convert at that boundary and nowhere else — the
+ * database, the API and formatMoney all stay in minor units.
+ */
+export function minorToMajorInput(amount: number | null | undefined, currency = "TND"): string {
+  if (amount === null || amount === undefined || Number.isNaN(amount)) return "";
+  return String(amount / minorUnitsPer(currency));
+}
+
+/** Accepts "89.5" or "89,5". Returns null for blank, NaN for unparseable. */
+export function majorInputToMinor(value: unknown, currency = "TND"): number | null {
+  const raw = String(value ?? "").trim().replace(",", ".");
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return Number.NaN;
+  return Math.round(n * minorUnitsPer(currency));
+}

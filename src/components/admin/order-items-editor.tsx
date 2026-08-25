@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { updateOrderItemsAction, type ActionResult } from "@/app/admin/actions";
 import { ProductImage } from "@/components/product-image";
 import { PillButton } from "@/components/ui";
-import { formatMoney, shippingFor } from "@/lib/format";
+import { formatMoney, majorInputToMinor, minorToMajorInput, shippingFor } from "@/lib/format";
 import type { AdminProduct } from "@/lib/admin/repo";
 import type { Order, OrderItem } from "@/lib/types";
 
@@ -20,6 +20,40 @@ type Line = {
 
 const fieldClass =
   "w-full rounded-xl border border-[color:var(--line-strong)] bg-paper/60 px-3 py-2 text-[15px] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-accent focus:bg-white";
+
+/**
+ * Price typed in dinars while the line keeps minor units. It holds its own
+ * draft string so half-typed values like "89," survive a keystroke — deriving
+ * the text from the number on every render would fight the user.
+ */
+function PriceInput({
+  valueMinor,
+  currency,
+  onChangeMinor,
+  className,
+}: {
+  valueMinor: number;
+  currency: string;
+  onChangeMinor: (minor: number) => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState(() => minorToMajorInput(valueMinor, currency));
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={draft}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        const minor = majorInputToMinor(e.target.value, currency);
+        if (minor !== null && !Number.isNaN(minor)) onChangeMinor(minor);
+      }}
+      onBlur={() => setDraft(minorToMajorInput(valueMinor, currency))}
+      className={className}
+    />
+  );
+}
 
 function toLine(item: OrderItem): Line {
   return {
@@ -162,12 +196,11 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
                   </label>
 
                   <label className="block">
-                    <span className="eyebrow text-ink-muted">Prix (millimes)</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={line.unit_cents}
-                      onChange={(e) => patch(index, { unit_cents: Math.max(0, Number(e.target.value) || 0) })}
+                    <span className="eyebrow text-ink-muted">Prix (DT)</span>
+                    <PriceInput
+                      valueMinor={line.unit_cents}
+                      currency={order.currency}
+                      onChangeMinor={(minor) => patch(index, { unit_cents: Math.max(0, minor) })}
                       className={fieldClass}
                     />
                   </label>

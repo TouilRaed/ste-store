@@ -51,7 +51,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
         <div className="flex flex-col gap-6">
           <Panel>
             <div className="p-6">
-              <p className="eyebrow text-ink-muted">Status</p>
+              <p className="eyebrow text-ink-muted">Statut</p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {ORDER_STATUSES.map((status) => (
                   <form key={status} action={setOrderStatusAction}>
@@ -76,7 +76,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
 
           <Panel>
             <div className="p-6">
-              <p className="eyebrow text-ink-muted">Customer & delivery</p>
+              <p className="eyebrow text-ink-muted">Client et livraison</p>
               <p className="mt-2 text-xs text-ink-muted">
                 Edit anything the customer got wrong, and keep staff notes here.
               </p>

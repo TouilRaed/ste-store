@@ -16,7 +16,7 @@ export class AdminError extends Error {
 export type AdminProduct = Product & { is_active: boolean; created_at: string };
 
 const PRODUCT_COLUMNS =
-  "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, is_active, tags, created_at";
+  "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, is_active, tags, offers, created_at";
 
 const ORDER_COLUMNS =
   "id, order_number, email, full_name, phone, address_line1, address_line2, city, postal_code, country, note, admin_note, subtotal_cents, shipping_cents, total_cents, currency, status, created_at";
@@ -97,7 +97,7 @@ export async function listCollections(): Promise<Collection[]> {
 export async function listOrders(filters: { status?: OrderStatus; search?: string } = {}): Promise<Order[]> {
   let query = client()
     .from("orders")
-    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, unit_cents, quantity)`)
+    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, offer_name, unit_cents, quantity)`)
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -115,7 +115,7 @@ export async function listOrders(filters: { status?: OrderStatus; search?: strin
 export async function getOrder(id: string): Promise<Order> {
   const { data, error } = await client()
     .from("orders")
-    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, unit_cents, quantity)`)
+    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, offer_name, unit_cents, quantity)`)
     .or(`id.eq.${id},order_number.eq.${id}`)
     .maybeSingle();
   if (error) throw new AdminError(500, error.message);
@@ -172,7 +172,9 @@ export async function getStats(): Promise<AdminStats> {
     revenueCents: orders
       .filter((o) => o.status !== "cancelled")
       .reduce((sum, o) => sum + o.total_cents, 0),
-    currency: orders[0]?.currency ?? "USD",
+    // TND, not USD: shipping is a flat 8000 minor units, which is 8 DT under
+    // the three-decimal rule but $80 under two. The column defaults to TND.
+    currency: orders[0]?.currency ?? "TND",
     products: {
       total: products.length,
       active: products.filter((p) => p.is_active).length,
