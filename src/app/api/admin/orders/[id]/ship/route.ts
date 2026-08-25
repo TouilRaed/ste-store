@@ -1,24 +1,33 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/admin/api";
+import { z } from "zod";
+import { readJson, withAdmin } from "@/lib/admin/api";
 import { getOrder, markShipped } from "@/lib/admin/repo";
-import { ShippingError, createIntigoShipment } from "@/lib/shipping/intigo";
+import { ShippingError, createParcelByName } from "@/lib/shipping/intigo";
 
 type Context = { params: Promise<{ id: string }> };
 
+const shipSchema = z.object({
+  city_name: z.string().trim().min(1),
+  district_name: z.string().trim().min(1),
+  neighborhood_name: z.string().trim().optional(),
+  pickup_index: z.coerce.number().int().min(0).default(0),
+  package_size: z.coerce.number().int().min(1).max(7).default(1),
+});
+
 /**
- * Hands one order to Intigo and records the tracking code it returns.
+ * Books one order with Intigo and stores the NID it returns.
  *
- * Deliberately not idempotent-by-accident: an order that already carries a
- * tracking code is refused rather than booked a second time, because a double
- * booking means a second driver and a second delivery fee.
+ * Refuses an order that already carries a tracking code: Intigo has no
+ * idempotency key here, so a second call books a second parcel — another
+ * driver, another delivery fee.
  */
-export const POST = withAdmin(async (_request, { params }: Context) => {
+export const POST = withAdmin(async (request, { params }: Context) => {
   const { id } = await params;
   const order = await getOrder(id);
 
   if (order.tracking_code) {
     return NextResponse.json(
-      { error: `Déjà expédiée — suivi ${order.tracking_code}.` },
+      { error: `Déjà expédiée — colis ${order.tracking_code}.` },
       { status: 409 },
     );
   }
@@ -27,10 +36,33 @@ export const POST = withAdmin(async (_request, { params }: Context) => {
     return NextResponse.json({ error: "Commande annulée." }, { status: 409 });
   }
 
+  if (!order.phone) {
+    return NextResponse.json(
+      { error: "Intigo exige un téléphone ; cette commande n'en a pas." },
+      { status: 400 },
+    );
+  }
+
+  const parsed = shipSchema.safeParse(await readJson(request));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Ville et délégation sont requises.", issues: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
   try {
-    const { trackingCode } = await createIntigoShipment(order);
-    const updated = await markShipped(id, "intigo", trackingCode);
-    return NextResponse.json({ order: updated, trackingCode });
+    const { nid } = await createParcelByName({
+      order,
+      cityName: parsed.data.city_name,
+      districtName: parsed.data.district_name,
+      neighborhoodName: parsed.data.neighborhood_name,
+      pickupIndex: parsed.data.pickup_index,
+      packageSize: parsed.data.package_size,
+    });
+
+    const updated = await markShipped(id, "intigo", nid);
+    return NextResponse.json({ order: updated, trackingCode: nid });
   } catch (error) {
     if (error instanceof ShippingError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

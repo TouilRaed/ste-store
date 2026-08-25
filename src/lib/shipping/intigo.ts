@@ -4,18 +4,23 @@ import { minorUnitsPer } from "@/lib/format";
 import type { Order } from "@/lib/types";
 
 /**
- * Hands an order to Intigo for delivery.
+ * Intigo delivery — API v3 (https://api.intigo.net/api/v3).
  *
- * Everything Intigo-specific is confined to this file: the endpoint, the auth
- * header and the field names. If their contract differs from what is mapped
- * below, this is the only file that changes — the route, the button and the
- * database columns stay as they are.
+ * Auth is the `X-API-Key` header, not a bearer token. Everything
+ * Intigo-specific lives here.
  *
- * Configure with:
- *   INTIGO_API_URL   full URL of the create-shipment endpoint
- *   INTIGO_API_KEY   bearer token / API key issued by Intigo
- *   INTIGO_SENDER_*  optional pickup details, if the account needs them per call
+ * We create parcels through `/parcels/by-name` rather than `/parcels/`,
+ * because `/parcels/` wants numeric destination_city_id / district_id that we
+ * have no way to know, while by-name takes the French (or Arabic) names.
+ * `/parcels/by-postal-code` is not usable either: cash-on-delivery orders are
+ * stored with postal_code "-", since the storefront form only asks for a
+ * gouvernorat.
+ *
+ * City and district are strict — an unknown name is a 400 — so the admin picks
+ * both from Intigo's own lists rather than typing them.
  */
+
+const DEFAULT_BASE = "https://api.intigo.net/api/v3";
 
 export class ShippingError extends Error {
   constructor(
@@ -28,61 +33,37 @@ export class ShippingError extends Error {
 }
 
 export function isIntigoConfigured(): boolean {
-  return Boolean(process.env.INTIGO_API_URL && process.env.INTIGO_API_KEY);
+  return Boolean(process.env.INTIGO_API_KEY);
 }
 
-/**
- * Money leaves here as a DECIMAL STRING in dinars, not minor units. Carriers
- * quote cash-on-delivery in dinars, and sending 220000 where 220 is meant is
- * the kind of mistake that is only discovered at the customer's door.
- */
-function codAmount(order: Order): string {
-  const divisor = minorUnitsPer(order.currency ?? "TND");
-  return (order.total_cents / divisor).toFixed(3);
+function baseUrl(): string {
+  return (process.env.INTIGO_API_URL || DEFAULT_BASE).replace(/\/+$/, "");
 }
 
-export type ShipmentResult = {
-  trackingCode: string;
-  raw: unknown;
-};
-
-export async function createIntigoShipment(order: Order): Promise<ShipmentResult> {
-  const url = process.env.INTIGO_API_URL;
+async function intigoFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const key = process.env.INTIGO_API_KEY;
-
-  if (!url || !key) {
+  if (!key) {
     throw new ShippingError(
-      "Intigo n'est pas configuré. Définissez INTIGO_API_URL et INTIGO_API_KEY.",
+      "Intigo n'est pas configuré. Définissez INTIGO_API_KEY.",
       503,
     );
   }
 
-  const payload = {
-    reference: order.order_number,
-    recipient_name: order.full_name,
-    recipient_phone: order.phone ?? "",
-    address: [order.address_line1, order.address_line2].filter(Boolean).join(", "),
-    governorate: order.city,
-    postal_code: order.postal_code,
-    // Cash on delivery: the driver collects this amount, in dinars.
-    cod_amount: codAmount(order),
-    note: order.note ?? "",
-  };
-
   let response: Response;
   try {
-    response = await fetch(url, {
-      method: "POST",
+    response = await fetch(`${baseUrl()}${path}`, {
+      ...init,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
+        "X-API-Key": key,
+        ...(init?.headers ?? {}),
       },
-      body: JSON.stringify(payload),
-      // A courier API should not hold an admin request open indefinitely.
+      // Never hold an admin request open on a courier outage.
       signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
     });
   } catch (error) {
-    const reason = error instanceof Error ? error.message : "unknown";
+    const reason = error instanceof Error ? error.message : "inconnue";
     throw new ShippingError(`Intigo est injoignable (${reason}).`);
   }
 
@@ -91,34 +72,148 @@ export async function createIntigoShipment(order: Order): Promise<ShipmentResult
   try {
     body = JSON.parse(text);
   } catch {
-    // Leave it as text; it still goes into the error message below.
+    // Non-JSON body; the raw text is reported in the error below.
   }
 
   if (!response.ok) {
-    throw new ShippingError(
-      `Intigo a refusé la commande (HTTP ${response.status}) : ${text.slice(0, 200)}`,
-    );
+    throw new ShippingError(describeError(response.status, body), response.status);
   }
 
-  const trackingCode = readTrackingCode(body);
-  if (!trackingCode) {
-    throw new ShippingError(
-      `Intigo a répondu sans code de suivi : ${text.slice(0, 200)}`,
-    );
-  }
-
-  return { trackingCode, raw: body };
+  return body as T;
 }
 
-/** Accepts the usual spellings so a small contract change does not break this. */
-function readTrackingCode(body: unknown): string | null {
-  if (!body || typeof body !== "object") return null;
-  const record = body as Record<string, unknown>;
-  const nested = (record.data ?? record.result ?? record) as Record<string, unknown>;
-  for (const key of ["tracking_code", "trackingCode", "barcode", "code", "reference", "id"]) {
-    const value = nested?.[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-    if (typeof value === "number") return String(value);
+/**
+ * Intigo returns either `{"detail": "..."}` or FastAPI's validation shape,
+ * `{"detail": [{loc, msg, type}]}`. Flattening both keeps the admin from
+ * seeing "[object Object]".
+ */
+function describeError(status: number, body: unknown): string {
+  const detail = (body as { detail?: unknown } | null)?.detail;
+
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((item) => {
+        const entry = item as { loc?: unknown[]; msg?: string };
+        const field = Array.isArray(entry.loc) ? entry.loc.at(-1) : undefined;
+        return field ? `${field}: ${entry.msg ?? ""}`.trim() : (entry.msg ?? "");
+      })
+      .filter(Boolean);
+    if (parts.length) return `Intigo a refusé la commande — ${parts.join(" ; ")}`;
   }
-  return null;
+
+  if (typeof detail === "string" && detail.trim()) {
+    if (status === 401) return "Clé API Intigo invalide ou absente.";
+    if (status === 402) return `Intigo : ${detail} (solde insuffisant ?)`;
+    return `Intigo : ${detail}`;
+  }
+
+  return `Intigo a répondu HTTP ${status}.`;
+}
+
+/* --- Regions ------------------------------------------------------------- */
+
+export type IntigoCity = { id: number; name: string };
+export type IntigoDistrict = { id: number; name: string };
+
+function normaliseList(body: unknown): { id: number; name: string }[] {
+  const rows = Array.isArray(body)
+    ? body
+    : ((body as { results?: unknown[]; data?: unknown[] })?.results ??
+      (body as { data?: unknown[] })?.data ??
+      []);
+
+  return (rows as Record<string, unknown>[])
+    .map((row) => {
+      const id = Number(row.id ?? row.city_id ?? row.district_id);
+      const name = String(row.name ?? row.label ?? row.name_fr ?? "").trim();
+      return { id, name };
+    })
+    .filter((row) => row.name.length > 0 && Number.isFinite(row.id));
+}
+
+export async function listCities(): Promise<IntigoCity[]> {
+  return normaliseList(await intigoFetch("/regions/cities"));
+}
+
+export async function listDistricts(cityId: number): Promise<IntigoDistrict[]> {
+  return normaliseList(await intigoFetch(`/regions/cities/${cityId}/districts`));
+}
+
+export async function listPickupAddresses(): Promise<unknown> {
+  return intigoFetch("/pickup-addresses/");
+}
+
+/* --- Parcel creation ----------------------------------------------------- */
+
+/**
+ * COD is quoted in DINARS, not minor units. `price` is what the driver
+ * collects, so it is the order total including the 8 DT delivery — sending
+ * 220000 where 220.000 is meant is only discovered at the customer's door.
+ */
+function codPrice(order: Order): number {
+  const divisor = minorUnitsPer(order.currency ?? "TND");
+  return Number((order.total_cents / divisor).toFixed(3));
+}
+
+function describeParcel(order: Order): string {
+  const items = order.order_items ?? [];
+  if (items.length === 0) return "Colis";
+  const text = items
+    .map((item) => `${item.quantity}× ${item.product_name}`)
+    .join(", ");
+  return text.slice(0, 500);
+}
+
+export type CreateParcelInput = {
+  order: Order;
+  cityName: string;
+  districtName: string;
+  /** Optional; Intigo ignores an unknown neighbourhood rather than failing. */
+  neighborhoodName?: string;
+  pickupIndex: number;
+  packageSize?: number;
+};
+
+export async function createParcelByName({
+  order,
+  cityName,
+  districtName,
+  neighborhoodName,
+  pickupIndex,
+  packageSize = 1,
+}: CreateParcelInput): Promise<{ nid: string; raw: unknown }> {
+  const address = [order.address_line1, order.address_line2]
+    .filter(Boolean)
+    .join(", ")
+    .slice(0, 500);
+
+  const payload: Record<string, unknown> = {
+    recipient_name: order.full_name.slice(0, 255),
+    phone1: (order.phone ?? "").replace(/\s+/g, ""),
+    destination_address: address,
+    city_name: cityName,
+    district_name: districtName,
+    price: codPrice(order),
+    package_size: packageSize,
+    description: describeParcel(order),
+    pickup_index: pickupIndex,
+    // Lets us reconcile an Intigo parcel back to our order later.
+    cid: order.order_number.slice(0, 50),
+  };
+
+  if (neighborhoodName) payload.neighborhood_name = neighborhoodName;
+  if (order.note) payload.additional_info = order.note.slice(0, 500);
+  if (order.email) payload.client_email = order.email.slice(0, 254);
+
+  const body = await intigoFetch<{ success?: boolean; nid?: string }>(
+    "/parcels/by-name",
+    { method: "POST", body: JSON.stringify(payload) },
+  );
+
+  const nid = typeof body?.nid === "string" ? body.nid.trim() : "";
+  if (!nid) {
+    throw new ShippingError("Intigo a répondu sans NID de colis.");
+  }
+
+  return { nid, raw: body };
 }
