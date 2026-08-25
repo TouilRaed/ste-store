@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJson, withAdmin } from "@/lib/admin/api";
 import { getOrder, markShipped } from "@/lib/admin/repo";
-import { ShippingError, createParcelByName } from "@/lib/shipping/intigo";
+import {
+  ShippingError,
+  createParcelByName,
+  defaultPickupIndex,
+} from "@/lib/shipping/intigo";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -10,7 +14,9 @@ const shipSchema = z.object({
   city_name: z.string().trim().min(1),
   district_name: z.string().trim().min(1),
   neighborhood_name: z.string().trim().optional(),
-  pickup_index: z.coerce.number().int().min(0).default(0),
+  // Omitted by the UI: resolved from the account, since Intigo indexes are
+  // 1-based and a hardcoded 0 points at no pickup address at all.
+  pickup_index: z.coerce.number().int().min(0).optional(),
   package_size: z.coerce.number().int().min(1).max(7).default(1),
 });
 
@@ -52,12 +58,14 @@ export const POST = withAdmin(async (request, { params }: Context) => {
   }
 
   try {
+    const pickupIndex = parsed.data.pickup_index ?? (await defaultPickupIndex());
+
     const { nid } = await createParcelByName({
       order,
       cityName: parsed.data.city_name,
       districtName: parsed.data.district_name,
       neighborhoodName: parsed.data.neighborhood_name,
-      pickupIndex: parsed.data.pickup_index,
+      pickupIndex,
       packageSize: parsed.data.package_size,
     });
 

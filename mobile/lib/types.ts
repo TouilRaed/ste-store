@@ -64,6 +64,8 @@ export type Order = {
   address_line1: string;
   address_line2: string | null;
   city: string;
+  /** Délégation — required by Intigo, chosen from their list. */
+  district?: string | null;
   postal_code: string;
   country: string;
   subtotal_cents: number;

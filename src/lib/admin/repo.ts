@@ -19,7 +19,7 @@ const PRODUCT_COLUMNS =
   "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, is_active, tags, offers, created_at";
 
 const ORDER_COLUMNS =
-  "id, order_number, email, full_name, phone, address_line1, address_line2, city, postal_code, country, note, admin_note, subtotal_cents, shipping_cents, total_cents, currency, status, carrier, tracking_code, shipped_at, created_at";
+  "id, order_number, email, full_name, phone, address_line1, address_line2, city, district, postal_code, country, note, admin_note, subtotal_cents, shipping_cents, total_cents, currency, status, carrier, tracking_code, shipped_at, created_at";
 
 /** Every admin read/write goes through the service role, so RLS never applies. */
 function client() {

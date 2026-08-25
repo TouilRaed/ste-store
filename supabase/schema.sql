@@ -190,3 +190,7 @@ alter table public.order_items add column if not exists offer_name text;
 alter table public.orders add column if not exists carrier text;
 alter table public.orders add column if not exists tracking_code text;
 alter table public.orders add column if not exists shipped_at timestamptz;
+
+-- Délégation, captured at checkout from Intigo's own list. `city` holds the
+-- gouvernorat; Intigo needs both, and its names are strict.
+alter table public.orders add column if not exists district text;

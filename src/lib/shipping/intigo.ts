@@ -40,7 +40,12 @@ function baseUrl(): string {
   return (process.env.INTIGO_API_URL || DEFAULT_BASE).replace(/\/+$/, "");
 }
 
-async function intigoFetch<T>(path: string, init?: RequestInit): Promise<T> {
+type FetchOptions = RequestInit & {
+  /** Seconds to cache. Regions change rarely; parcel calls must never cache. */
+  revalidate?: number;
+};
+
+async function intigoFetch<T>(path: string, init?: FetchOptions): Promise<T> {
   const key = process.env.INTIGO_API_KEY;
   if (!key) {
     throw new ShippingError(
@@ -60,7 +65,9 @@ async function intigoFetch<T>(path: string, init?: RequestInit): Promise<T> {
       },
       // Never hold an admin request open on a courier outage.
       signal: AbortSignal.timeout(15_000),
-      cache: "no-store",
+      ...(init?.revalidate
+        ? { next: { revalidate: init.revalidate } }
+        : { cache: "no-store" as const }),
     });
   } catch (error) {
     const reason = error instanceof Error ? error.message : "inconnue";
@@ -115,12 +122,14 @@ function describeError(status: number, body: unknown): string {
 export type IntigoCity = { id: number; name: string };
 export type IntigoDistrict = { id: number; name: string };
 
-function normaliseList(body: unknown): { id: number; name: string }[] {
+function normaliseList(body: unknown, key?: string): { id: number; name: string }[] {
+  const envelope = body as Record<string, unknown> | null;
   const rows = Array.isArray(body)
     ? body
-    : ((body as { results?: unknown[]; data?: unknown[] })?.results ??
-      (body as { data?: unknown[] })?.data ??
-      []);
+    : (((key ? envelope?.[key] : undefined) ??
+        envelope?.results ??
+        envelope?.data ??
+        []) as unknown[]);
 
   return (rows as Record<string, unknown>[])
     .map((row) => {
@@ -132,15 +141,49 @@ function normaliseList(body: unknown): { id: number; name: string }[] {
 }
 
 export async function listCities(): Promise<IntigoCity[]> {
-  return normaliseList(await intigoFetch("/regions/cities"));
+  return normaliseList(
+    await intigoFetch("/regions/cities", { revalidate: 86_400 }),
+    "cities",
+  );
 }
 
 export async function listDistricts(cityId: number): Promise<IntigoDistrict[]> {
-  return normaliseList(await intigoFetch(`/regions/cities/${cityId}/districts`));
+  return normaliseList(
+    await intigoFetch(`/regions/cities/${cityId}/districts`, { revalidate: 86_400 }),
+    "districts",
+  );
 }
 
-export async function listPickupAddresses(): Promise<unknown> {
-  return intigoFetch("/pickup-addresses/");
+export type IntigoPickupAddress = {
+  id: number;
+  index: number;
+  city_name?: string;
+  district_name?: string;
+  street_address?: string;
+};
+
+export async function listPickupAddresses(): Promise<IntigoPickupAddress[]> {
+  const body = await intigoFetch<{ pickup_addresses?: IntigoPickupAddress[] }>(
+    "/pickup-addresses/",
+  );
+  return Array.isArray(body?.pickup_addresses) ? body.pickup_addresses : [];
+}
+
+/**
+ * The account's pickup index, read from Intigo rather than assumed. Their
+ * indexes are 1-based — defaulting to 0 sends the parcel to a pickup point
+ * that does not exist.
+ */
+export async function defaultPickupIndex(): Promise<number> {
+  const addresses = await listPickupAddresses();
+  const index = addresses[0]?.index;
+  if (typeof index !== "number") {
+    throw new ShippingError(
+      "Aucune adresse de ramassage configurée chez Intigo.",
+      400,
+    );
+  }
+  return index;
 }
 
 /* --- Parcel creation ----------------------------------------------------- */

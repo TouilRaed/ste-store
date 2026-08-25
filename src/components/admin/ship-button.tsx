@@ -28,11 +28,14 @@ function fold(value: string): string {
 export function ShipButton({
   orderId,
   orderCity,
+  orderDistrict,
   trackingCode,
   cancelled,
 }: {
   orderId: string;
   orderCity: string;
+  /** Chosen by the customer at checkout, from Intigo's own list. */
+  orderDistrict: string | null;
   trackingCode: string | null;
   cancelled: boolean;
 }) {
@@ -89,7 +92,14 @@ export function ShipButton({
           setError(body.error ?? "Impossible de charger les délégations.");
           return;
         }
-        setDistricts(body.districts ?? []);
+        const list: Region[] = body.districts ?? [];
+        setDistricts(list);
+        // Preselect what the customer picked at checkout, so the admin only
+        // confirms rather than re-entering it.
+        if (orderDistrict) {
+          const match = list.find((d) => fold(d.name) === fold(orderDistrict));
+          if (match) setDistrictName(match.name);
+        }
       } catch {
         if (active) setError("Impossible de charger les délégations.");
       }
@@ -98,7 +108,7 @@ export function ShipButton({
     return () => {
       active = false;
     };
-  }, [cityId]);
+  }, [cityId, orderDistrict]);
 
   if (shipped) {
     return (

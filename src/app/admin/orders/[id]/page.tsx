@@ -82,6 +82,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                 <ShipButton
                   orderId={order.id}
                   orderCity={order.city}
+                  orderDistrict={order.district ?? null}
                   trackingCode={order.tracking_code ?? null}
                   cancelled={order.status === "cancelled"}
                 />

@@ -5,7 +5,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { placeCodOrder, type CodOrderResult } from "@/app/actions/orders";
 import { PillButton } from "@/components/ui";
 import { formatMoney, shippingFor } from "@/lib/format";
-import { GOVERNORATES } from "@/lib/tunisia";
+import { RegionSelect } from "@/components/region-select";
 import type { Product } from "@/lib/types";
 
 const inputClass =
@@ -166,22 +166,12 @@ export function CodOrderForm({ product }: { product: Product }) {
             ) : null}
           </label>
 
-          <label className="block">
-            <span className="eyebrow text-ink-muted">Gouvernorat</span>
-            <select name="governorate" defaultValue="" disabled={pending} className={inputClass}>
-              <option value="" disabled>
-                Choisir…
-              </option>
-              {GOVERNORATES.map((governorate) => (
-                <option key={governorate} value={governorate}>
-                  {governorate}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.governorate ? (
-              <span className="mt-2 block text-sm text-accent-deep">{fieldErrors.governorate}</span>
-            ) : null}
-          </label>
+          <RegionSelect
+            className={inputClass}
+            disabled={pending}
+            governorateError={fieldErrors.governorate}
+            districtError={fieldErrors.district}
+          />
 
           <label className="block sm:col-span-2">
             <span className="eyebrow text-ink-muted">Adresse</span>

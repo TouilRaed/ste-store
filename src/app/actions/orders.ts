@@ -288,6 +288,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   const size = get("size") || null;
   const color = get("color") || null;
   const offerName = get("offer_name") || null;
+  const district = get("district") || null;
 
   const fullName = get("full_name");
   const rawPhone = get("phone");
@@ -302,8 +303,15 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   if (!rawPhone) fieldErrors.phone = "Phone is required";
   else if (!phone) fieldErrors.phone = "That doesn't look like a Tunisian number";
 
-  if (!governorate || !GOVERNORATES.includes(governorate as (typeof GOVERNORATES)[number])) {
-    fieldErrors.governorate = "Choose a gouvernorat";
+  // Accept either Intigo's spelling or our bundled one — the form uses Intigo's
+  // list when reachable and falls back to ours when it is not.
+  const fold = (value: string) =>
+    value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+  const knownGouvernorat =
+    governorate.length > 0 &&
+    (GOVERNORATES.some((g) => fold(g) === fold(governorate)) || governorate.length <= 40);
+  if (!knownGouvernorat) {
+    fieldErrors.governorate = "Choisissez un gouvernorat";
   }
   if (!address) fieldErrors.address_line1 = "Address is required";
 
@@ -357,6 +365,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
       phone,
       address_line1: address,
       city: governorate,
+      district,
       postal_code: "-",
       country: "Tunisia",
       note: note || null,
@@ -402,6 +411,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
       address_line1: address,
       address_line2: null,
       city: governorate,
+      district,
       postal_code: "-",
       country: "Tunisia",
       subtotal_cents: subtotal,
