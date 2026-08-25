@@ -48,7 +48,7 @@ export function SiteHeader() {
         <nav className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3.5 md:px-8">
           <Link href="/" className="flex items-center gap-3 whitespace-nowrap">
             <SpinningLogo size={32} speed={7} priority className="ring-white/25" />
-            <span className="text-[17px] font-medium lowercase">{BRAND.NAME}</span>
+            <span className="text-[17px] font-medium tracking-[0.02em]">{BRAND.NAME}</span>
           </Link>
 
           <div className="ml-auto hidden items-center gap-7 md:flex">

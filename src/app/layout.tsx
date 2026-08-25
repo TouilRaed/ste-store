@@ -22,8 +22,7 @@ export const metadata: Metadata = {
     default: BRAND.NAME,
     template: `%s · ${BRAND.NAME}`,
   },
-  description:
-    "Small-run clothing made from traceable cloth. Tailored pieces, everyday essentials, outerwear and knitwear, shipped worldwide.",
+  description: BRAND.TAGLINE,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

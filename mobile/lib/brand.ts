@@ -9,7 +9,7 @@
  */
 export const BRAND = {
   /** Shown on the login screen and in the app name. */
-  NAME: "ste",
+  NAME: "STE DM",
   /** Lowercase slug used for the Expo slug, scheme, bundle id and token key. */
   KEY: "ste",
 } as const;

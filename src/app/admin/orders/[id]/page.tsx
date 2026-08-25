@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setOrderStatusAction } from "@/app/admin/actions";
 import { OrderEditor } from "@/components/admin/order-editor";
+import { ShipButton } from "@/components/admin/ship-button";
 import { OrderItemsEditor } from "@/components/admin/order-items-editor";
 import { PageHeading, Panel, StatusBadge } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/guard";
@@ -70,6 +71,19 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                     </button>
                   </form>
                 ))}
+              </div>
+            </div>
+          </Panel>
+
+          <Panel>
+            <div className="p-6">
+              <p className="eyebrow text-ink-muted">Livraison</p>
+              <div className="mt-5">
+                <ShipButton
+                  orderId={order.id}
+                  trackingCode={order.tracking_code ?? null}
+                  cancelled={order.status === "cancelled"}
+                />
               </div>
             </div>
           </Panel>

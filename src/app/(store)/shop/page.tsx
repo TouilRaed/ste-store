@@ -8,7 +8,7 @@ import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Boutique",
-  description: `Toutes les pièces de la série ${BRAND.NAME} en cours — tailoring, essentiels, vestes et maille.`,
+  description: `Tous les produits ${BRAND.NAME} — paiement à la livraison partout en Tunisie.`,
 };
 
 const SORTS = [
@@ -69,11 +69,11 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
       <Reveal>
         <Eyebrow>{products.length} pieces in stock</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,7vw,5.5rem)] leading-[0.92] tracking-[-0.02em]">
-          {activeCollection ? activeCollection.name : "Toute la série"}
+          {activeCollection ? activeCollection.name : "Tous les produits"}
         </h1>
         <p className="mt-6 max-w-lg text-base leading-relaxed text-ink-soft">
           {activeCollection?.tagline ??
-            "Toutes les pièces disponibles. Paiement à la livraison, partout en Tunisie."}
+            "Tous les produits disponibles. Paiement à la livraison, partout en Tunisie."}
         </p>
       </Reveal>
 

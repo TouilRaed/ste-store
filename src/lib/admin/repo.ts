@@ -19,7 +19,7 @@ const PRODUCT_COLUMNS =
   "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, is_active, tags, offers, created_at";
 
 const ORDER_COLUMNS =
-  "id, order_number, email, full_name, phone, address_line1, address_line2, city, postal_code, country, note, admin_note, subtotal_cents, shipping_cents, total_cents, currency, status, created_at";
+  "id, order_number, email, full_name, phone, address_line1, address_line2, city, postal_code, country, note, admin_note, subtotal_cents, shipping_cents, total_cents, currency, status, carrier, tracking_code, shipped_at, created_at";
 
 /** Every admin read/write goes through the service role, so RLS never applies. */
 function client() {
@@ -125,6 +125,29 @@ export async function getOrder(id: string): Promise<Order> {
 
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
   return updateOrder(id, { status });
+}
+
+/** Records a successful carrier handoff and moves the order to `shipped`. */
+export async function markShipped(
+  id: string,
+  carrier: string,
+  trackingCode: string,
+): Promise<Order> {
+  const { data, error } = await client()
+    .from("orders")
+    .update({
+      carrier,
+      tracking_code: trackingCode,
+      shipped_at: new Date().toISOString(),
+      status: "shipped",
+    })
+    .eq("id", id)
+    .select(ORDER_COLUMNS)
+    .maybeSingle();
+
+  if (error) throw new AdminError(500, error.message);
+  if (!data) throw new AdminError(404, "Commande introuvable");
+  return data as unknown as Order;
 }
 
 /** Patches status, contact details, shipping address or either note. */

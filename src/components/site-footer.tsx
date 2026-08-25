@@ -8,8 +8,9 @@ const COLUMNS = [
     title: "Produits",
     links: [
       { href: "/shop", label: "Tous les produits" },
-      { href: "/shop?gender=women", label: "Femme" },
-      { href: "/shop?gender=men", label: "Homme" },
+      { href: "/shop?collection=decoration-murale", label: "Décoration murale" },
+      { href: "/shop?collection=luminaires", label: "Luminaires" },
+      { href: "/shop?collection=textile-tapis", label: "Textile & tapis" },
       { href: "/shop?sort=price-asc", label: "Les moins chers" },
     ],
   },
@@ -23,7 +24,7 @@ export function SiteFooter() {
           <div>
             <div className="flex items-center gap-3">
               <SpinningLogo size={40} speed={9} />
-              <p className="text-xl lowercase">{BRAND.NAME}</p>
+              <p className="text-xl tracking-[0.02em]">{BRAND.NAME}</p>
             </div>
             <p className="mt-4 max-w-xs text-base leading-relaxed text-ink-soft">
               {BRAND.TAGLINE}

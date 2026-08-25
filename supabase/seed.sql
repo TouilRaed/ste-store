@@ -3,10 +3,11 @@
 -- Safe to re-run: upserts on slug.
 
 insert into public.collections (slug, name, tagline, position) values
-  ('atelier', 'Atelier', 'Tailored pieces cut in small runs.', 1),
-  ('everyday', 'Everyday', 'The quiet essentials you reach for first.', 2),
-  ('outerwear', 'Outerwear', 'Weight, drape, and weather.', 3),
-  ('knitwear', 'Knitwear', 'Slow yarns, long winters.', 4)
+  ('decoration-murale', 'Décoration murale', 'Cadres, miroirs et affiches.', 1),
+  ('luminaires', 'Luminaires', 'Lampes, guirlandes et appliques.', 2),
+  ('cuisine-table', 'Cuisine & table', 'Vaisselle, ustensiles et art de la table.', 3),
+  ('textile-tapis', 'Textile & tapis', 'Coussins, plaids et tapis.', 4),
+  ('rangement', 'Rangement', 'Paniers, étagères et boîtes.', 5)
 on conflict (slug) do update
   set name = excluded.name,
       tagline = excluded.tagline,

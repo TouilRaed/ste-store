@@ -71,6 +71,10 @@ export type Order = {
   total_cents: number;
   currency: string;
   status: OrderStatus;
+  /** Carrier handoff. Null until the order is given to Intigo. */
+  carrier?: string | null;
+  tracking_code?: string | null;
+  shipped_at?: string | null;
   created_at: string;
   order_items?: OrderItem[];
 };

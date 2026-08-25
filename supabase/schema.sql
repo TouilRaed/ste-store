@@ -184,3 +184,9 @@ alter table public.products add column if not exists offers jsonb not null defau
 
 -- Which offer the customer picked; null means they bought at the base price.
 alter table public.order_items add column if not exists offer_name text;
+
+-- Shipment handoff to the carrier (Intigo). `tracking_code` is whatever the
+-- carrier returns as its own reference; null until the order is handed over.
+alter table public.orders add column if not exists carrier text;
+alter table public.orders add column if not exists tracking_code text;
+alter table public.orders add column if not exists shipped_at timestamptz;

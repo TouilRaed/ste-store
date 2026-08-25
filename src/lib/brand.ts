@@ -7,7 +7,7 @@
  */
 export const BRAND = {
   /** Shown in the nav, footer, page titles and both admins. */
-  NAME: "ste",
+  NAME: "STE DM",
   /** Lowercase slug used for cookies, storage keys and project names. */
   KEY: "ste",
   /** One line under the logo in the footer. */

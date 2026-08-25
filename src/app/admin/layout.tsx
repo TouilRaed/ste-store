@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           <div className="flex items-center gap-3">
             <SpinningLogo size={32} speed={8} />
             <div className="min-w-0">
-              <Link href="/admin" className="block truncate text-[15px] lowercase">
+              <Link href="/admin" className="block truncate text-[15px]">
                 {BRAND.NAME}
               </Link>
               <span className="eyebrow text-accent-deep">Admin</span>
