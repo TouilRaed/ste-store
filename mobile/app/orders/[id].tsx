@@ -11,7 +11,8 @@ import {
 } from "../../lib/format";
 import { theme } from "../../lib/theme";
 import {
-  ORDER_STATUSES,
+  SETTABLE_ORDER_STATUSES,
+  orderStatusLabel,
   type OrderItemInput,
   type OrderPatch,
   type OrderStatus,
@@ -210,10 +211,10 @@ export default function OrderDetailScreen() {
 
         <Eyebrow>Status</Eyebrow>
         <View style={styles.chips}>
-          {ORDER_STATUSES.map((status) => (
+          {SETTABLE_ORDER_STATUSES.map((status) => (
             <Chip
               key={status}
-              label={saving === status ? "…" : status}
+              label={saving === status ? "…" : orderStatusLabel(status)}
               active={order.status === status}
               onPress={() => changeStatus(status)}
             />

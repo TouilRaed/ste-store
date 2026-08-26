@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
 
   const tiles = [
     { label: "Chiffre d'affaires", value: formatMoney(stats.revenueCents, stats.currency), hint: "excl. cancelled" },
-    { label: "Commandes", value: String(stats.orders.total), hint: `${stats.orders.pending} pending` },
+    { label: "Commandes", value: String(stats.orders.total), hint: `${stats.orders.pending} en attente` },
     { label: "Produits", value: String(stats.products.total), hint: `${stats.products.active} active` },
     { label: "Stock faible", value: String(stats.products.lowStock), hint: "8 or fewer left" },
   ];

@@ -194,3 +194,16 @@ alter table public.orders add column if not exists shipped_at timestamptz;
 -- Délégation, captured at checkout from Intigo's own list. `city` holds the
 -- gouvernorat; Intigo needs both, and its names are strict.
 alter table public.orders add column if not exists district text;
+
+-- Order statuses follow the shop's real workflow. "paid" is dropped: nothing is
+-- paid before delivery in a cash-on-delivery shop. Any existing 'paid' row is
+-- migrated to 'confirmed' before the constraint is re-applied.
+update public.orders set status = 'confirmed' where status = 'paid';
+
+do $$
+begin
+  alter table public.orders drop constraint if exists orders_status_check;
+  alter table public.orders
+    add constraint orders_status_check
+    check (status in ('pending','confirmed','ready','shipped','delivered','cancelled'));
+end $$;

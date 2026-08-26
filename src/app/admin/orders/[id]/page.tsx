@@ -7,7 +7,7 @@ import { OrderItemsEditor } from "@/components/admin/order-items-editor";
 import { PageHeading, Panel, StatusBadge } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/guard";
 import { AdminError, getOrder, listProducts } from "@/lib/admin/repo";
-import { ORDER_STATUSES } from "@/lib/admin/schemas";
+import { SETTABLE_ORDER_STATUSES, orderStatusLabel } from "@/lib/admin/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -54,20 +54,20 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
             <div className="p-6">
               <p className="eyebrow text-ink-muted">Statut</p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {ORDER_STATUSES.map((status) => (
+                {SETTABLE_ORDER_STATUSES.map((status) => (
                   <form key={status} action={setOrderStatusAction}>
                     <input type="hidden" name="id" value={order.id} />
                     <input type="hidden" name="status" value={status} />
                     <button
                       type="submit"
                       disabled={status === order.status}
-                      className={`rounded-full border px-4 py-1.5 text-[13px] capitalize transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:cursor-default ${
+                      className={`rounded-full border px-4 py-1.5 text-[13px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:cursor-default ${
                         status === order.status
                           ? "border-transparent bg-ink text-paper"
                           : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
                       }`}
                     >
-                      {status}
+                      {orderStatusLabel(status)}
                     </button>
                   </form>
                 ))}

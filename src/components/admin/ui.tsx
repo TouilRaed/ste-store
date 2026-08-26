@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ORDER_STATUSES, type OrderStatus } from "@/lib/admin/schemas";
+import { ORDER_STATUSES, type OrderStatus, orderStatusLabel } from "@/lib/admin/schemas";
 
 const STATUS_TONE: Record<OrderStatus, string> = {
   pending: "bg-accent-soft text-accent-deep",
-  paid: "bg-[#e7efe4] text-sage",
+  confirmed: "bg-[#e7efe4] text-sage",
+  ready: "bg-[#efe9dd] text-[#7a6741]",
   shipped: "bg-[#e6eaf0] text-[#41536b]",
   delivered: "bg-ink text-paper",
   cancelled: "bg-paper-sand text-ink-muted",
@@ -12,7 +13,9 @@ const STATUS_TONE: Record<OrderStatus, string> = {
 
 export function StatusBadge({ status }: { status: string }) {
   const tone = STATUS_TONE[status as OrderStatus] ?? "bg-paper-sand text-ink-muted";
-  return <span className={`eyebrow rounded-full px-3 py-1 ${tone}`}>{status}</span>;
+  return (
+    <span className={`eyebrow rounded-full px-3 py-1 ${tone}`}>{orderStatusLabel(status)}</span>
+  );
 }
 
 export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -65,7 +68,10 @@ export function SetupNotice() {
 }
 
 export function StatusFilter({ current, basePath }: { current?: string; basePath: string }) {
-  const options = [{ value: "", label: "All" }, ...ORDER_STATUSES.map((s) => ({ value: s, label: s }))];
+  const options = [
+    { value: "", label: "Toutes" },
+    ...ORDER_STATUSES.map((s) => ({ value: s, label: orderStatusLabel(s) })),
+  ];
 
   return (
     <div className="flex flex-wrap gap-2">

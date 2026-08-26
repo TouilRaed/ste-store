@@ -34,7 +34,8 @@ export const cardShadow = {
 
 export const statusTone: Record<string, { bg: string; fg: string }> = {
   pending: { bg: theme.accentSoft, fg: theme.accentDeep },
-  paid: { bg: "#E4F1EA", fg: theme.sage },
+  confirmed: { bg: "#E4F1EA", fg: theme.sage },
+  ready: { bg: "#EFE9DD", fg: "#7A6741" },
   shipped: { bg: "#DDE7FA", fg: theme.accentDeep },
   delivered: { bg: theme.accent, fg: "#FFFFFF" },
   cancelled: { bg: theme.paperSand, fg: theme.inkMuted },

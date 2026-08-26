@@ -1,7 +1,31 @@
 /** Mirrors the payloads returned by /api/admin/* on the Next.js app. */
 
-export const ORDER_STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
+export const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "ready",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+
+/** The ones an operator sets by hand, in workflow order. */
+export const SETTABLE_ORDER_STATUSES = ["pending", "confirmed", "ready", "cancelled"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+/** Mirrors ORDER_STATUS_LABELS on the web. Stored values stay English. */
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  pending: "En attente",
+  confirmed: "Confirmé",
+  ready: "Prêt à expédier",
+  shipped: "Expédiée",
+  delivered: "Livrée",
+  cancelled: "Annulé",
+};
+
+export function orderStatusLabel(status: string): string {
+  return ORDER_STATUS_LABELS[status as OrderStatus] ?? status;
+}
 
 export type Collection = {
   id: string;
@@ -82,7 +106,13 @@ export type Order = {
 };
 
 export type AdminStats = {
-  orders: { total: number; pending: number; paid: number; shipped: number };
+  orders: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    ready: number;
+    shipped: number;
+  };
   revenueCents: number;
   currency: string;
   products: { total: number; active: number; lowStock: number };

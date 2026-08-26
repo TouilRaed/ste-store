@@ -1,6 +1,40 @@
 import { z } from "zod";
 
-export const ORDER_STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
+/**
+ * The shop's real workflow. "paid" is gone: nothing is paid before delivery in
+ * a cash-on-delivery shop, so the status never meant anything here.
+ *
+ * `shipped` and `delivered` are not set by hand — the first comes from booking
+ * the parcel with Intigo, the second from the delivery itself.
+ */
+export const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "ready",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+
+/** The ones an operator sets manually, in workflow order. */
+export const SETTABLE_ORDER_STATUSES = ["pending", "confirmed", "ready", "cancelled"] as const;
+
+/**
+ * Display labels. The stored values stay English — a Postgres CHECK constraint
+ * pins them, and Intigo/mobile both read them — so only the UI is translated.
+ */
+export const ORDER_STATUS_LABELS: Record<(typeof ORDER_STATUSES)[number], string> = {
+  pending: "En attente",
+  confirmed: "Confirmé",
+  ready: "Prêt à expédier",
+  shipped: "Expédiée",
+  delivered: "Livrée",
+  cancelled: "Annulé",
+};
+
+export function orderStatusLabel(status: string): string {
+  return ORDER_STATUS_LABELS[status as (typeof ORDER_STATUSES)[number]] ?? status;
+}
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 const slug = z

@@ -23,7 +23,7 @@ export default function DashboardScreen() {
           <View style={styles.grid}>
             {[
               { label: "Chiffre d'affaires", value: formatMoney(data.revenueCents, data.currency), hint: "excl. cancelled" },
-              { label: "Commandes", value: String(data.orders.total), hint: `${data.orders.pending} pending` },
+              { label: "Commandes", value: String(data.orders.total), hint: `${data.orders.pending} en attente` },
               { label: "Produits", value: String(data.products.total), hint: `${data.products.active} active` },
               { label: "Stock faible", value: String(data.products.lowStock), hint: "8 or fewer" },
             ].map((tile) => (

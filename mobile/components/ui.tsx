@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { cardShadow, radius, statusTone, theme } from "../lib/theme";
+import { orderStatusLabel } from "../lib/types";
 
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[styles.card, style]}>{children}</View>;
@@ -27,7 +28,7 @@ export function StatusBadge({ status }: { status: string }) {
   const tone = statusTone[status] ?? { bg: theme.paperSand, fg: theme.inkMuted };
   return (
     <View style={[styles.badge, { backgroundColor: tone.bg }]}>
-      <Text style={[styles.badgeText, { color: tone.fg }]}>{status}</Text>
+      <Text style={[styles.badgeText, { color: tone.fg }]}>{orderStatusLabel(status)}</Text>
     </View>
   );
 }

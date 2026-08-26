@@ -169,7 +169,13 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order>
 // --- Dashboard --------------------------------------------------------------
 
 export type AdminStats = {
-  orders: { total: number; pending: number; paid: number; shipped: number };
+  orders: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    ready: number;
+    shipped: number;
+  };
   revenueCents: number;
   currency: string;
   products: { total: number; active: number; lowStock: number };
@@ -188,7 +194,8 @@ export async function getStats(): Promise<AdminStats> {
     orders: {
       total: orders.length,
       pending: counted("pending"),
-      paid: counted("paid"),
+      confirmed: counted("confirmed"),
+      ready: counted("ready"),
       shipped: counted("shipped"),
     },
     // Cancelled orders never count toward revenue.
