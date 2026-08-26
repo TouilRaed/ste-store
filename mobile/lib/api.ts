@@ -94,6 +94,17 @@ export const api = {
   updateOrder: (id: string, patch: OrderPatch) =>
     apiFetch<{ order: Order }>(`/api/admin/orders/${id}`, { method: "PATCH", body: patch }),
 
+  /**
+   * Books the parcel with Intigo and returns its NID. The city and délégation
+   * come from what the customer picked at checkout — Intigo rejects an unknown
+   * name — and the server resolves the pickup index itself.
+   */
+  shipOrder: (id: string, cityName: string, districtName: string) =>
+    apiFetch<{ order: Order; trackingCode: string }>(`/api/admin/orders/${id}/ship`, {
+      method: "POST",
+      body: { city_name: cityName, district_name: districtName },
+    }),
+
   /** Replaces every line; the server recomputes subtotal, shipping and total. */
   setOrderItems: (id: string, items: OrderItemInput[]) =>
     apiFetch<{ order: Order }>(`/api/admin/orders/${id}/items`, { method: "PUT", body: { items } }),

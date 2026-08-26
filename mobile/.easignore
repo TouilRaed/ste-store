@@ -1,0 +1,5 @@
+# Only the Expo app needs uploading; the Next.js site is deployed separately.
+node_modules/
+.expo/
+dist/
+web-build/

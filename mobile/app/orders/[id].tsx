@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { Image, Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Linking,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { api, ApiError } from "../../lib/api";
 import {
   formatDateTime,
@@ -59,6 +68,8 @@ export default function OrderDetailScreen() {
 
   const [edit, setEdit] = useState<OrderPatch | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [shipping, setShipping] = useState(false);
+  const [shipError, setShipError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState(0);
 
   // Lines are edited locally, then saved as a whole set.
@@ -71,6 +82,26 @@ export default function OrderDetailScreen() {
   const catalogue = useAsync(() => api.products(), picking ? "open" : "");
 
   const order = data?.order;
+
+  /**
+   * Hands the parcel to Intigo through the same admin endpoint the web uses.
+   * City and délégation are whatever the customer chose at checkout: Intigo
+   * rejects an unknown name, so re-typing them on a phone would only invite
+   * a 400.
+   */
+  async function shipNow() {
+    if (!order || !order.district) return;
+    setShipping(true);
+    setShipError(null);
+    try {
+      const res = await api.shipOrder(order.id, order.city, order.district);
+      setData({ order: { ...order, ...res.order } });
+    } catch (err) {
+      setShipError(err instanceof ApiError ? err.message : "Impossible d'expédier");
+    } finally {
+      setShipping(false);
+    }
+  }
 
   async function changeStatus(status: OrderStatus) {
     if (!order || status === order.status) return;
@@ -209,7 +240,36 @@ export default function OrderDetailScreen() {
 
         <View style={styles.divider} />
 
-        <Eyebrow>Status</Eyebrow>
+        <Eyebrow>Livraison</Eyebrow>
+        {order.tracking_code ? (
+          <View>
+            <Text style={styles.meta}>Expédiée · Intigo</Text>
+            <Text style={styles.trackingCode}>{order.tracking_code}</Text>
+          </View>
+        ) : order.status === "cancelled" ? (
+          <Text style={styles.meta}>Commande annulée.</Text>
+        ) : !order.district ? (
+          <Text style={styles.meta}>
+            Délégation manquante — expédiez cette commande depuis le web.
+          </Text>
+        ) : (
+          <View>
+            <Text style={styles.meta}>
+              {order.city} · {order.district}
+            </Text>
+            <Button
+              label={shipping ? "Envoi à Intigo…" : "Prêt à expédier"}
+              onPress={shipNow}
+              disabled={shipping}
+              style={styles.shipButton}
+            />
+          </View>
+        )}
+        {shipError ? <Message tone="error">{shipError}</Message> : null}
+
+        <View style={styles.divider} />
+
+        <Eyebrow>Statut</Eyebrow>
         <View style={styles.chips}>
           {SETTABLE_ORDER_STATUSES.map((status) => (
             <Chip
@@ -426,6 +486,13 @@ const styles = StyleSheet.create({
   headRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   number: { marginTop: 6, fontSize: 22, letterSpacing: 1, color: theme.ink },
   divider: { height: 1, backgroundColor: theme.line, marginVertical: 18 },
+  trackingCode: {
+    marginTop: 6,
+    fontSize: 15,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    color: theme.ink,
+  },
+  shipButton: { marginTop: 12 },
   chips: { flexDirection: "row", flexWrap: "wrap", marginTop: 14, rowGap: 8 },
   itemRow: { flexDirection: "row", alignItems: "center", marginTop: 16 },
   thumb: { width: 48, height: 62, borderRadius: 10, overflow: "hidden", backgroundColor: theme.paperDeep },

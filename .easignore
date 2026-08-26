@@ -1,0 +1,11 @@
+# EAS only needs the Expo app in mobile/. The Next.js site deploys via Vercel,
+# and .agents/ contains a symlink Windows cannot recreate during upload.
+.agents/
+.claude/
+.next/
+.vercel/
+node_modules/
+src/
+public/
+scripts/
+supabase/
