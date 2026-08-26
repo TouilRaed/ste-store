@@ -59,7 +59,7 @@ export async function notifyNewOrder(order: OrderPush): Promise<void> {
     if (tokens.length === 0) return;
 
     const body =
-      `${order.customer} · ${order.itemCount} ${order.itemCount === 1 ? "piece" : "pieces"} · ` +
+      `${order.customer} · ${order.itemCount} ${order.itemCount === 1 ? "article" : "articles"} · ` +
       `${money(order.totalCents, order.currency)}`;
 
     const dead: string[] = [];
@@ -67,7 +67,7 @@ export async function notifyNewOrder(order: OrderPush): Promise<void> {
     for (let i = 0; i < tokens.length; i += CHUNK) {
       const batch = tokens.slice(i, i + CHUNK).map((to) => ({
         to,
-        title: "New order",
+        title: "Nouvelle commande",
         body,
         sound: "default" as const,
         priority: "high" as const,

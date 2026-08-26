@@ -21,7 +21,7 @@ export default function OrdersScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filters}
       >
-        <Chip label="All" active={status === undefined} onPress={() => setStatus(undefined)} />
+        <Chip label="Toutes" active={status === undefined} onPress={() => setStatus(undefined)} />
         {ORDER_STATUSES.map((value) => (
           <Chip key={value} label={value} active={status === value} onPress={() => setStatus(value)} />
         ))}

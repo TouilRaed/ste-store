@@ -1,16 +1,18 @@
 import type { ExpoConfig } from "expo/config";
 
-import { BRAND } from "./lib/brand";
+import BRAND from "./brand.json";
 
 /**
  * Was `app.json`. It is a config file now so the Expo identity — app name,
  * slug, scheme, bundle id, package — derives from BRAND instead of being
  * frozen as literals that every clone has to hand-edit.
  *
- * `apiBaseUrl` is deliberately empty: set EXPO_PUBLIC_API_BASE_URL, or fill it
- * in once the Vercel deployment exists. `lib/constants.ts` falls back to
- * http://localhost:3000 when it is blank.
+ * `apiBaseUrl` must point at the deployed storefront: on a phone "localhost"
+ * is the phone itself, so a build that falls back to it cannot reach anything.
+ * EXPO_PUBLIC_API_BASE_URL overrides it for local development.
  */
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://ste-store.vercel.app";
 const config: ExpoConfig = {
   name: `${BRAND.NAME} admin`,
   slug: `${BRAND.KEY}-admin`,
@@ -39,8 +41,15 @@ const config: ExpoConfig = {
   },
   plugins: ["expo-router", "expo-secure-store", "expo-notifications"],
   scheme: `${BRAND.KEY}admin`,
+  // EAS could not write this itself — a dynamic config is not machine-editable.
+  // lib/push.ts reads extra.eas.projectId to mint an Expo push token; without
+  // it registration silently does nothing and no notification ever arrives.
+  owner: "touilraed",
   extra: {
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "",
+    apiBaseUrl: API_BASE_URL,
+    eas: {
+      projectId: "5d2e93d1-9208-45eb-a24b-683a316aa0bc",
+    },
   },
   // app.json also carried `notification.iosDisplayInForeground`. That key is
   // gone from @expo/config-types 57; foreground display is a runtime concern
