@@ -192,7 +192,7 @@ export function ShipButton({
         onClick={() => startTransition(ship)}
         className="mt-5 w-full"
       >
-        {pending ? "Envoi à Intigo…" : "Prêt à expédier"}
+        {pending ? "Envoi à Intigo…" : "Créer le colis Intigo"}
       </PillButton>
 
       {error ? <p className="mt-3 text-sm text-accent-deep">{error}</p> : null}

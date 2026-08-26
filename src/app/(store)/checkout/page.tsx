@@ -7,18 +7,16 @@ import { placeOrder, type PlaceOrderResult } from "@/app/actions/orders";
 import { ProductImage } from "@/components/product-image";
 import { Reveal } from "@/components/reveal";
 import { Eyebrow, PillButton, PillLink } from "@/components/ui";
+import { RegionSelect } from "@/components/region-select";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatMoney } from "@/lib/format";
 
 const FIELDS = [
   { name: "full_name", label: "Nom complet", autoComplete: "name", span: 2 },
   { name: "email", label: "Email", autoComplete: "email", type: "email", span: 2 },
-  { name: "phone", label: "Téléphone (facultatif)", autoComplete: "tel", span: 2 },
+  { name: "phone", label: "Téléphone", autoComplete: "tel", type: "tel", span: 2 },
   { name: "address_line1", label: "Adresse", autoComplete: "address-line1", span: 2 },
-  { name: "address_line2", label: "Apartment, floor (optional)", autoComplete: "address-line2", span: 2 },
-  { name: "city", label: "City", autoComplete: "address-level2", span: 1 },
-  { name: "postal_code", label: "Code postal", autoComplete: "postal-code", span: 1 },
-  { name: "country", label: "Country", autoComplete: "country-name", span: 2 },
+  { name: "address_line2", label: "Appartement, étage (facultatif)", autoComplete: "address-line2", span: 2 },
 ] as const;
 
 export default function CheckoutPage() {
@@ -85,6 +83,15 @@ export default function CheckoutPage() {
               <p className="eyebrow text-ink-muted">Informations de livraison</p>
 
               <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {/* Same Intigo lists as the product page, so a cart order is
+                    bookable without the operator re-entering the address. */}
+                <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <RegionSelect
+                    className="mt-2 w-full rounded-2xl border border-[color:var(--line-strong)] bg-paper/60 px-4 py-3 text-base transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] outline-none focus:border-accent focus:bg-white"
+                    disabled={pending}
+                  />
+                </div>
+
                 {FIELDS.map((field) => (
                   <label
                     key={field.name}

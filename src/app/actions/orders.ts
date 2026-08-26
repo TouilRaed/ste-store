@@ -24,13 +24,15 @@ type IncomingLine = {
   quantity: number;
 };
 
+/**
+ * postal_code and country are no longer collected — the checkout asks for a
+ * gouvernorat and délégation instead, and both are filled server-side.
+ */
 const REQUIRED_FIELDS: Array<[keyof ShippingDetails, string]> = [
-  ["full_name", "Name is required"],
-  ["email", "Email is required"],
-  ["address_line1", "Street address is required"],
-  ["city", "City is required"],
-  ["postal_code", "Postal code is required"],
-  ["country", "Country is required"],
+  ["full_name", "Le nom est obligatoire"],
+  ["email", "L'e-mail est obligatoire"],
+  ["address_line1", "L'adresse est obligatoire"],
+  ["city", "Choisissez un gouvernorat"],
 ];
 
 type ShippingDetails = {
@@ -40,6 +42,8 @@ type ShippingDetails = {
   address_line1: string;
   address_line2: string;
   city: string;
+  /** Délégation, from Intigo's list — same as the cash-on-delivery form. */
+  district: string | null;
   postal_code: string;
   country: string;
   note: string;
@@ -69,9 +73,12 @@ function readShipping(formData: FormData): ShippingDetails {
     phone: get("phone"),
     address_line1: get("address_line1"),
     address_line2: get("address_line2"),
-    city: get("city"),
-    postal_code: get("postal_code"),
-    country: get("country"),
+    // The checkout now asks for a gouvernorat and délégation from Intigo's
+    // lists, exactly like the product page — so a cart order is bookable too.
+    city: get("governorate"),
+    district: get("district") || null,
+    postal_code: "-",
+    country: "Tunisie",
     note: get("note"),
   };
 }
@@ -112,18 +119,31 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
   const shipping = readShipping(formData);
   const lines = parseLines(String(formData.get("lines") ?? "[]"));
 
-  if (lines.length === 0) return { ok: false, error: "Your bag is empty." };
+  if (lines.length === 0) return { ok: false, error: "Votre panier est vide." };
 
   const fieldErrors: Record<string, string> = {};
   for (const [field, message] of REQUIRED_FIELDS) {
     if (!shipping[field]) fieldErrors[field] = message;
   }
   if (shipping.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(shipping.email)) {
-    fieldErrors.email = "That email doesn't look right";
+    fieldErrors.email = "Cet e-mail ne semble pas valide";
   }
+
+  // Intigo requires phone1 with at least 8 digits, so an order without a usable
+  // number cannot be shipped at all — reject it here rather than at the counter.
+  const phone = normalisePhone(shipping.phone);
+  if (!shipping.phone) fieldErrors.phone = "Le téléphone est obligatoire";
+  else if (!phone) fieldErrors.phone = "Ce numéro tunisien ne semble pas valide";
+
+  if (!shipping.district) fieldErrors.district = "Choisissez une délégation";
+
   if (Object.keys(fieldErrors).length > 0) {
-    return { ok: false, error: "Check the highlighted fields.", fieldErrors };
+    return { ok: false, error: "Vérifiez les champs en surbrillance.", fieldErrors };
   }
+
+  // Non-null: the checks above return early when the number is missing or
+  // unparseable. Storing the normalised form is what Intigo accepts.
+  shipping.phone = phone as string;
 
   const supabase = await getSupabaseServerClient();
 
@@ -171,7 +191,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
     })
     .filter((i): i is NonNullable<typeof i> => i !== null);
 
-  if (items.length === 0) return { ok: false, error: "Those pieces are no longer available." };
+  if (items.length === 0) return { ok: false, error: "Ces produits ne sont plus disponibles." };
 
   const subtotal = items.reduce((sum, i) => sum + i.unit_cents * i.quantity, 0);
   const shippingCents = shippingFor(subtotal);
@@ -197,6 +217,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
         address_line1: shipping.address_line1,
         address_line2: shipping.address_line2 || null,
         city: shipping.city,
+        district: shipping.district,
         postal_code: shipping.postal_code,
         country: shipping.country,
         note: shipping.note || null,
@@ -297,11 +318,11 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   const note = get("note");
 
   const fieldErrors: Record<string, string> = {};
-  if (!fullName) fieldErrors.full_name = "Name is required";
+  if (!fullName) fieldErrors.full_name = "Le nom est obligatoire";
 
   const phone = normalisePhone(rawPhone);
-  if (!rawPhone) fieldErrors.phone = "Phone is required";
-  else if (!phone) fieldErrors.phone = "That doesn't look like a Tunisian number";
+  if (!rawPhone) fieldErrors.phone = "Le téléphone est obligatoire";
+  else if (!phone) fieldErrors.phone = "Ce numéro tunisien ne semble pas valide";
 
   // Accept either Intigo's spelling or our bundled one — the form uses Intigo's
   // list when reachable and falls back to ours when it is not.
@@ -313,10 +334,10 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   if (!knownGouvernorat) {
     fieldErrors.governorate = "Choisissez un gouvernorat";
   }
-  if (!address) fieldErrors.address_line1 = "Address is required";
+  if (!address) fieldErrors.address_line1 = "L'adresse est obligatoire";
 
   if (Object.keys(fieldErrors).length > 0) {
-    return { ok: false, error: "Check the highlighted fields.", fieldErrors };
+    return { ok: false, error: "Vérifiez les champs en surbrillance.", fieldErrors };
   }
 
   const supabase = await getSupabaseServerClient();
@@ -332,7 +353,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
       ).data
     : (fallbackProducts.find((p) => p.slug === slug) ?? null);
 
-  if (!product) return { ok: false, error: "That piece is no longer available." };
+  if (!product) return { ok: false, error: "Ce produit n'est plus disponible." };
 
   const codOffer = resolveOffer(product.offers, offerName);
   const codUnitCents = codOffer ? codOffer.price_cents : product.price_cents;

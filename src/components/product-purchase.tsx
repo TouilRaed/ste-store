@@ -56,20 +56,25 @@ export function ProductGallery({ product }: { product: Product }) {
   );
 }
 
-export function AddToCart({ product }: { product: Product }) {
-  const { add } = useCart();
-  const [size, setSize] = useState<string | null>(product.sizes[0] ?? null);
-  const [color, setColor] = useState<string | null>(product.colors[0] ?? null);
-  const [quantity, setQuantity] = useState(1);
-  // null = the base price; otherwise the index of the chosen offer.
-  const [offerIndex, setOfferIndex] = useState<number | null>(null);
-
+/** Size, colour and offer, chosen once and shared by both ways to buy. */
+export function ProductOptions({
+  product,
+  size,
+  color,
+  offerIndex,
+  onSize,
+  onColor,
+  onOffer,
+}: {
+  product: Product;
+  size: string | null;
+  color: string | null;
+  offerIndex: number | null;
+  onSize: (value: string) => void;
+  onColor: (value: string) => void;
+  onOffer: (value: number | null) => void;
+}) {
   const offers = product.offers ?? [];
-  const selectedOffer = offerIndex === null ? null : (offers[offerIndex] ?? null);
-  const unitCents = selectedOffer ? selectedOffer.price_cents : product.price_cents;
-
-  const soldOut = product.stock <= 0;
-  const max = Math.max(1, Math.min(product.stock, 8));
 
   return (
     <div className="mt-10">
@@ -79,7 +84,7 @@ export function AddToCart({ product }: { product: Product }) {
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setOfferIndex(null)}
+              onClick={() => onOffer(null)}
               className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
                 offerIndex === null
                   ? "border-transparent bg-accent text-white"
@@ -92,7 +97,7 @@ export function AddToCart({ product }: { product: Product }) {
               <button
                 key={`${offer.name}-${index}`}
                 type="button"
-                onClick={() => setOfferIndex(index)}
+                onClick={() => onOffer(index)}
                 className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
                   offerIndex === index
                     ? "border-transparent bg-accent text-white"
@@ -113,7 +118,7 @@ export function AddToCart({ product }: { product: Product }) {
               <button
                 key={s}
                 type="button"
-                onClick={() => setSize(s)}
+                onClick={() => onSize(s)}
                 className={`min-w-[3.25rem] rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
                   size === s
                     ? "border-transparent bg-accent text-white"
@@ -135,7 +140,7 @@ export function AddToCart({ product }: { product: Product }) {
               <button
                 key={c}
                 type="button"
-                onClick={() => setColor(c)}
+                onClick={() => onColor(c)}
                 className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
                   color === c
                     ? "border-transparent bg-accent text-white"
@@ -149,6 +154,37 @@ export function AddToCart({ product }: { product: Product }) {
         </fieldset>
       ) : null}
 
+    </div>
+  );
+}
+
+/**
+ * Quantity and the cart button. The selection is owned by ProductBuyPanel so
+ * the shopper picks an offer once, not once per purchase path.
+ */
+export function AddToCart({
+  product,
+  size,
+  color,
+  offerIndex,
+}: {
+  product: Product;
+  size: string | null;
+  color: string | null;
+  offerIndex: number | null;
+}) {
+  const { add } = useCart();
+  const [quantity, setQuantity] = useState(1);
+
+  const offers = product.offers ?? [];
+  const selectedOffer = offerIndex === null ? null : (offers[offerIndex] ?? null);
+  const unitCents = selectedOffer ? selectedOffer.price_cents : product.price_cents;
+
+  const soldOut = product.stock <= 0;
+  const max = Math.max(1, Math.min(product.stock, 8));
+
+  return (
+    <div>
       <div className="mt-10 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1 rounded-full border border-[color:var(--line-strong)] bg-white/60 p-1">
           <button

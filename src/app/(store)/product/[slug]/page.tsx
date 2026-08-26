@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
-import { CodOrderForm } from "@/components/cod-order-form";
-import { AddToCart, ProductGallery } from "@/components/product-purchase";
+import { ProductBuyPanel } from "@/components/product-buy-panel";
+import { ProductGallery } from "@/components/product-purchase";
 import { Reveal } from "@/components/reveal";
 import { Eyebrow, PillLink } from "@/components/ui";
 import { badgesFor, stockNote } from "@/lib/catalog/badges";
@@ -63,11 +63,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
 
           <p className="mt-8 max-w-md text-base leading-relaxed text-ink-soft">{product.description}</p>
 
-          <AddToCart product={product} />
-
-          <div className="mt-10">
-            <CodOrderForm product={product} />
-          </div>
+          <ProductBuyPanel product={product} />
 
           <div className="mt-14 border-t border-[color:var(--line)] pt-8">
             <p className="eyebrow text-ink-muted">Caractéristiques</p>

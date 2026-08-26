@@ -258,7 +258,7 @@ export default function OrderDetailScreen() {
               {order.city} · {order.district}
             </Text>
             <Button
-              label={shipping ? "Envoi à Intigo…" : "Prêt à expédier"}
+              label={shipping ? "Envoi à Intigo…" : "Créer le colis Intigo"}
               onPress={shipNow}
               disabled={shipping}
               style={styles.shipButton}

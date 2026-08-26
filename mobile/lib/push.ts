@@ -44,9 +44,14 @@ function projectId(): string | undefined {
  * Returns the token, or null with the reason logged (simulators have no push
  * hardware, and a token needs an EAS project id).
  */
+/** Last failure reason, surfaced in Réglages so a silent failure is visible. */
+export let lastPushError: string | null = null;
+
 export async function registerForOrderPushes(): Promise<string | null> {
+  lastPushError = null;
   if (!Device.isDevice) {
-    console.warn("[push] simulators cannot receive push notifications");
+    lastPushError = "Un émulateur ne reçoit pas de notifications — testez sur un vrai téléphone.";
+    console.warn("[push]", lastPushError);
     return null;
   }
 
@@ -58,22 +63,42 @@ export async function registerForOrderPushes(): Promise<string | null> {
     status = (await Notifications.requestPermissionsAsync()).status;
   }
   if (status !== "granted") {
-    console.warn("[push] notification permission denied");
+    lastPushError = "Permission refusée. Autorisez les notifications dans les réglages Android.";
+    console.warn("[push]", lastPushError);
     return null;
   }
 
   const id = projectId();
   if (!id) {
-    console.warn("[push] no EAS project id — run `npx eas init` in mobile/");
+    lastPushError = "APK trop ancienne (aucun projet EAS). Installez la dernière version.";
+    console.warn("[push]", lastPushError);
     return null;
   }
 
-  const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId: id });
+  let token: string;
+  try {
+    ({ data: token } = await Notifications.getExpoPushTokenAsync({ projectId: id }));
+  } catch (error) {
+    // Usually a missing FCM key on the Expo project, or a package-name mismatch.
+    lastPushError = `Expo n'a pas pu créer le jeton : ${
+      error instanceof Error ? error.message : "erreur inconnue"
+    }`;
+    console.warn("[push]", lastPushError);
+    return null;
+  }
 
-  await apiFetch("/api/admin/devices", {
-    method: "POST",
-    body: { token, platform: Platform.OS },
-  });
+  try {
+    await apiFetch("/api/admin/devices", {
+      method: "POST",
+      body: { token, platform: Platform.OS },
+    });
+  } catch (error) {
+    lastPushError = `Enregistrement refusé par le serveur : ${
+      error instanceof Error ? error.message : "erreur inconnue"
+    }`;
+    console.warn("[push]", lastPushError);
+    return null;
+  }
 
   registered = token;
   return token;

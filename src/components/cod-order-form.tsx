@@ -15,11 +15,23 @@ const inputClass =
  * Buy-now form for cash on delivery — the way most Tunisian shops sell. No
  * cart, no account: the piece, a phone number and an address.
  */
-export function CodOrderForm({ product }: { product: Product }) {
-  const [size, setSize] = useState<string | null>(product.sizes[0] ?? null);
-  const [color, setColor] = useState<string | null>(product.colors[0] ?? null);
+/**
+ * Cash-on-delivery form. Size, colour and offer are chosen once in
+ * ProductOptions above and passed in — rendering a second set of selectors
+ * let a shopper pick "3 lampes" in one place and the unit price in the other.
+ */
+export function CodOrderForm({
+  product,
+  size,
+  color,
+  offerIndex,
+}: {
+  product: Product;
+  size: string | null;
+  color: string | null;
+  offerIndex: number | null;
+}) {
   const [quantity, setQuantity] = useState(1);
-  const [offerIndex, setOfferIndex] = useState<number | null>(null);
   const [result, setResult] = useState<CodOrderResult | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -64,83 +76,6 @@ export function CodOrderForm({ product }: { product: Product }) {
           Vous payez le livreur à la réception. Aucune carte, aucun compte — laissez votre numéro et
           nous vous appelons pour confirmer.
         </p>
-
-        {offers.length > 0 ? (
-          <fieldset className="mt-6">
-            <legend className="eyebrow text-ink-muted">Offres</legend>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setOfferIndex(null)}
-                className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
-                  offerIndex === null
-                    ? "border-transparent bg-accent text-white"
-                    : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
-                }`}
-              >
-                Prix unitaire — {formatMoney(product.price_cents, product.currency)}
-              </button>
-              {offers.map((offer, index) => (
-                <button
-                  key={`${offer.name}-${index}`}
-                  type="button"
-                  onClick={() => setOfferIndex(index)}
-                  className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
-                    offerIndex === index
-                      ? "border-transparent bg-accent text-white"
-                      : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
-                  }`}
-                >
-                  {offer.name} — {formatMoney(offer.price_cents, product.currency)}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
-
-        {product.sizes.length > 0 ? (
-          <fieldset className="mt-6">
-            <legend className="eyebrow text-ink-muted">Taille</legend>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {product.sizes.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setSize(value)}
-                  className={`min-w-[3rem] rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
-                    size === value
-                      ? "border-transparent bg-accent text-white"
-                      : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
-
-        {product.colors.length > 0 ? (
-          <fieldset className="mt-5">
-            <legend className="eyebrow text-ink-muted">Couleur</legend>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {product.colors.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setColor(value)}
-                  className={`rounded-full border px-4 py-2 text-[15px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
-                    color === value
-                      ? "border-transparent bg-accent text-white"
-                      : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">

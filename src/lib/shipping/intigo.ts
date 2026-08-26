@@ -198,6 +198,17 @@ function codPrice(order: Order): number {
   return Number((order.total_cents / divisor).toFixed(3));
 }
 
+/**
+ * Intigo wants a bare local number. Orders store the display form
+ * ("+216 53 773 703"), and sending that — even with spaces stripped — is
+ * rejected as `phone1: Phone must be at least 8 digits`, because the "+" and
+ * the 216 country code are not digits it counts.
+ */
+function localPhone(input: string | null | undefined): string {
+  const digits = String(input ?? "").replace(/\D/g, "");
+  return digits.startsWith("216") ? digits.slice(3) : digits;
+}
+
 function describeParcel(order: Order): string {
   const items = order.order_items ?? [];
   if (items.length === 0) return "Colis";
@@ -232,7 +243,7 @@ export async function createParcelByName({
 
   const payload: Record<string, unknown> = {
     recipient_name: order.full_name.slice(0, 255),
-    phone1: (order.phone ?? "").replace(/\s+/g, ""),
+    phone1: localPhone(order.phone),
     destination_address: address,
     city_name: cityName,
     district_name: districtName,
