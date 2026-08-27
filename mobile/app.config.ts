@@ -25,6 +25,11 @@ const config: ExpoConfig = {
     bundleIdentifier: `com.${BRAND.KEY}.admin`,
   },
   android: {
+    // Lets the native Firebase SDK register with FCM on the device — the
+    // service account key uploaded to EAS only lets Expo's backend *send*
+    // through FCM; without this file the app has no Firebase project to
+    // register against, so getExpoPushTokenAsync() fails on-device.
+    googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#FDFBF7",
       foregroundImage: "./assets/android-icon-foreground.png",
