@@ -82,6 +82,9 @@ export default function OrderDetailScreen() {
   const catalogue = useAsync(() => api.products(), picking ? "open" : "");
 
   const order = data?.order;
+  // Bare digits with country code, e.g. "21653773703" — what tel:/wa.me expect,
+  // not the "+216 XX XXX XXX" display form the order stores.
+  const phoneDigits = (order?.phone ?? "").replace(/\D/g, "");
 
   /**
    * Hands the parcel to Intigo through the same admin endpoint the web uses.
@@ -459,7 +462,7 @@ export default function OrderDetailScreen() {
           />
 
           {saveError ? <Message tone="error">{saveError}</Message> : null}
-          {savedAt > 0 && !edit ? <Message>Order updated.</Message> : null}
+          {savedAt > 0 && !edit ? <Message>Commande mise à jour.</Message> : null}
 
           <Button
             label="Enregistrer"
@@ -467,10 +470,34 @@ export default function OrderDetailScreen() {
             loading={savingEdit}
             style={styles.button}
           />
+
+          {/*
+            Both use the customer's phone as stored — the same "+216 XX XXX XXX"
+            form the confirmation call uses — stripped to digits for tel:/wa.me.
+            Hidden rather than shown-disabled when there is no phone: nothing to
+            call or message, so there is nothing useful the button could do.
+          */}
+          {phoneDigits ? (
+            <>
+              <Button
+                label="Appeler le client"
+                variant="outline"
+                onPress={() => Linking.openURL(`tel:+${phoneDigits}`)}
+                style={styles.button}
+              />
+              <Button
+                label="WhatsApp"
+                variant="outline"
+                onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)}
+                style={styles.button}
+              />
+            </>
+          ) : null}
+
           <Button
             label="Envoyer un e-mail au client"
             variant="outline"
-            onPress={() => Linking.openURL(`mailto:${order.email}?subject=Order ${order.order_number}`)}
+            onPress={() => Linking.openURL(`mailto:${order.email}?subject=Commande ${order.order_number}`)}
             style={styles.button}
           />
         </View>
