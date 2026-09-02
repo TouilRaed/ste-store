@@ -9,9 +9,11 @@ import type { Product } from "@/lib/types";
  * Owns the shopper's choice of size, colour and offer for the whole product
  * page.
  *
- * The cart button and the cash-on-delivery form used to keep their own copies,
- * so the selectors appeared twice and could disagree — a shopper could pick
- * "3 lampes" beside the cart button and still order at the unit price below.
+ * The picker itself is rendered once, inside the commande (checkout) block —
+ * not repeated above the cart button too. It used to appear twice, which let
+ * a shopper pick "3 lampes" in one copy and still order at the unit price in
+ * the other; sharing one piece of state instead of one rendered picker would
+ * have fixed the disagreement but not the redundant UI.
  */
 export function ProductBuyPanel({ product }: { product: Product }) {
   const [size, setSize] = useState<string | null>(product.sizes[0] ?? null);
@@ -21,6 +23,8 @@ export function ProductBuyPanel({ product }: { product: Product }) {
 
   return (
     <div>
+      <AddToCart product={product} size={size} color={color} offerIndex={offerIndex} />
+
       <ProductOptions
         product={product}
         size={size}
@@ -31,9 +35,7 @@ export function ProductBuyPanel({ product }: { product: Product }) {
         onOffer={setOfferIndex}
       />
 
-      <AddToCart product={product} size={size} color={color} offerIndex={offerIndex} />
-
-      <div className="mt-10">
+      <div className="mt-8">
         <CodOrderForm product={product} size={size} color={color} offerIndex={offerIndex} />
       </div>
     </div>

@@ -16,8 +16,12 @@ export const ORDER_STATUSES = [
   "cancelled",
 ] as const;
 
-/** The ones an operator sets manually, in workflow order. */
-export const SETTABLE_ORDER_STATUSES = ["pending", "confirmed", "ready", "cancelled"] as const;
+/**
+ * The ones an operator sets manually. "ready" is not offered as a button:
+ * booking the parcel with Intigo is what actually moves an order forward, so
+ * a separate manual "ready" step only invited confusion with that action.
+ */
+export const SETTABLE_ORDER_STATUSES = ["pending", "confirmed", "cancelled"] as const;
 
 /**
  * Display labels. The stored values stay English — a Postgres CHECK constraint
@@ -115,6 +119,16 @@ export const productInputSchema = z.object({
 export type ProductInput = z.infer<typeof productInputSchema>;
 
 export const productPatchSchema = productInputSchema.partial();
+
+/** Collection slug is auto-generated from the name, same as for products. */
+export const collectionInputSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  tagline: z.preprocess(blankToNull, z.string().trim().max(200).nullable()),
+  position: z.coerce.number().int().min(0).max(1000).default(0),
+});
+
+export const collectionPatchSchema = collectionInputSchema.partial();
+export type CollectionInput = z.infer<typeof collectionInputSchema>;
 
 export const orderPatchSchema = z.object({
   status: z.enum(ORDER_STATUSES),

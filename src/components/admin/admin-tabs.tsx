@@ -7,6 +7,7 @@ const TABS = [
   { href: "/admin", label: "Tableau de bord", glyph: "◈", exact: true },
   { href: "/admin/orders", label: "Commandes", glyph: "▤", exact: false },
   { href: "/admin/products", label: "Produits", glyph: "◇", exact: false },
+  { href: "/admin/collections", label: "Catégories", glyph: "▧", exact: false },
 ];
 
 /**

@@ -29,6 +29,14 @@ export function InstagramIcon({ className = "h-4 w-4" }: { className?: string })
   );
 }
 
+export function FacebookIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M13.5 21v-8.2h2.75l.41-3.19h-3.16V7.55c0-.92.26-1.55 1.57-1.55h1.68V3.14A22.5 22.5 0 0 0 13.9 3c-2.44 0-4.11 1.49-4.11 4.22v2.39H7v3.19h2.79V21h3.71Z" />
+    </svg>
+  );
+}
+
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <span

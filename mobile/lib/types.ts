@@ -9,8 +9,8 @@ export const ORDER_STATUSES = [
   "cancelled",
 ] as const;
 
-/** The ones an operator sets by hand, in workflow order. */
-export const SETTABLE_ORDER_STATUSES = ["pending", "confirmed", "ready", "cancelled"] as const;
+/** Mirrors SETTABLE_ORDER_STATUSES on the web — "ready" is not a button here either. */
+export const SETTABLE_ORDER_STATUSES = ["pending", "confirmed", "cancelled"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 /** Mirrors ORDER_STATUS_LABELS on the web. Stored values stay English. */

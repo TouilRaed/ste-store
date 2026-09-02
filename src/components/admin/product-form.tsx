@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { deleteProductAction, saveProductAction, type ActionResult } from "@/app/admin/actions";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { OffersEditor } from "@/components/admin/offers-editor";
@@ -49,6 +49,10 @@ function Field({
 export function ProductForm({ product, collections }: ProductFormProps) {
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(saveProductAction, null);
   const errors = state?.fieldErrors ?? {};
+  // "Disponible" replaces a raw stock number: the toggle sets a large or zero
+  // quantity behind the scenes, so the existing "en stock" / "épuisé" logic
+  // elsewhere in the app needs no change.
+  const [disponible, setDisponible] = useState(product ? product.stock > 0 : true);
 
   return (
     <>
@@ -62,14 +66,14 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 <input name="name" defaultValue={product?.name} className={inputClass} />
               </Field>
 
-              <Field
-                label="Slug"
-                hint="Utilisé dans l'URL : /product/votre-slug"
-                error={errors.slug}
-                className="sm:col-span-2"
-              >
-                <input name="slug" defaultValue={product?.slug} className={inputClass} />
-              </Field>
+              {product ? (
+                <p className="-mt-3 text-xs text-ink-muted sm:col-span-2">
+                  URL : /product/{product.slug}
+                </p>
+              ) : null}
+              {errors.slug?.length ? (
+                <p className="-mt-3 text-xs text-accent-deep sm:col-span-2">{errors.slug[0]}</p>
+              ) : null}
 
               <Field label="Description" error={errors.description} className="sm:col-span-2">
                 <textarea
@@ -162,24 +166,28 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                   />
                 </Field>
 
-                <Field label="Devise" error={errors.currency}>
-                  <input
-                    name="currency"
-                    maxLength={3}
-                    defaultValue={product?.currency ?? "TND"}
-                    className={`${inputClass} uppercase`}
-                  />
-                </Field>
+                {/* The shop only ever sells in dinars — no field to fill in. */}
+                <input type="hidden" name="currency" value="TND" />
 
-                <Field label="Stock" error={errors.stock}>
-                  <input
-                    name="stock"
-                    type="number"
-                    min={0}
-                    defaultValue={product?.stock ?? 0}
-                    className={inputClass}
-                  />
-                </Field>
+                <div className="col-span-2">
+                  <span className="eyebrow text-ink-muted">Disponibilité</span>
+                  <label className="mt-2 flex items-center gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={disponible}
+                      onChange={(e) => setDisponible(e.target.checked)}
+                      className="h-4 w-4 accent-[color:var(--ink)]"
+                    />
+                    Disponible
+                  </label>
+                  {/* Behind the scenes this is still the stock column: a large
+                      number when available, zero when not — the storefront's
+                      "en stock" / "épuisé" logic already reads it that way. */}
+                  <input type="hidden" name="stock" value={disponible ? 999 : 0} />
+                  {errors.stock?.length ? (
+                    <span className="mt-2 block text-xs text-accent-deep">{errors.stock[0]}</span>
+                  ) : null}
+                </div>
 
                 <Field label="Collection" error={errors.collection_id} className="col-span-2">
                   <select
@@ -212,7 +220,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                       defaultChecked={product?.is_active ?? true}
                       className="h-4 w-4 accent-[color:var(--ink)]"
                     />
-                    Visible in the shop
+                    Visible dans la boutique
                   </label>
                   <label className="flex items-center gap-3 text-sm">
                     <input
@@ -221,7 +229,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                       defaultChecked={product?.is_featured ?? false}
                       className="h-4 w-4 accent-[color:var(--ink)]"
                     />
-                    Featured on the home page
+                    Mis en avant sur l&apos;accueil
                   </label>
                 </div>
               </div>

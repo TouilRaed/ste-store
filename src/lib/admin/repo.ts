@@ -1,7 +1,13 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
-import type { OrderItemInput, OrderPatch, OrderStatus, ProductInput } from "@/lib/admin/schemas";
+import type {
+  CollectionInput,
+  OrderItemInput,
+  OrderPatch,
+  OrderStatus,
+  ProductInput,
+} from "@/lib/admin/schemas";
 import { shippingFor } from "@/lib/format";
 import type { Collection, Order, Product } from "@/lib/types";
 
@@ -59,6 +65,13 @@ export async function getProduct(id: string): Promise<AdminProduct> {
   return data as unknown as AdminProduct;
 }
 
+/** Used to make an auto-generated slug unique before insert, not after a 409. */
+export async function productSlugExists(slug: string): Promise<boolean> {
+  const { data, error } = await client().from("products").select("id").eq("slug", slug).maybeSingle();
+  if (error) throw new AdminError(500, error.message);
+  return Boolean(data);
+}
+
 export async function createProduct(input: ProductInput): Promise<AdminProduct> {
   const { data, error } = await client().from("products").insert(input).select(PRODUCT_COLUMNS).single();
   if (error) throw new AdminError(error.code === "23505" ? 409 : 500, error.message);
@@ -90,6 +103,59 @@ export async function listCollections(): Promise<Collection[]> {
     .order("position", { ascending: true });
   if (error) throw new AdminError(500, error.message);
   return (data ?? []) as Collection[];
+}
+
+export async function collectionSlugExists(slug: string): Promise<boolean> {
+  const { data, error } = await client().from("collections").select("id").eq("slug", slug).maybeSingle();
+  if (error) throw new AdminError(500, error.message);
+  return Boolean(data);
+}
+
+export async function createCollection(
+  input: { slug: string } & CollectionInput,
+): Promise<Collection> {
+  const { data, error } = await client()
+    .from("collections")
+    .insert(input)
+    .select("id, slug, name, tagline, position")
+    .single();
+  if (error) throw new AdminError(error.code === "23505" ? 409 : 500, error.message);
+  return data as unknown as Collection;
+}
+
+export async function updateCollection(
+  id: string,
+  patch: Partial<CollectionInput>,
+): Promise<Collection> {
+  if (Object.keys(patch).length === 0) {
+    const { data, error } = await client()
+      .from("collections")
+      .select("id, slug, name, tagline, position")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new AdminError(500, error.message);
+    if (!data) throw new AdminError(404, "Collection introuvable");
+    return data as unknown as Collection;
+  }
+  const { data, error } = await client()
+    .from("collections")
+    .update(patch)
+    .eq("id", id)
+    .select("id, slug, name, tagline, position")
+    .maybeSingle();
+  if (error) throw new AdminError(error.code === "23505" ? 409 : 500, error.message);
+  if (!data) throw new AdminError(404, "Collection introuvable");
+  return data as unknown as Collection;
+}
+
+/**
+ * Products pointing at this collection are not deleted — the foreign key is
+ * `on delete set null` in the schema, so they simply become uncategorised
+ * rather than vanishing along with the collection.
+ */
+export async function deleteCollection(id: string): Promise<void> {
+  const { error } = await client().from("collections").delete().eq("id", id);
+  if (error) throw new AdminError(500, error.message);
 }
 
 // --- Orders -----------------------------------------------------------------

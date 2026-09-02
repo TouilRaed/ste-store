@@ -14,14 +14,21 @@ import {
 import { rateLimit } from "@/lib/admin/rate-limit";
 import {
   AdminError,
+  collectionSlugExists,
+  createCollection,
   createProduct,
+  deleteCollection,
   deleteProduct,
+  productSlugExists,
   setOrderItems,
+  updateCollection,
   updateOrder,
   updateOrderStatus,
   updateProduct,
 } from "@/lib/admin/repo";
 import {
+  collectionInputSchema,
+  collectionPatchSchema,
   orderItemsSchema,
   orderPatchSchema,
   orderUpdateSchema,
@@ -72,6 +79,32 @@ export async function adminLogout() {
   redirect("/admin/login");
 }
 
+/**
+ * Kept in ASCII only — the slug column and its schema regex both reject
+ * anything else, so an accented name has to lose the accents rather than the
+ * whole slug field falling back to nothing.
+ */
+function slugify(input: string): string {
+  const base = input
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  return base || "produit";
+}
+
+/** Appends -2, -3… until the slug is free, rather than surfacing a raw 409. */
+async function uniqueSlug(name: string): Promise<string> {
+  const base = slugify(name);
+  let candidate = base;
+  for (let n = 2; n <= 50 && (await productSlugExists(candidate)); n += 1) {
+    candidate = `${base}-${n}`;
+  }
+  return candidate;
+}
+
 export async function saveProductAction(
   _prev: ActionResult | null,
   formData: FormData,
@@ -85,8 +118,7 @@ export async function saveProductAction(
     // Price is required: a blank must fail validation, not coerce to 0.
     const priceMinor = majorInputToMinor(formData.get("price_dinars"), currency) ?? Number.NaN;
     const compareMinor = majorInputToMinor(formData.get("compare_at_dinars"), currency);
-    const raw = {
-      slug: formData.get("slug"),
+    const raw: Record<string, unknown> = {
       name: formData.get("name"),
       description: formData.get("description"),
       details: formData.get("details"),
@@ -104,6 +136,13 @@ export async function saveProductAction(
       is_active: formData.get("is_active") === "on",
       offers: formData.get("offers"),
     };
+
+    // No slug field in the form: generate one on create, leave it alone on
+    // edit. Setting it to null instead of omitting it would fail validation —
+    // the patch schema allows a missing key, not an explicit null string.
+    if (!id) {
+      raw.slug = await uniqueSlug(String(formData.get("name") ?? ""));
+    }
 
     const schema = id ? productPatchSchema : productInputSchema;
     const parsed = schema.safeParse(raw);
@@ -129,6 +168,66 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   redirect("/admin/products");
+}
+
+/** Appends -2, -3… on a name collision rather than surfacing a raw 409. */
+async function uniqueCollectionSlug(name: string): Promise<string> {
+  const base = slugify(name);
+  let candidate = base;
+  for (let n = 2; n <= 50 && (await collectionSlugExists(candidate)); n += 1) {
+    candidate = `${base}-${n}`;
+  }
+  return candidate;
+}
+
+export async function saveCollectionAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+
+    const id = String(formData.get("id") ?? "").trim();
+    const raw: Record<string, unknown> = {
+      name: formData.get("name"),
+      tagline: formData.get("tagline"),
+      position: formData.get("position"),
+    };
+
+    const schema = id ? collectionPatchSchema : collectionInputSchema;
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: "Vérifiez les champs en surbrillance.",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    if (id) {
+      await updateCollection(id, parsed.data);
+    } else {
+      const slug = await uniqueCollectionSlug(String(formData.get("name") ?? ""));
+      await createCollection({ slug, ...(parsed.data as ReturnType<typeof collectionInputSchema.parse>) });
+    }
+  } catch (error) {
+    return { ok: false, error: toMessage(error) };
+  }
+
+  revalidatePath("/admin/collections");
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  return { ok: true };
+}
+
+export async function deleteCollectionAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (id) await deleteCollection(id);
+  revalidatePath("/admin/collections");
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  redirect("/admin/collections");
 }
 
 export async function setOrderStatusAction(formData: FormData): Promise<void> {

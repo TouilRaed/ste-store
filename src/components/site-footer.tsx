@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { SpinningLogo } from "@/components/spinning-logo";
-import { Eyebrow, InstagramIcon } from "@/components/ui";
-import { BRAND, INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/brand";
+import { Eyebrow, FacebookIcon, InstagramIcon } from "@/components/ui";
+import {
+  BRAND,
+  FACEBOOK_URL,
+  INSTAGRAM_HANDLE,
+  INSTAGRAM_URL,
+  hasFacebook,
+  hasInstagram,
+} from "@/lib/brand";
 
 const COLUMNS = [
   {
@@ -50,19 +57,34 @@ export function SiteFooter() {
             </div>
           ))}
 
-          {/* Contact — Instagram lives here rather than in the nav band. */}
+          {/* Contact — social links live here rather than in the nav band. */}
           <div>
             <p className="eyebrow text-ink-muted">Contact</p>
 
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="mt-5 inline-flex items-center gap-2.5 rounded-full bg-accent px-5 py-2.5 text-base text-white transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-deep active:scale-[0.98]"
-            >
-              <InstagramIcon className="h-[18px] w-[18px]" />
-              {INSTAGRAM_HANDLE}
-            </a>
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              {hasInstagram ? (
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2.5 rounded-full bg-accent px-5 py-2.5 text-base text-white transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-deep active:scale-[0.98]"
+                >
+                  <InstagramIcon className="h-[18px] w-[18px]" />
+                  {INSTAGRAM_HANDLE}
+                </a>
+              ) : null}
+              {hasFacebook ? (
+                <a
+                  href={FACEBOOK_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2.5 rounded-full bg-accent px-5 py-2.5 text-base text-white transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-deep active:scale-[0.98]"
+                >
+                  <FacebookIcon className="h-[18px] w-[18px]" />
+                  Facebook
+                </a>
+              ) : null}
+            </div>
 
             <p className="mt-4 text-base leading-relaxed text-ink-soft">
               Écrivez-nous en message privé pour les tailles, les disponibilités ou le suivi d&apos;une

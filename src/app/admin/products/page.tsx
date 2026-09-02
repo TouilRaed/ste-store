@@ -26,7 +26,7 @@ export default async function AdminProductsPage() {
   return (
     <>
       <PageHeading
-        eyebrow={`${products.length} in the catalogue`}
+        eyebrow={`${products.length} produit${products.length === 1 ? "" : "s"}`}
         title="Produits"
         action={<PillLink href="/admin/products/new">Nouvelle pièce</PillLink>}
       />
@@ -58,14 +58,16 @@ export default async function AdminProductsPage() {
                   ) : null}
                   {product.is_featured ? (
                     <span className="eyebrow rounded-full bg-accent-soft px-3 py-1 text-accent-deep">
-                      Featured
+                      Mis en avant
                     </span>
                   ) : null}
 
                   <span
-                    className={`text-xs tabular-nums ${product.stock <= 8 ? "text-accent-deep" : "text-ink-muted"}`}
+                    className={`eyebrow rounded-full px-3 py-1 ${
+                      product.stock > 0 ? "bg-[#e7efe4] text-sage" : "bg-accent-soft text-accent-deep"
+                    }`}
                   >
-                    {product.stock} in stock
+                    {product.stock > 0 ? "Disponible" : "Rupture"}
                   </span>
 
                   <span className="w-20 text-right text-sm tabular-nums">

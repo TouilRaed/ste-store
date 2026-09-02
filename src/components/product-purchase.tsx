@@ -221,9 +221,8 @@ export function AddToCart({
               quantity,
             })
           }
-          className="min-w-[15rem] flex-1"
         >
-          {soldOut ? "Épuisé" : `Ajouter au panier — ${formatMoney(unitCents * quantity, product.currency)}`}
+          {soldOut ? "Épuisé" : `Ajouter — ${formatMoney(unitCents * quantity, product.currency)}`}
         </PillButton>
       </div>
 
