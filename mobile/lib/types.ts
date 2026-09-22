@@ -42,6 +42,25 @@ export type ProductOffer = {
   price_cents: number;
 };
 
+/** One pickable value inside a group, e.g. "Laiton" under "Couleur". */
+export type ProductOptionChoice = {
+  name: string;
+  /** Shown in the storefront gallery when this choice is picked. */
+  image: string | null;
+};
+
+/** A way the product varies — "Couleur", "Type", "Modèle". */
+export type ProductOptionGroup = {
+  label: string;
+  choices: ProductOptionChoice[];
+};
+
+/** What a customer picked, copied onto the order line. */
+export type SelectedOption = {
+  label: string;
+  value: string;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -52,8 +71,10 @@ export type Product = {
   compare_at_cents: number | null;
   currency: string;
   images: string[];
+  /** Legacy, kept for orders placed before option groups existed. */
   sizes: string[];
   colors: string[];
+  option_groups: ProductOptionGroup[];
   collection_id: string | null;
   gender: "women" | "men" | "unisex";
   stock: number;
@@ -70,6 +91,7 @@ export type OrderItem = {
   product_name: string;
   product_slug: string;
   image: string | null;
+  options?: SelectedOption[];
   size: string | null;
   color: string | null;
   offer_name?: string | null;
@@ -139,6 +161,8 @@ export type OrderItemInput = {
   product_slug: string;
   product_name: string;
   image: string | null;
+  /** Carried through untouched: saving a line must not erase the choice. */
+  options?: SelectedOption[];
   size: string | null;
   color: string | null;
   offer_name?: string | null;

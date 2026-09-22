@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import { api, ApiError } from "../lib/api";
 import { majorInputToMinor, minorToMajorInput } from "../lib/format";
-import { theme } from "../lib/theme";
-import type { Collection, Product, ProductInput } from "../lib/types";
+import { radius, theme } from "../lib/theme";
+import type { Collection, Product, ProductInput, ProductOptionGroup } from "../lib/types";
 import { Button, Card, Chip, Eyebrow, Field, Message, Toggle, useBottomInset } from "./ui";
 
 type ProductFormProps = {
@@ -35,6 +35,7 @@ type Draft = {
   offers: { name: string; price: string }[];
   sizes: string;
   colors: string;
+  optionGroups: ProductOptionGroup[];
   price: string;
   compareAt: string;
   currency: string;
@@ -72,6 +73,10 @@ function toDraft(product?: Product): Draft {
     })),
     sizes: product?.sizes.join("\n") ?? "",
     colors: product?.colors.join("\n") ?? "",
+    optionGroups: (product?.option_groups ?? []).map((g) => ({
+      label: g.label,
+      choices: (g.choices ?? []).map((c) => ({ name: c.name, image: c.image ?? null })),
+    })),
     price: minorToMajorInput(product?.price_cents, product?.currency ?? "TND"),
     compareAt: minorToMajorInput(product?.compare_at_cents, product?.currency ?? "TND"),
     currency: product?.currency ?? "TND",
@@ -130,6 +135,50 @@ export function ProductForm({ product, collections }: ProductFormProps) {
     }
   }
 
+  function patchGroup(index: number, patch: Partial<ProductOptionGroup>) {
+    setDraft((prev) => ({
+      ...prev,
+      optionGroups: prev.optionGroups.map((g, i) => (i === index ? { ...g, ...patch } : g)),
+    }));
+  }
+
+  function patchChoice(gi: number, ci: number, patch: { name?: string; image?: string | null }) {
+    setDraft((prev) => ({
+      ...prev,
+      optionGroups: prev.optionGroups.map((g, i) =>
+        i === gi ? { ...g, choices: g.choices.map((c, j) => (j === ci ? { ...c, ...patch } : c)) } : g,
+      ),
+    }));
+  }
+
+  /** Same upload path as the product photos, attached to one choice. */
+  async function pickOptionImage(gi: number, ci: number) {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError("L'accès à la photothèque est nécessaire pour ajouter des images");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.85 });
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    setUploading(true);
+    setError(null);
+    try {
+      const url = await api.uploadImage({
+        uri: asset.uri,
+        name: asset.fileName ?? `option-${Date.now()}.jpg`,
+        type: asset.mimeType ?? "image/jpeg",
+      });
+      patchChoice(gi, ci, { image: url });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Échec de l'envoi");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function buildPayload(): ProductInput | null {
     // Typed in dinars; the API and columns expect minor units.
     const currency = draft.currency.trim().toUpperCase() || "TND";
@@ -156,6 +205,15 @@ export function ProductForm({ product, collections }: ProductFormProps) {
         .filter((o) => o.name.length > 0 && !Number.isNaN(o.price_cents)),
       sizes: splitLines(draft.sizes),
       colors: splitLines(draft.colors),
+      // Half-typed rows are drafts, not options — they never reach the API.
+      option_groups: draft.optionGroups
+        .map((g) => ({
+          label: g.label.trim(),
+          choices: g.choices
+            .map((c) => ({ name: c.name.trim(), image: c.image }))
+            .filter((c) => c.name.length > 0),
+        }))
+        .filter((g) => g.label.length > 0 && g.choices.length > 0),
       price_cents: price,
       compare_at_cents: Number.isNaN(compareAt as number) ? null : compareAt,
       currency: draft.currency.trim().toUpperCase() || "TND",
@@ -292,14 +350,91 @@ export function ProductForm({ product, collections }: ProductFormProps) {
               Épuisé, « Plus que N » et la promo sont automatiques — inutile de les cocher.
             </Text>
           </View>
-          <Field label="Tailles" value={draft.sizes} onChangeText={(v) => set("sizes", v)} multiline hint="Une par ligne" />
-          <Field
-            label="Couleurs"
-            value={draft.colors}
-            onChangeText={(v) => set("colors", v)}
-            multiline
-            hint="Une par ligne"
-          />
+          {/* Option groups — "Couleur", "Type" — each choice with its own
+              photo, which the storefront shows when the shopper picks it. */}
+          <View style={styles.optionBlock}>
+            <Eyebrow>Options</Eyebrow>
+            <Text style={styles.photoHint}>
+              Déclinaisons du produit. La photo d&apos;une option s&apos;affiche quand le client la
+              sélectionne, et le choix part avec la commande.
+            </Text>
+
+            {draft.optionGroups.map((group, gi) => (
+              <View key={`group-${gi}`} style={styles.optionGroup}>
+                <Field
+                  label="Nom du groupe"
+                  value={group.label}
+                  onChangeText={(v) => patchGroup(gi, { label: v })}
+                  placeholder="Couleur"
+                />
+
+                {group.choices.map((choice, ci) => (
+                  <View key={`choice-${gi}-${ci}`} style={styles.optionRow}>
+                    <Pressable
+                      onPress={() => pickOptionImage(gi, ci)}
+                      style={styles.optionThumb}
+                      disabled={uploading}
+                    >
+                      {choice.image ? (
+                        <Image source={{ uri: choice.image }} style={styles.optionThumbImage} />
+                      ) : (
+                        <Text style={styles.photoAddText}>+</Text>
+                      )}
+                    </Pressable>
+
+                    <View style={styles.optionName}>
+                      <Field
+                        label=""
+                        value={choice.name}
+                        onChangeText={(v) => patchChoice(gi, ci, { name: v })}
+                        placeholder="Laiton"
+                      />
+                    </View>
+
+                    <Pressable
+                      onPress={() =>
+                        patchGroup(gi, { choices: group.choices.filter((_, j) => j !== ci) })
+                      }
+                      hitSlop={10}
+                    >
+                      <Text style={styles.optionRemove}>✕</Text>
+                    </Pressable>
+                  </View>
+                ))}
+
+                <View style={styles.optionActions}>
+                  <Button
+                    label="+ Option"
+                    variant="outline"
+                    onPress={() =>
+                      patchGroup(gi, { choices: [...group.choices, { name: "", image: null }] })
+                    }
+                  />
+                  <Button
+                    label="Retirer le groupe"
+                    variant="danger"
+                    onPress={() =>
+                      set(
+                        "optionGroups",
+                        draft.optionGroups.filter((_, i) => i !== gi),
+                      )
+                    }
+                  />
+                </View>
+              </View>
+            ))}
+
+            <Button
+              label="+ Ajouter un groupe"
+              variant="outline"
+              onPress={() =>
+                set("optionGroups", [
+                  ...draft.optionGroups,
+                  { label: "", choices: [{ name: "", image: null }] },
+                ])
+              }
+            />
+          </View>
         </Card>
 
         <Card style={styles.card}>
@@ -467,6 +602,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   photoRemoveText: { fontSize: 15, lineHeight: 17, color: theme.accentDeep },
+  optionBlock: { marginTop: 8, marginBottom: 18 },
+  optionGroup: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: radius.field,
+    borderWidth: 1,
+    borderColor: theme.line,
+  },
+  optionRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  optionThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: theme.lineStrong,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  optionThumbImage: { width: "100%", height: "100%" },
+  optionName: { flex: 1 },
+  optionRemove: { fontSize: 16, color: theme.inkMuted, paddingHorizontal: 4 },
+  optionActions: { flexDirection: "row", gap: 10, marginTop: 4 },
   photoAdd: {
     width: 78,
     height: 104,

@@ -182,6 +182,9 @@ export default function OrderDetailScreen() {
       product_slug: item.product_slug,
       product_name: item.product_name,
       image: item.image ?? null,
+      // Carried through untouched: the editor replaces every line on save, so
+      // dropping these would erase what the customer chose.
+      options: item.options ?? [],
       size: item.size ?? null,
       color: item.color ?? null,
       unit_cents: item.unit_cents,
@@ -200,8 +203,13 @@ export default function OrderDetailScreen() {
         product_slug: product.slug,
         product_name: product.name,
         image: product.images[0] ?? null,
-        size: product.sizes[0] ?? null,
-        color: product.colors[0] ?? null,
+        // A piece added by the shop has no customer choice behind it; the
+        // first choice of each group is the sensible default.
+        options: (product.option_groups ?? [])
+          .filter((g) => g.choices.length > 0)
+          .map((g) => ({ label: g.label, value: g.choices[0].name })),
+        size: null,
+        color: null,
         unit_cents: product.price_cents,
         quantity: 1,
       },
@@ -321,6 +329,11 @@ export default function OrderDetailScreen() {
                   <Text style={styles.meta}>
                     {line.quantity} x {formatMoney(line.unit_cents, order.currency)}
                   </Text>
+                  {line.options && line.options.length > 0 ? (
+                    <Text style={styles.meta}>
+                      {line.options.map((o) => `${o.label} : ${o.value}`).join(" · ")}
+                    </Text>
+                  ) : null}
                 </View>
                 <Text style={styles.itemPrice}>
                   {formatMoney(line.unit_cents * line.quantity, order.currency)}
