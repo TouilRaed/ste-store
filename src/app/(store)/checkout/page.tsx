@@ -17,7 +17,6 @@ const FIELDS = [
   { name: "email", label: "Email", autoComplete: "email", type: "email", span: 2 },
   { name: "phone", label: "Téléphone", autoComplete: "tel", type: "tel", span: 2 },
   { name: "address_line1", label: "Adresse", autoComplete: "address-line1", span: 2 },
-  { name: "address_line2", label: "Appartement, étage (facultatif)", autoComplete: "address-line2", span: 2 },
 ] as const;
 
 export default function CheckoutPage() {
