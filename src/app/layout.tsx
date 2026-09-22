@@ -23,7 +23,8 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   openGraph: {
-    images: ["/logo.png"],
+    // The full lockup, wordmark included — a link preview has room for it.
+    images: ["/logo-lockup.png"],
     siteName: BRAND.NAME,
   },
   title: {

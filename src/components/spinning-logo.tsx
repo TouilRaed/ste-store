@@ -26,7 +26,9 @@ export function SpinningLogo({ size = 32, speed = 7, className = "", priority }:
         sizes={`${size * 2}px`}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
-        className="scale-[1.35] object-cover"
+        // object-contain, not cover: the mark is a framed rectangle and
+        // cropping it to fill the circle cut the frame off.
+        className="object-contain"
       />
     </span>
   );
