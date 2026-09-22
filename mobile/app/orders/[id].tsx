@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import {
   Image,
+  KeyboardAvoidingView,
   Linking,
   Platform,
   RefreshControl,
@@ -28,7 +29,17 @@ import {
   type Product,
 } from "../../lib/types";
 import { useAsync } from "../../lib/use-async";
-import { Button, Card, Chip, Eyebrow, Field, Loading, Message, StatusBadge } from "../../components/ui";
+import {
+  Button,
+  Card,
+  Chip,
+  Eyebrow,
+  Field,
+  Loading,
+  Message,
+  StatusBadge,
+  useBottomInset,
+} from "../../components/ui";
 
 /**
  * Price typed in dinars while the line stores minor units. Keeps its own draft
@@ -63,6 +74,7 @@ export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, error, loading, refreshing, refresh, setData } = useAsync(() => api.order(id), id);
 
+  const paddingBottom = useBottomInset();
   const [saving, setSaving] = useState<OrderStatus | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -228,287 +240,300 @@ export default function OrderDetailScreen() {
   const linesDirty = lines !== null;
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.ink} />}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Card style={styles.card}>
-        <View style={styles.headRow}>
-          <View>
-            <Eyebrow>{formatDateTime(order.created_at)}</Eyebrow>
-            <Text style={styles.number}>{order.order_number}</Text>
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingBottom }]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.ink} />}
+      >
+        <Card style={styles.card}>
+          <View style={styles.headRow}>
+            <View>
+              <Eyebrow>{formatDateTime(order.created_at)}</Eyebrow>
+              <Text style={styles.number}>{order.order_number}</Text>
+            </View>
+            <StatusBadge status={order.status} />
           </View>
-          <StatusBadge status={order.status} />
-        </View>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <Eyebrow>Livraison</Eyebrow>
-        {order.tracking_code ? (
-          <View>
-            <Text style={styles.meta}>Expédiée · Intigo</Text>
-            <Text style={styles.trackingCode}>{order.tracking_code}</Text>
-          </View>
-        ) : order.status === "cancelled" ? (
-          <Text style={styles.meta}>Commande annulée.</Text>
-        ) : !order.district ? (
-          <Text style={styles.meta}>
-            Délégation manquante — expédiez cette commande depuis le web.
-          </Text>
-        ) : (
-          <View>
+          <Eyebrow>Livraison</Eyebrow>
+          {order.tracking_code ? (
+            <View>
+              <Text style={styles.meta}>Expédiée · Intigo</Text>
+              <Text style={styles.trackingCode}>{order.tracking_code}</Text>
+            </View>
+          ) : order.status === "cancelled" ? (
+            <Text style={styles.meta}>Commande annulée.</Text>
+          ) : !order.district ? (
             <Text style={styles.meta}>
-              {order.city} · {order.district}
+              Délégation manquante — expédiez cette commande depuis le web.
             </Text>
-            <Button
-              label={shipping ? "Envoi à Intigo…" : "Créer le colis Intigo"}
-              onPress={shipNow}
-              disabled={shipping}
-              style={styles.shipButton}
-            />
+          ) : (
+            <View>
+              <Text style={styles.meta}>
+                {order.city} · {order.district}
+              </Text>
+              <Button
+                label={shipping ? "Envoi à Intigo…" : "Créer le colis Intigo"}
+                onPress={shipNow}
+                disabled={shipping}
+                style={styles.shipButton}
+              />
+            </View>
+          )}
+          {shipError ? <Message tone="error">{shipError}</Message> : null}
+
+          <View style={styles.divider} />
+
+          <Eyebrow>Statut</Eyebrow>
+          <View style={styles.chips}>
+            {SETTABLE_ORDER_STATUSES.map((status) => (
+              <Chip
+                key={status}
+                label={saving === status ? "…" : orderStatusLabel(status)}
+                active={order.status === status}
+                onPress={() => changeStatus(status)}
+              />
+            ))}
           </View>
-        )}
-        {shipError ? <Message tone="error">{shipError}</Message> : null}
+          {saveError ? <Message tone="error">{saveError}</Message> : null}
+        </Card>
 
-        <View style={styles.divider} />
+        <Card style={styles.card}>
+          <Eyebrow>Pieces commandees</Eyebrow>
+          <Text style={styles.lineHint}>
+            Taille, couleur, quantite et prix. Le total se recalcule a l&apos;enregistrement.
+          </Text>
 
-        <Eyebrow>Statut</Eyebrow>
-        <View style={styles.chips}>
-          {SETTABLE_ORDER_STATUSES.map((status) => (
-            <Chip
-              key={status}
-              label={saving === status ? "…" : orderStatusLabel(status)}
-              active={order.status === status}
-              onPress={() => changeStatus(status)}
-            />
-          ))}
-        </View>
-        {saveError ? <Message tone="error">{saveError}</Message> : null}
-      </Card>
-
-      <Card style={styles.card}>
-        <Eyebrow>Pieces commandees</Eyebrow>
-        <Text style={styles.lineHint}>
-          Taille, couleur, quantite et prix. Le total se recalcule a l&apos;enregistrement.
-        </Text>
-
-        {currentLines.map((line, index) => (
-          <View key={`${line.product_slug}-${index}`} style={styles.lineBlock}>
-            <View style={styles.itemRow}>
-              <View style={styles.thumb}>
-                {line.image ? <Image source={{ uri: line.image }} style={styles.image} /> : null}
-              </View>
-              <View style={styles.itemBody}>
-                <Text style={styles.itemName}>{line.product_name}</Text>
-                <Text style={styles.meta}>
-                  {line.quantity} x {formatMoney(line.unit_cents, order.currency)}
+          {currentLines.map((line, index) => (
+            <View key={`${line.product_slug}-${index}`} style={styles.lineBlock}>
+              <View style={styles.itemRow}>
+                <View style={styles.thumb}>
+                  {line.image ? <Image source={{ uri: line.image }} style={styles.image} /> : null}
+                </View>
+                <View style={styles.itemBody}>
+                  <Text style={styles.itemName}>{line.product_name}</Text>
+                  <Text style={styles.meta}>
+                    {line.quantity} x {formatMoney(line.unit_cents, order.currency)}
+                  </Text>
+                </View>
+                <Text style={styles.itemPrice}>
+                  {formatMoney(line.unit_cents * line.quantity, order.currency)}
                 </Text>
               </View>
-              <Text style={styles.itemPrice}>
-                {formatMoney(line.unit_cents * line.quantity, order.currency)}
-              </Text>
-            </View>
 
-            <View style={styles.lineFields}>
-              <View style={styles.lineHalf}>
-                <Field
-                  label="Taille"
-                  value={line.size ?? ""}
-                  onChangeText={(v) => patchLine(index, { size: v.trim() ? v : null })}
-                />
-              </View>
-              <View style={styles.lineHalf}>
-                <Field
-                  label="Couleur"
-                  value={line.color ?? ""}
-                  onChangeText={(v) => patchLine(index, { color: v.trim() ? v : null })}
-                />
-              </View>
-              <View style={styles.lineHalf}>
-                <Field
-                  label="Quantité"
-                  value={String(line.quantity)}
-                  keyboardType="number-pad"
-                  onChangeText={(v) => patchLine(index, { quantity: Math.max(1, Number(v) || 1) })}
-                />
-              </View>
-              <View style={styles.lineHalf}>
-                <PriceField
-                  valueMinor={line.unit_cents}
-                  currency={order.currency}
-                  onChangeMinor={(minor) => patchLine(index, { unit_cents: minor })}
-                />
-              </View>
-            </View>
-
-            <Button
-              label="Retirer cette pièce"
-              variant="danger"
-              onPress={() => dropLine(index)}
-              style={styles.lineRemove}
-            />
-          </View>
-        ))}
-
-        {picking ? (
-          <View style={styles.pickerBlock}>
-            <Eyebrow>Ajouter une piece</Eyebrow>
-            {catalogue.loading ? (
-              <Loading />
-            ) : (
-              <View style={styles.chips}>
-                {(catalogue.data?.products ?? []).map((product) => (
-                  <Chip
-                    key={product.id}
-                    label={`${product.name} - ${formatMoney(product.price_cents, product.currency)}`}
-                    active={false}
-                    onPress={() => addLine(product)}
+              <View style={styles.lineFields}>
+                <View style={styles.lineHalf}>
+                  <Field
+                    label="Taille"
+                    value={line.size ?? ""}
+                    onChangeText={(v) => patchLine(index, { size: v.trim() ? v : null })}
                   />
-                ))}
+                </View>
+                <View style={styles.lineHalf}>
+                  <Field
+                    label="Couleur"
+                    value={line.color ?? ""}
+                    onChangeText={(v) => patchLine(index, { color: v.trim() ? v : null })}
+                  />
+                </View>
+                <View style={styles.lineHalf}>
+                  <Field
+                    label="Quantité"
+                    value={String(line.quantity)}
+                    keyboardType="number-pad"
+                    onChangeText={(v) => patchLine(index, { quantity: Math.max(1, Number(v) || 1) })}
+                  />
+                </View>
+                <View style={styles.lineHalf}>
+                  <PriceField
+                    valueMinor={line.unit_cents}
+                    currency={order.currency}
+                    onChangeMinor={(minor) => patchLine(index, { unit_cents: minor })}
+                  />
+                </View>
               </View>
-            )}
+
+              <Button
+                label="Retirer cette pièce"
+                variant="danger"
+                onPress={() => dropLine(index)}
+                style={styles.lineRemove}
+              />
+            </View>
+          ))}
+
+          {picking ? (
+            <View style={styles.pickerBlock}>
+              <Eyebrow>Ajouter une piece</Eyebrow>
+              {catalogue.loading ? (
+                <Loading />
+              ) : (
+                <View style={styles.chips}>
+                  {(catalogue.data?.products ?? []).map((product) => (
+                    <Chip
+                      key={product.id}
+                      label={`${product.name} - ${formatMoney(product.price_cents, product.currency)}`}
+                      active={false}
+                      onPress={() => addLine(product)}
+                    />
+                  ))}
+                </View>
+              )}
+              <Button
+                label="Annuler"
+                variant="outline"
+                onPress={() => setPicking(false)}
+                style={styles.button}
+              />
+            </View>
+          ) : (
             <Button
-              label="Annuler"
+              label="Ajouter une pièce"
               variant="outline"
-              onPress={() => setPicking(false)}
+              onPress={() => setPicking(true)}
               style={styles.button}
             />
+          )}
+
+          <View style={styles.divider} />
+
+          <View style={styles.totalRow}>
+            <Text style={styles.meta}>Sous-total</Text>
+            <Text style={styles.totalValue}>{formatMoney(draftSubtotal, order.currency)}</Text>
           </View>
-        ) : (
-          <Button
-            label="Ajouter une pièce"
-            variant="outline"
-            onPress={() => setPicking(true)}
-            style={styles.button}
-          />
-        )}
+          <View style={styles.totalRow}>
+            <Text style={styles.meta}>Livraison</Text>
+            <Text style={styles.totalValue}>{formatMoney(draftShipping, order.currency)}</Text>
+          </View>
+          <View style={[styles.totalRow, styles.grandRow]}>
+            <Text style={styles.grandLabel}>Total</Text>
+            <Text style={styles.grandValue}>
+              {formatMoney(draftSubtotal + draftShipping, order.currency)}
+            </Text>
+          </View>
 
-        <View style={styles.divider} />
+          {linesError ? <Message tone="error">{linesError}</Message> : null}
 
-        <View style={styles.totalRow}>
-          <Text style={styles.meta}>Sous-total</Text>
-          <Text style={styles.totalValue}>{formatMoney(draftSubtotal, order.currency)}</Text>
-        </View>
-        <View style={styles.totalRow}>
-          <Text style={styles.meta}>Livraison</Text>
-          <Text style={styles.totalValue}>{formatMoney(draftShipping, order.currency)}</Text>
-        </View>
-        <View style={[styles.totalRow, styles.grandRow]}>
-          <Text style={styles.grandLabel}>Total</Text>
-          <Text style={styles.grandValue}>
-            {formatMoney(draftSubtotal + draftShipping, order.currency)}
-          </Text>
-        </View>
-
-        {linesError ? <Message tone="error">{linesError}</Message> : null}
-
-        {linesDirty ? (
-          <Button
-            label="Enregistrer les lignes"
-            onPress={saveLines}
-            loading={savingLines}
-            style={styles.button}
-          />
-        ) : null}
-      </Card>
-
-      <Card style={styles.card}>
-        <Eyebrow>Customer &amp; delivery</Eyebrow>
-
-        <View style={styles.editBlock}>
-          <Field label="Nom" value={draft.full_name ?? ""} onChangeText={(v) => setField("full_name", v)} />
-          <Field
-            label="Email"
-            value={draft.email ?? ""}
-            onChangeText={(v) => setField("email", v)}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          <Field
-            label="Téléphone"
-            value={draft.phone ?? ""}
-            onChangeText={(v) => setField("phone", v)}
-            keyboardType="phone-pad"
-          />
-          <Field
-            label="Adresse"
-            value={draft.address_line1 ?? ""}
-            onChangeText={(v) => setField("address_line1", v)}
-          />
-          <Field
-            label="Appartement, étage"
-            value={draft.address_line2 ?? ""}
-            onChangeText={(v) => setField("address_line2", v)}
-          />
-          <Field label="Ville" value={draft.city ?? ""} onChangeText={(v) => setField("city", v)} />
-          <Field
-            label="Code postal"
-            value={draft.postal_code ?? ""}
-            onChangeText={(v) => setField("postal_code", v)}
-          />
-          <Field label="Pays" value={draft.country ?? ""} onChangeText={(v) => setField("country", v)} />
-          <Field
-            label="Note du client"
-            value={draft.note ?? ""}
-            onChangeText={(v) => setField("note", v)}
-            multiline
-          />
-          <Field
-            label="Note interne"
-            value={draft.admin_note ?? ""}
-            onChangeText={(v) => setField("admin_note", v)}
-            multiline
-            hint="Visible uniquement dans l'admin"
-          />
-
-          {saveError ? <Message tone="error">{saveError}</Message> : null}
-          {savedAt > 0 && !edit ? <Message>Commande mise à jour.</Message> : null}
-
-          <Button
-            label="Enregistrer"
-            onPress={saveDetails}
-            loading={savingEdit}
-            style={styles.button}
-          />
-
-          {/*
-            Both use the customer's phone as stored — the same "+216 XX XXX XXX"
-            form the confirmation call uses — stripped to digits for tel:/wa.me.
-            Hidden rather than shown-disabled when there is no phone: nothing to
-            call or message, so there is nothing useful the button could do.
-          */}
-          {phoneDigits ? (
-            <>
-              <Button
-                label="Appeler le client"
-                variant="outline"
-                onPress={() => Linking.openURL(`tel:+${phoneDigits}`)}
-                style={styles.button}
-              />
-              <Button
-                label="WhatsApp"
-                variant="outline"
-                onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)}
-                style={styles.button}
-              />
-            </>
+          {linesDirty ? (
+            <Button
+              label="Enregistrer les lignes"
+              onPress={saveLines}
+              loading={savingLines}
+              style={styles.button}
+            />
           ) : null}
+        </Card>
 
-          <Button
-            label="Envoyer un e-mail au client"
-            variant="outline"
-            onPress={() => Linking.openURL(`mailto:${order.email}?subject=Commande ${order.order_number}`)}
-            style={styles.button}
-          />
-        </View>
-      </Card>
+        <Card style={styles.card}>
+          <Eyebrow>Customer &amp; delivery</Eyebrow>
 
-    </ScrollView>
+          <View style={styles.editBlock}>
+            <Field label="Nom" value={draft.full_name ?? ""} onChangeText={(v) => setField("full_name", v)} />
+            <Field
+              label="Email"
+              value={draft.email ?? ""}
+              onChangeText={(v) => setField("email", v)}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+            <Field
+              label="Téléphone"
+              value={draft.phone ?? ""}
+              onChangeText={(v) => setField("phone", v)}
+              keyboardType="phone-pad"
+            />
+            <Field
+              label="Adresse"
+              value={draft.address_line1 ?? ""}
+              onChangeText={(v) => setField("address_line1", v)}
+            />
+            <Field
+              label="Appartement, étage"
+              value={draft.address_line2 ?? ""}
+              onChangeText={(v) => setField("address_line2", v)}
+            />
+            <Field label="Ville" value={draft.city ?? ""} onChangeText={(v) => setField("city", v)} />
+            <Field
+              label="Code postal"
+              value={draft.postal_code ?? ""}
+              onChangeText={(v) => setField("postal_code", v)}
+            />
+            <Field label="Pays" value={draft.country ?? ""} onChangeText={(v) => setField("country", v)} />
+            <Field
+              label="Note du client"
+              value={draft.note ?? ""}
+              onChangeText={(v) => setField("note", v)}
+              multiline
+            />
+            <Field
+              label="Note interne"
+              value={draft.admin_note ?? ""}
+              onChangeText={(v) => setField("admin_note", v)}
+              multiline
+              hint="Visible uniquement dans l'admin"
+            />
+
+            {saveError ? <Message tone="error">{saveError}</Message> : null}
+            {savedAt > 0 && !edit ? <Message>Commande mise à jour.</Message> : null}
+
+            <Button
+              label="Enregistrer"
+              onPress={saveDetails}
+              loading={savingEdit}
+              style={styles.button}
+            />
+
+            {/*
+              Both use the customer's phone as stored — the same "+216 XX XXX XXX"
+              form the confirmation call uses — stripped to digits for tel:/wa.me.
+              Hidden rather than shown-disabled when there is no phone: nothing to
+              call or message, so there is nothing useful the button could do.
+            */}
+            {phoneDigits ? (
+              <View style={styles.contactRow}>
+                <Button
+                  label="Appeler"
+                  variant="outline"
+                  onPress={() => Linking.openURL(`tel:+${phoneDigits}`)}
+                  style={styles.contactButton}
+                />
+                <Button
+                  label="WhatsApp"
+                  variant="outline"
+                  onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)}
+                  style={styles.contactButton}
+                />
+              </View>
+            ) : null}
+
+            {/* Cash-on-delivery orders carry no email at all, and a mailto:
+                built from a missing one opens the mail app addressed to
+                "null". Hidden on the same grounds as the phone buttons. */}
+            {order.email ? (
+              <Button
+                label="Envoyer un e-mail au client"
+                variant="outline"
+                onPress={() => Linking.openURL(`mailto:${order.email}?subject=Commande ${order.order_number}`)}
+                style={styles.button}
+              />
+            ) : null}
+          </View>
+        </Card>
+
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 40 },
+  flex: { flex: 1 },
+  container: { padding: 16 },
   card: { padding: 20, marginBottom: 16 },
   headRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   number: { marginTop: 6, fontSize: 22, letterSpacing: 1, color: theme.ink },
@@ -535,6 +560,8 @@ const styles = StyleSheet.create({
   grandValue: { fontSize: 20, color: theme.ink, fontVariant: ["tabular-nums"] },
   address: { marginTop: 10, fontSize: 14, lineHeight: 21, color: theme.inkSoft },
   button: { marginTop: 12 },
+  contactRow: { flexDirection: "row", gap: 10, marginTop: 12 },
+  contactButton: { flex: 1, paddingHorizontal: 12 },
   editBlock: { marginTop: 18 },
   lineBlock: { marginTop: 18, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 14 },
   lineFields: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 12 },

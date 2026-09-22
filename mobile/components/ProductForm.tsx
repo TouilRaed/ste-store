@@ -1,12 +1,23 @@
 import { useState } from "react";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { api, ApiError } from "../lib/api";
 import { majorInputToMinor, minorToMajorInput } from "../lib/format";
 import { theme } from "../lib/theme";
 import type { Collection, Product, ProductInput } from "../lib/types";
-import { Button, Card, Chip, Eyebrow, Field, Message, Toggle } from "./ui";
+import { Button, Card, Chip, Eyebrow, Field, Message, Toggle, useBottomInset } from "./ui";
 
 type ProductFormProps = {
   product?: Product;
@@ -80,6 +91,7 @@ const splitLines = (value: string) =>
 
 export function ProductForm({ product, collections }: ProductFormProps) {
   const [draft, setDraft] = useState<Draft>(() => toDraft(product));
+  const paddingBottom = useBottomInset(48);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -200,224 +212,234 @@ export function ProductForm({ product, collections }: ProductFormProps) {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Card style={styles.card}>
-        <Field label="Nom" value={draft.name} onChangeText={(v) => set("name", v)} />
-        <Field
-          label="Slug"
-          value={draft.slug}
-          onChangeText={(v) => set("slug", v)}
-          autoCapitalize="none"
-          hint="Utilisé dans l'URL : /product/votre-slug"
-        />
-        <Field
-          label="Description"
-          value={draft.description}
-          onChangeText={(v) => set("description", v)}
-          multiline
-        />
-        <Field
-          label="Caractéristiques"
-          value={draft.details}
-          onChangeText={(v) => set("details", v)}
-          multiline
-          hint="Une ligne par point"
-        />
-        <Eyebrow>Photos</Eyebrow>
-        <View style={styles.photoRow}>
-          {draft.images.map((url, index) => (
-            <View key={url} style={styles.photo}>
-              <Image source={{ uri: url }} style={styles.photoImage} />
-              {index === 0 ? (
-                <View style={styles.coverTag}>
-                  <Text style={styles.coverText}>Cover</Text>
-                </View>
-              ) : null}
-              <Pressable
-                onPress={() => set("images", draft.images.filter((u) => u !== url))}
-                style={styles.photoRemove}
-                accessibilityLabel="Retirer la photo"
-              >
-                <Text style={styles.photoRemoveText}>×</Text>
-              </Pressable>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingBottom }]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
+        <Card style={styles.card}>
+          <Field label="Nom" value={draft.name} onChangeText={(v) => set("name", v)} />
+          <Field
+            label="Slug"
+            value={draft.slug}
+            onChangeText={(v) => set("slug", v)}
+            autoCapitalize="none"
+            hint="Utilisé dans l'URL : /product/votre-slug"
+          />
+          <Field
+            label="Description"
+            value={draft.description}
+            onChangeText={(v) => set("description", v)}
+            multiline
+          />
+          <Field
+            label="Caractéristiques"
+            value={draft.details}
+            onChangeText={(v) => set("details", v)}
+            multiline
+            hint="Une ligne par point"
+          />
+          <Eyebrow>Photos</Eyebrow>
+          <View style={styles.photoRow}>
+            {draft.images.map((url, index) => (
+              <View key={url} style={styles.photo}>
+                <Image source={{ uri: url }} style={styles.photoImage} />
+                {index === 0 ? (
+                  <View style={styles.coverTag}>
+                    <Text style={styles.coverText}>Cover</Text>
+                  </View>
+                ) : null}
+                <Pressable
+                  onPress={() => set("images", draft.images.filter((u) => u !== url))}
+                  style={styles.photoRemove}
+                  accessibilityLabel="Retirer la photo"
+                >
+                  <Text style={styles.photoRemoveText}>×</Text>
+                </Pressable>
+              </View>
+            ))}
+
+            <Pressable onPress={pickImage} style={styles.photoAdd} disabled={uploading}>
+              {uploading ? <ActivityIndicator color={theme.ink} /> : <Text style={styles.photoAddText}>+</Text>}
+            </Pressable>
+          </View>
+          <Text style={styles.photoHint}>First photo is the card image. Up to 5 MB each.</Text>
+
+          <View style={styles.tagBlock}>
+            <Eyebrow>Étiquettes</Eyebrow>
+            <View style={styles.chips}>
+              {TAG_PRESETS.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  active={draft.tags.includes(tag)}
+                  onPress={() =>
+                    set(
+                      "tags",
+                      draft.tags.includes(tag)
+                        ? draft.tags.filter((t) => t !== tag)
+                        : [...draft.tags, tag],
+                    )
+                  }
+                />
+              ))}
             </View>
-          ))}
+            <Text style={styles.photoHint}>
+              Épuisé, « Plus que N » et la promo sont automatiques — inutile de les cocher.
+            </Text>
+          </View>
+          <Field label="Tailles" value={draft.sizes} onChangeText={(v) => set("sizes", v)} multiline hint="Une par ligne" />
+          <Field
+            label="Couleurs"
+            value={draft.colors}
+            onChangeText={(v) => set("colors", v)}
+            multiline
+            hint="Une par ligne"
+          />
+        </Card>
 
-          <Pressable onPress={pickImage} style={styles.photoAdd} disabled={uploading}>
-            {uploading ? <ActivityIndicator color={theme.ink} /> : <Text style={styles.photoAddText}>+</Text>}
-          </Pressable>
-        </View>
-        <Text style={styles.photoHint}>First photo is the card image. Up to 5 MB each.</Text>
+        <Card style={styles.card}>
+          <Field
+            label="Prix (DT)"
+            value={draft.price}
+            onChangeText={(v) => set("price", v)}
+            keyboardType="decimal-pad"
+          />
+          <Field
+            label="Prix barré (DT)"
+            value={draft.compareAt}
+            onChangeText={(v) => set("compareAt", v)}
+            keyboardType="decimal-pad"
+            hint="En dinars — ex : 220 ou 89,500"
+          />
+          <Field
+            label="Devise"
+            value={draft.currency}
+            onChangeText={(v) => set("currency", v)}
+            autoCapitalize="characters"
+            maxLength={3}
+          />
+          <Field
+            label="Stock"
+            value={draft.stock}
+            onChangeText={(v) => set("stock", v)}
+            keyboardType="number-pad"
+          />
 
-        <View style={styles.tagBlock}>
-          <Eyebrow>Étiquettes</Eyebrow>
-          <View style={styles.chips}>
-            {TAG_PRESETS.map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                active={draft.tags.includes(tag)}
-                onPress={() =>
+          <Eyebrow>Offres</Eyebrow>
+          <Text style={styles.hint}>
+            Lots optionnels proposés en plus du prix de base — ex. « 3 pièces » à 120 DT.
+          </Text>
+          {draft.offers.map((offer, index) => (
+            <View key={index}>
+              <Field
+                label="Nom de l'offre"
+                value={offer.name}
+                placeholder="3 pièces"
+                onChangeText={(v) =>
                   set(
-                    "tags",
-                    draft.tags.includes(tag)
-                      ? draft.tags.filter((t) => t !== tag)
-                      : [...draft.tags, tag],
+                    "offers",
+                    draft.offers.map((o, i) => (i === index ? { ...o, name: v } : o)),
                   )
                 }
               />
+              <Field
+                label="Prix de l'offre (DT)"
+                value={offer.price}
+                placeholder="120"
+                keyboardType="decimal-pad"
+                onChangeText={(v) =>
+                  set(
+                    "offers",
+                    draft.offers.map((o, i) => (i === index ? { ...o, price: v } : o)),
+                  )
+                }
+              />
+              <Button
+                label="Retirer cette offre"
+                variant="outline"
+                onPress={() => set("offers", draft.offers.filter((_, i) => i !== index))}
+              />
+            </View>
+          ))}
+          <Button
+            label="Ajouter une offre"
+            variant="outline"
+            onPress={() => set("offers", [...draft.offers, { name: "", price: "" }])}
+          />
+
+          <Eyebrow>Collection</Eyebrow>
+          <View style={styles.chips}>
+            <Chip label="Aucune" active={draft.collectionId === null} onPress={() => set("collectionId", null)} />
+            {collections.map((collection) => (
+              <Chip
+                key={collection.id}
+                label={collection.name}
+                active={draft.collectionId === collection.id}
+                onPress={() => set("collectionId", collection.id)}
+              />
             ))}
           </View>
-          <Text style={styles.photoHint}>
-            Épuisé, « Plus que N » et la promo sont automatiques — inutile de les cocher.
-          </Text>
-        </View>
-        <Field label="Tailles" value={draft.sizes} onChangeText={(v) => set("sizes", v)} multiline hint="Une par ligne" />
-        <Field
-          label="Couleurs"
-          value={draft.colors}
-          onChangeText={(v) => set("colors", v)}
-          multiline
-          hint="Une par ligne"
-        />
-      </Card>
 
-      <Card style={styles.card}>
-        <Field
-          label="Prix (DT)"
-          value={draft.price}
-          onChangeText={(v) => set("price", v)}
-          keyboardType="decimal-pad"
-        />
-        <Field
-          label="Prix barré (DT)"
-          value={draft.compareAt}
-          onChangeText={(v) => set("compareAt", v)}
-          keyboardType="decimal-pad"
-          hint="En dinars — ex : 220 ou 89,500"
-        />
-        <Field
-          label="Devise"
-          value={draft.currency}
-          onChangeText={(v) => set("currency", v)}
-          autoCapitalize="characters"
-          maxLength={3}
-        />
-        <Field
-          label="Stock"
-          value={draft.stock}
-          onChangeText={(v) => set("stock", v)}
-          keyboardType="number-pad"
-        />
+          <View style={styles.spacer} />
 
-        <Eyebrow>Offres</Eyebrow>
-        <Text style={styles.hint}>
-          Lots optionnels proposés en plus du prix de base — ex. « 3 pièces » à 120 DT.
-        </Text>
-        {draft.offers.map((offer, index) => (
-          <View key={index}>
-            <Field
-              label="Nom de l'offre"
-              value={offer.name}
-              placeholder="3 pièces"
-              onChangeText={(v) =>
-                set(
-                  "offers",
-                  draft.offers.map((o, i) => (i === index ? { ...o, name: v } : o)),
-                )
-              }
-            />
-            <Field
-              label="Prix de l'offre (DT)"
-              value={offer.price}
-              placeholder="120"
-              keyboardType="decimal-pad"
-              onChangeText={(v) =>
-                set(
-                  "offers",
-                  draft.offers.map((o, i) => (i === index ? { ...o, price: v } : o)),
-                )
-              }
-            />
-            <Button
-              label="Retirer cette offre"
-              variant="outline"
-              onPress={() => set("offers", draft.offers.filter((_, i) => i !== index))}
-            />
+          <Eyebrow>Cut for</Eyebrow>
+          <View style={styles.chips}>
+            {GENDERS.map((gender) => (
+              <Chip
+                key={gender}
+                label={gender}
+                active={draft.gender === gender}
+                onPress={() => set("gender", gender)}
+              />
+            ))}
           </View>
-        ))}
-        <Button
-          label="Ajouter une offre"
-          variant="outline"
-          onPress={() => set("offers", [...draft.offers, { name: "", price: "" }])}
-        />
 
-        <Eyebrow>Collection</Eyebrow>
-        <View style={styles.chips}>
-          <Chip label="Aucune" active={draft.collectionId === null} onPress={() => set("collectionId", null)} />
-          {collections.map((collection) => (
-            <Chip
-              key={collection.id}
-              label={collection.name}
-              active={draft.collectionId === collection.id}
-              onPress={() => set("collectionId", collection.id)}
-            />
-          ))}
-        </View>
+          <View style={styles.divider} />
 
-        <View style={styles.spacer} />
-
-        <Eyebrow>Cut for</Eyebrow>
-        <View style={styles.chips}>
-          {GENDERS.map((gender) => (
-            <Chip
-              key={gender}
-              label={gender}
-              active={draft.gender === gender}
-              onPress={() => set("gender", gender)}
-            />
-          ))}
-        </View>
-
-        <View style={styles.divider} />
-
-        <Toggle label="Visible dans la boutique" value={draft.isActive} onChange={(v) => set("isActive", v)} />
-        <Toggle
-          label="Mis en avant sur l'accueil"
-          value={draft.isFeatured}
-          onChange={(v) => set("isFeatured", v)}
-        />
-      </Card>
-
-      {error ? <Message tone="error">{error}</Message> : null}
-
-      <Button
-        label={product ? "Enregistrer" : "Créer la pièce"}
-        onPress={save}
-        loading={saving}
-        style={styles.save}
-      />
-
-      {product ? (
-        <>
-          <Text style={styles.deleteHint}>
-            Past orders keep their own copy of the name and price, so deleting is safe.
-          </Text>
-          <Button
-            label="Supprimer cette pièce"
-            variant="danger"
-            onPress={confirmDelete}
-            loading={deleting}
-            style={styles.delete}
+          <Toggle label="Visible dans la boutique" value={draft.isActive} onChange={(v) => set("isActive", v)} />
+          <Toggle
+            label="Mis en avant sur l'accueil"
+            value={draft.isFeatured}
+            onChange={(v) => set("isFeatured", v)}
           />
-        </>
-      ) : null}
-    </ScrollView>
+        </Card>
+
+        {error ? <Message tone="error">{error}</Message> : null}
+
+        <Button
+          label={product ? "Enregistrer" : "Créer la pièce"}
+          onPress={save}
+          loading={saving}
+          style={styles.save}
+        />
+
+        {product ? (
+          <>
+            <Text style={styles.deleteHint}>
+              Past orders keep their own copy of the name and price, so deleting is safe.
+            </Text>
+            <Button
+              label="Supprimer cette pièce"
+              variant="danger"
+              onPress={confirmDelete}
+              loading={deleting}
+              style={styles.delete}
+            />
+          </>
+        ) : null}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 48 },
+  flex: { flex: 1 },
+  container: { padding: 16 },
   card: { padding: 20, marginBottom: 16 },
   chips: { flexDirection: "row", flexWrap: "wrap", marginTop: 12, rowGap: 8 },
   photoRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 12 },

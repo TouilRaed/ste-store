@@ -4,11 +4,12 @@ import { api } from "../../lib/api";
 import { formatMoney } from "../../lib/format";
 import { theme } from "../../lib/theme";
 import { useAsync } from "../../lib/use-async";
-import { Button, Card, Loading, Message, Tag } from "../../components/ui";
+import { Button, Card, Loading, Message, Tag, useBottomInset } from "../../components/ui";
 
 export default function ProductsScreen() {
   const { data, error, loading, refreshing, refresh } = useAsync(() => api.products());
   const products = data?.products ?? [];
+  const paddingBottom = useBottomInset();
 
   return (
     <View style={styles.flex}>
@@ -22,7 +23,7 @@ export default function ProductsScreen() {
         <FlatList
           data={products}
           keyExtractor={(product) => product.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom }]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.ink} />
           }
@@ -72,7 +73,7 @@ export default function ProductsScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   head: { padding: 16, paddingBottom: 8 },
-  list: { padding: 16, paddingTop: 4, paddingBottom: 40 },
+  list: { padding: 16, paddingTop: 4 },
   card: { flexDirection: "row", alignItems: "center", padding: 12, marginBottom: 12 },
   thumb: {
     width: 52,

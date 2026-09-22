@@ -9,8 +9,20 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from "react-native";
-import { cardShadow, radius, statusTone, theme } from "../lib/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TOUCH_MIN, cardShadow, radius, statusTone, theme } from "../lib/theme";
 import { orderStatusLabel } from "../lib/types";
+
+/**
+ * Bottom padding for a scrolling screen.
+ *
+ * Android runs edge-to-edge, so the gesture bar sits *over* the app rather
+ * than beside it. A fixed paddingBottom leaves the last card half-swallowed by
+ * it; adding the inset keeps the final row reachable on every device.
+ */
+export function useBottomInset(base = 40): number {
+  return base + useSafeAreaInsets().bottom;
+}
 
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[styles.card, style]}>{children}</View>;
@@ -61,31 +73,44 @@ export function Button({
   style?: ViewStyle;
 }) {
   const isSolid = variant === "solid";
+  const isDanger = variant === "danger";
+  const busy = Boolean(disabled || loading);
+
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled || loading}
+      disabled={busy}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: busy, busy: Boolean(loading) }}
       style={({ pressed }) => [
         styles.button,
         isSolid ? styles.buttonSolid : styles.buttonOutline,
-        variant === "danger" && styles.buttonDanger,
-        (disabled || loading) && styles.buttonDisabled,
+        isDanger && styles.buttonDanger,
+        busy && styles.buttonDisabled,
+        pressed && (isSolid ? styles.buttonSolidPressed : styles.buttonOutlinePressed),
         pressed && styles.buttonPressed,
         style,
       ]}
     >
+      {/* The label stays mounted under the spinner so the button keeps its
+          width and the row never reflows mid-save. */}
+      <Text
+        style={[
+          styles.buttonText,
+          isSolid ? { color: theme.white } : { color: isDanger ? theme.danger : theme.accent },
+          loading && styles.buttonTextHidden,
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
       {loading ? (
-        <ActivityIndicator color={isSolid ? "#FFFFFF" : theme.accent} />
-      ) : (
-        <Text
-          style={[
-            styles.buttonText,
-            isSolid ? { color: "#FFFFFF" } : { color: variant === "danger" ? theme.accentDeep : theme.accent },
-          ]}
-        >
-          {label}
-        </Text>
-      )}
+        <ActivityIndicator
+          style={StyleSheet.absoluteFill}
+          color={isSolid ? theme.white : isDanger ? theme.danger : theme.accent}
+        />
+      ) : null}
     </Pressable>
   );
 }
@@ -102,9 +127,14 @@ export function Chip({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
       style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.buttonPressed]}
     >
-      <Text style={[styles.chipText, active && { color: theme.paper }]}>{label}</Text>
+      <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -137,7 +167,13 @@ export function Toggle({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <Pressable onPress={() => onChange(!value)} style={styles.toggleRow}>
+    <Pressable
+      onPress={() => onChange(!value)}
+      accessibilityRole="checkbox"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: value }}
+      style={({ pressed }) => [styles.toggleRow, pressed && styles.togglePressed]}
+    >
       <View style={[styles.checkbox, value && styles.checkboxOn]}>
         {value ? <Text style={styles.checkmark}>✓</Text> : null}
       </View>
@@ -197,29 +233,39 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   button: {
+    minHeight: TOUCH_MIN,
     borderRadius: radius.pill,
-    paddingVertical: 14,
+    paddingVertical: 13,
     paddingHorizontal: 22,
     alignItems: "center",
     justifyContent: "center",
   },
   buttonSolid: { backgroundColor: theme.accent },
   buttonOutline: { backgroundColor: theme.white, borderWidth: 1, borderColor: theme.lineStrong },
-  buttonDanger: { backgroundColor: theme.white, borderWidth: 1, borderColor: theme.lineStrong },
-  buttonDisabled: { opacity: 0.55 },
+  // Destructive actions used to render identically to a plain outline button,
+  // so "Supprimer" looked like any other secondary choice.
+  buttonDanger: { backgroundColor: theme.dangerSoft, borderColor: theme.danger },
+  buttonDisabled: { opacity: 0.45 },
   buttonPressed: { transform: [{ scale: 0.98 }] },
+  buttonSolidPressed: { backgroundColor: theme.accentDeep },
+  buttonOutlinePressed: { backgroundColor: theme.paperDeep },
   buttonText: { fontSize: 16, fontWeight: "500" },
+  buttonTextHidden: { opacity: 0 },
   chip: {
+    minHeight: 40,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: theme.lineStrong,
     backgroundColor: theme.white,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     marginRight: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   chipActive: { backgroundColor: theme.accent, borderColor: theme.accent },
   chipText: { fontSize: 14, color: theme.inkSoft, textTransform: "capitalize" },
+  chipTextActive: { color: theme.white, fontWeight: "600" },
   field: { marginBottom: 18 },
   input: {
     marginTop: 8,
@@ -234,7 +280,8 @@ const styles = StyleSheet.create({
   },
   inputMultiline: { minHeight: 96, textAlignVertical: "top" },
   hint: { marginTop: 6, fontSize: 11, color: theme.inkMuted },
-  toggleRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
+  toggleRow: { flexDirection: "row", alignItems: "center", minHeight: TOUCH_MIN, paddingVertical: 12 },
+  togglePressed: { opacity: 0.6 },
   checkbox: {
     width: 22,
     height: 22,

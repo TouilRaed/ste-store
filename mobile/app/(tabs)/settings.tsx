@@ -5,11 +5,12 @@ import { clearToken } from "../../lib/auth";
 import { lastPushError, registerForOrderPushes, unregisterOrderPushes } from "../../lib/push";
 import { API_BASE_URL } from "../../lib/constants";
 import { theme } from "../../lib/theme";
-import { Button, Card, Eyebrow, Message } from "../../components/ui";
+import { Button, Card, Eyebrow, Message, useBottomInset } from "../../components/ui";
 
 export default function SettingsScreen() {
   const [pushState, setPushState] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const paddingBottom = useBottomInset();
 
   /**
    * Re-runs registration and reports the outcome on screen. Every failure path
@@ -41,7 +42,7 @@ ${token.slice(0, 32)}…`
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
       <Card style={styles.card}>
         <Eyebrow>Serveur</Eyebrow>
         <Text style={styles.value}>{API_BASE_URL}</Text>
@@ -89,7 +90,7 @@ ${token.slice(0, 32)}…`
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 40 },
+  container: { padding: 16 },
   card: { padding: 20, marginBottom: 16 },
   value: { marginTop: 10, fontSize: 15, color: theme.ink },
   hint: { marginTop: 10, fontSize: 12, lineHeight: 18, color: theme.inkMuted },

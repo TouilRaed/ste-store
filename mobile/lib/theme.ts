@@ -10,6 +10,9 @@ export const theme = {
   accentDeep: "#1A3FAE",
   accentSoft: "#E8EFFD",
   sage: "#2F7A5A",
+  /** Destructive actions — deleting a line, cancelling an order. */
+  danger: "#B42318",
+  dangerSoft: "#FDECEA",
   line: "rgba(13,21,38,0.10)",
   lineStrong: "rgba(13,21,38,0.18)",
   white: "#FFFFFF",
@@ -25,6 +28,13 @@ export const spacing = {
   screen: 20,
   gap: 16,
 } as const;
+
+/**
+ * Smallest comfortable tap target. Android's own guidance is 48dp; anything
+ * under it is a button you have to aim at, which is the wrong thing to ask of
+ * someone packing orders one-handed.
+ */
+export const TOUCH_MIN = 48;
 
 /** Soft, diffused shadow — never a hard dark drop. */
 export const cardShadow = {

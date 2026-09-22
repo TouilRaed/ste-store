@@ -6,13 +6,14 @@ import { formatDate, formatMoney } from "../../lib/format";
 import { theme } from "../../lib/theme";
 import { ORDER_STATUSES, type OrderStatus } from "../../lib/types";
 import { useAsync } from "../../lib/use-async";
-import { Card, Chip, Loading, Message, StatusBadge } from "../../components/ui";
+import { Card, Chip, Loading, Message, StatusBadge, useBottomInset } from "../../components/ui";
 
 export default function OrdersScreen() {
   const [status, setStatus] = useState<OrderStatus | undefined>(undefined);
   const { data, error, loading, refreshing, refresh } = useAsync(() => api.orders(status), status ?? "all");
 
   const orders = data?.orders ?? [];
+  const paddingBottom = useBottomInset();
 
   return (
     <View style={styles.flex}>
@@ -33,7 +34,7 @@ export default function OrdersScreen() {
         <FlatList
           data={orders}
           keyExtractor={(order) => order.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom }]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.ink} />
           }
@@ -74,7 +75,7 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   filters: { paddingHorizontal: 16, paddingVertical: 12 },
-  list: { padding: 16, paddingTop: 4, paddingBottom: 40 },
+  list: { padding: 16, paddingTop: 4 },
   card: { padding: 16, marginBottom: 12 },
   rowTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   number: { fontSize: 14, letterSpacing: 1, color: theme.ink },

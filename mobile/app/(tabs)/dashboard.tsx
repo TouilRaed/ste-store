@@ -4,16 +4,17 @@ import { api } from "../../lib/api";
 import { formatDate, formatMoney } from "../../lib/format";
 import { theme } from "../../lib/theme";
 import { useAsync } from "../../lib/use-async";
-import { Card, Eyebrow, Loading, Message, StatusBadge } from "../../components/ui";
+import { Card, Eyebrow, Loading, Message, StatusBadge, useBottomInset } from "../../components/ui";
 
 export default function DashboardScreen() {
   const { data, error, loading, refreshing, refresh } = useAsync(() => api.stats());
+  const paddingBottom = useBottomInset();
 
   if (loading) return <Loading />;
 
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingBottom }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.ink} />}
     >
       {error ? <Message tone="error">{error}</Message> : null}
@@ -76,7 +77,7 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 40 },
+  container: { padding: 16 },
   grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 },
   tile: { width: "50%", flexGrow: 1, flexBasis: "45%", margin: 6, padding: 18 },
   tileValue: { marginTop: 12, fontSize: 26, color: theme.ink, fontVariant: ["tabular-nums"] },
