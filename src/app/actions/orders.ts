@@ -5,6 +5,8 @@ import { cookies } from "next/headers";
 import { fallbackProducts } from "@/lib/catalog/fallback";
 import { shippingFor } from "@/lib/format";
 import { notifyNewOrder } from "@/lib/admin/push";
+import { sendMetaEvent } from "@/lib/meta/capi";
+import { purchaseEventId } from "@/lib/meta/config";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
 import type { CartLine, ProductOffer } from "@/lib/types";
 import { LAST_ORDER_COOKIE } from "@/lib/order-cookie";
@@ -287,6 +289,30 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
     },
   );
 
+  // Confirmed checkout — the conversion Meta optimises against. Sent with the
+  // order number as the event id so the pixel copy fired on the confirmation
+  // page collapses into this one. Never awaited for correctness: a marketing
+  // call must not be able to fail an order that is already committed.
+  await sendMetaEvent({
+    eventName: "Purchase",
+    eventId: purchaseEventId(orderNumber),
+    user: {
+      email: shipping.email,
+      phone: shipping.phone,
+      fullName: shipping.full_name,
+      city: shipping.city,
+      country: shipping.country,
+    },
+    contents: items.map((item) => ({
+      id: item.product_slug,
+      quantity: item.quantity,
+      unitCents: item.unit_cents,
+    })),
+    valueCents: total,
+    currency,
+    orderNumber,
+  });
+
   return { ok: true, orderNumber };
 }
 
@@ -449,6 +475,23 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
       maxAge: 60 * 60 * 24 * 7,
     },
   );
+
+  // Same conversion as the cart checkout: one piece, paid on delivery. There
+  // is no email on this path, so the hashed phone and name carry the match.
+  await sendMetaEvent({
+    eventName: "Purchase",
+    eventId: purchaseEventId(orderNumber),
+    user: {
+      phone,
+      fullName,
+      city: governorate,
+      country: "Tunisia",
+    },
+    contents: [{ id: item.product_slug, quantity: item.quantity, unitCents: item.unit_cents }],
+    valueCents: total,
+    currency,
+    orderNumber,
+  });
 
   return { ok: true, orderNumber };
 }

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { placeOrder, type PlaceOrderResult } from "@/app/actions/orders";
 import { ProductImage } from "@/components/product-image";
 import { Reveal } from "@/components/reveal";
@@ -10,6 +10,7 @@ import { Eyebrow, PillButton, PillLink } from "@/components/ui";
 import { RegionSelect } from "@/components/region-select";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatMoney } from "@/lib/format";
+import { trackPixel } from "@/lib/meta/pixel";
 
 const FIELDS = [
   { name: "full_name", label: "Nom complet", autoComplete: "name", span: 2 },
@@ -26,6 +27,18 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const fieldErrors = result && !result.ok ? (result.fieldErrors ?? {}) : {};
+
+  // InitiateCheckout, once the basket has come back from localStorage. Guarded
+  // so returning to the form after a validation error doesn't count twice.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || !hydrated || lines.length === 0) return;
+    checkoutTracked.current = true;
+    trackPixel("InitiateCheckout", {
+      contents: lines.map((l) => ({ id: l.slug, quantity: l.quantity, unitCents: l.unitCents })),
+      valueCents: totalCents,
+    });
+  }, [hydrated, lines, totalCents]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

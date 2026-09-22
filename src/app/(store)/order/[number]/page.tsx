@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { MetaPurchase } from "@/components/meta-purchase";
 import { ProductImage } from "@/components/product-image";
 import { Reveal } from "@/components/reveal";
 import { Eyebrow, PillLink } from "@/components/ui";
@@ -74,6 +75,18 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-16 pb-8 md:px-8 md:pt-28">
+      {/* Browser half of the Purchase conversion; the order action already
+          sent the server copy under the same event id. */}
+      <MetaPurchase
+        orderNumber={order.order_number}
+        valueCents={order.total_cents}
+        currency={order.currency}
+        contents={items.map((item) => ({
+          id: item.product_slug,
+          quantity: item.quantity,
+          unitCents: item.unit_cents,
+        }))}
+      />
       <Reveal className="text-center">
         <Eyebrow>Order {order.order_number}</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">

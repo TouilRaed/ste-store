@@ -12,6 +12,7 @@ import {
 } from "react";
 import * as store from "@/lib/cart/store";
 import { shippingFor } from "@/lib/format";
+import { trackPixel } from "@/lib/meta/pixel";
 import type { CartLine } from "@/lib/types";
 
 type CartContextValue = {
@@ -40,6 +41,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback((incoming: Omit<CartLine, "key">) => {
     setLastAdded(store.addLine(incoming));
+    // Cart lines carry no currency of their own; the shop prices in dinars.
+    trackPixel("AddToCart", {
+      contents: [{ id: incoming.slug, quantity: incoming.quantity, unitCents: incoming.unitCents }],
+      valueCents: incoming.unitCents * incoming.quantity,
+    });
   }, []);
 
   const dismissToast = useCallback(() => setLastAdded(null), []);
