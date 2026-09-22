@@ -56,7 +56,7 @@ export default function CartPage() {
                         {line.name}
                       </Link>
                       <p className="eyebrow mt-2 text-ink-muted">
-                        {[line.size, line.color].filter(Boolean).join(" · ") || "Taille unique"}
+                        {line.options.map((o) => o.value).join(" · ") || "Modèle unique"}
                       </p>
                     </div>
                     <p className="shrink-0 text-base tabular-nums">

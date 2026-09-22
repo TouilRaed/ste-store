@@ -207,3 +207,17 @@ begin
     add constraint orders_status_check
     check (status in ('pending','confirmed','ready','shipped','delivered','cancelled'));
 end $$;
+
+-- Option groups: the ways one product varies, each choice carrying its own
+-- photo so the gallery can follow the click. Held as jsonb
+--   [{ "label": "Couleur", "choices": [{ "name": "Laiton", "image": url|null }] }]
+-- which replaces the flat `sizes` and `colors` arrays: those could not hold a
+-- picture, and a shop selling "Type A / Type B" had nowhere to put it. The old
+-- columns stay for the orders already placed against them.
+alter table public.products add column if not exists option_groups jsonb not null default '[]'::jsonb;
+
+-- What the customer picked, as [{ "label": "Couleur", "value": "Laiton" }].
+-- Copied onto the line like product_name and unit_cents: an order must still
+-- read correctly after the product's options are edited or the product is
+-- deleted.
+alter table public.order_items add column if not exists options jsonb not null default '[]'::jsonb;

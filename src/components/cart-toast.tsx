@@ -25,7 +25,7 @@ export function CartToast() {
               <p className="eyebrow text-ink-muted">Added to bag</p>
               <p className="truncate text-base">{lastAdded.name}</p>
               <p className="text-sm text-ink-muted tabular-nums">
-                {[lastAdded.size, lastAdded.color].filter(Boolean).join(" / ")} ·{" "}
+                {lastAdded.options.map((o) => o.value).join(" / ") || "Modèle unique"} ·{" "}
                 {formatMoney(lastAdded.unitCents)}
               </p>
             </div>

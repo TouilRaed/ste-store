@@ -22,7 +22,7 @@ export class AdminError extends Error {
 export type AdminProduct = Product & { is_active: boolean; created_at: string };
 
 const PRODUCT_COLUMNS =
-  "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, collection_id, gender, stock, is_featured, is_active, tags, offers, created_at";
+  "id, slug, name, description, details, price_cents, compare_at_cents, currency, images, sizes, colors, option_groups, collection_id, gender, stock, is_featured, is_active, tags, offers, created_at";
 
 const ORDER_COLUMNS =
   "id, order_number, email, full_name, phone, address_line1, address_line2, city, district, postal_code, country, note, admin_note, subtotal_cents, shipping_cents, total_cents, currency, status, carrier, tracking_code, shipped_at, created_at";
@@ -163,7 +163,7 @@ export async function deleteCollection(id: string): Promise<void> {
 export async function listOrders(filters: { status?: OrderStatus; search?: string } = {}): Promise<Order[]> {
   let query = client()
     .from("orders")
-    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, offer_name, unit_cents, quantity)`)
+    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, options, offer_name, unit_cents, quantity)`)
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -181,7 +181,7 @@ export async function listOrders(filters: { status?: OrderStatus; search?: strin
 export async function getOrder(id: string): Promise<Order> {
   const { data, error } = await client()
     .from("orders")
-    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, offer_name, unit_cents, quantity)`)
+    .select(`${ORDER_COLUMNS}, order_items(product_name, product_slug, image, size, color, options, offer_name, unit_cents, quantity)`)
     .or(`id.eq.${id},order_number.eq.${id}`)
     .maybeSingle();
   if (error) throw new AdminError(500, error.message);
@@ -306,6 +306,7 @@ export async function setOrderItems(id: string, items: OrderItemInput[]): Promis
       image: item.image ?? null,
       size: item.size ?? null,
       color: item.color ?? null,
+      options: item.options ?? [],
       unit_cents: item.unit_cents,
       quantity: item.quantity,
     })),

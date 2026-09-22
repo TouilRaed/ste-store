@@ -6,7 +6,7 @@ import { ProductImage } from "@/components/product-image";
 import { PillButton } from "@/components/ui";
 import { formatMoney, majorInputToMinor, minorToMajorInput, shippingFor } from "@/lib/format";
 import type { AdminProduct } from "@/lib/admin/repo";
-import type { Order, OrderItem } from "@/lib/types";
+import type { Order, OrderItem, SelectedOption } from "@/lib/types";
 
 type Line = {
   product_slug: string;
@@ -14,6 +14,8 @@ type Line = {
   image: string | null;
   size: string | null;
   color: string | null;
+  /** Carried through untouched so saving a quantity keeps the choice. */
+  options: SelectedOption[];
   unit_cents: number;
   quantity: number;
 };
@@ -62,6 +64,7 @@ function toLine(item: OrderItem): Line {
     image: item.image ?? null,
     size: item.size ?? null,
     color: item.color ?? null,
+    options: item.options ?? [],
     unit_cents: item.unit_cents,
     quantity: item.quantity,
   };
@@ -94,8 +97,13 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
         product_slug: product.slug,
         product_name: product.name,
         image: product.images[0] ?? null,
-        size: product.sizes[0] ?? null,
-        color: product.colors[0] ?? null,
+        size: null,
+        color: null,
+        // A piece added by the shop has no customer choice behind it; the
+        // first choice of each group is the sensible default.
+        options: (product.option_groups ?? [])
+          .filter((g) => g.choices.length > 0)
+          .map((g) => ({ label: g.label, value: g.choices[0].name })),
         unit_cents: product.price_cents,
         quantity: 1,
       },
@@ -133,6 +141,14 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
                     Retirer
                   </button>
                 </div>
+
+                {/* What the customer picked, shown as it was ordered. Not
+                    editable here: changing it would rewrite their choice. */}
+                {line.options.length > 0 ? (
+                  <p className="mt-2 text-sm text-ink-muted">
+                    {line.options.map((o) => `${o.label} : ${o.value}`).join(" · ")}
+                  </p>
+                ) : null}
 
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <label className="block">

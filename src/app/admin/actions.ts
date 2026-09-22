@@ -135,6 +135,7 @@ export async function saveProductAction(
       is_featured: formData.get("is_featured") === "on",
       is_active: formData.get("is_active") === "on",
       offers: formData.get("offers"),
+      option_groups: formData.get("option_groups"),
     };
 
     // No slug field in the form: generate one on create, leave it alone on

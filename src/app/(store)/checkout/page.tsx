@@ -48,8 +48,10 @@ export default function CheckoutPage() {
         lines.map((l) => ({
           productId: l.productId,
           slug: l.slug,
-          size: l.size,
-          color: l.color,
+          options: l.options,
+          // The offer was being dropped here, so a cart order always billed
+          // the unit price even when a bundle had been picked.
+          offerName: l.offerName,
           quantity: l.quantity,
         })),
       ),
@@ -161,7 +163,7 @@ export default function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-base">{line.name}</p>
                       <p className="text-sm text-ink-muted">
-                        {[line.size, line.color].filter(Boolean).join(" · ") || "Taille unique"} × {line.quantity}
+                        {line.options.map((o) => o.value).join(" · ") || "Modèle unique"} × {line.quantity}
                       </p>
                     </div>
                     <p className="text-base tabular-nums">{formatMoney(line.unitCents * line.quantity)}</p>

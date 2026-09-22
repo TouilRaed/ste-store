@@ -7,6 +7,7 @@ import { PillButton } from "@/components/ui";
 import { formatMoney, shippingFor } from "@/lib/format";
 import { RegionSelect } from "@/components/region-select";
 import { useCart } from "@/lib/cart/cart-context";
+import { useProductSelection } from "@/components/product-selection";
 import type { Product } from "@/lib/types";
 
 const inputClass =
@@ -21,28 +22,15 @@ const inputClass =
  * ProductOptions above and passed in — rendering a second set of selectors
  * let a shopper pick "3 lampes" in one place and the unit price in the other.
  */
-export function CodOrderForm({
-  product,
-  size,
-  color,
-  offerIndex,
-}: {
-  product: Product;
-  size: string | null;
-  color: string | null;
-  offerIndex: number | null;
-}) {
+export function CodOrderForm({ product }: { product: Product }) {
   const { add } = useCart();
+  const { options, offer: selectedOffer, unitCents, spotlight } = useProductSelection();
   const [quantity, setQuantity] = useState(1);
   const [result, setResult] = useState<CodOrderResult | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
   const fieldErrors = result && !result.ok ? (result.fieldErrors ?? {}) : {};
-
-  const offers = product.offers ?? [];
-  const selectedOffer = offerIndex === null ? null : (offers[offerIndex] ?? null);
-  const unitCents = selectedOffer ? selectedOffer.price_cents : product.price_cents;
 
   const subtotal = unitCents * quantity;
   const shipping = shippingFor(subtotal);
@@ -55,8 +43,9 @@ export function CodOrderForm({
     const formData = new FormData(event.currentTarget);
     formData.set("slug", product.slug);
     formData.set("quantity", String(quantity));
-    if (size) formData.set("size", size);
-    if (color) formData.set("color", color);
+    // Sent as one field: the server re-reads the product's own groups and
+    // keeps only choices that still exist on it.
+    formData.set("options", JSON.stringify(options));
     if (selectedOffer) formData.set("offer_name", selectedOffer.name);
 
     startTransition(async () => {
@@ -185,9 +174,10 @@ export function CodOrderForm({
                 productId: product.id,
                 slug: product.slug,
                 name: product.name,
-                image: product.images[0] ?? null,
-                size,
-                color,
+                // The variant the shopper is looking at, so the bag shows what
+                // they picked rather than the product's default photo.
+                image: spotlight ?? product.images[0] ?? null,
+                options,
                 offerName: selectedOffer?.name ?? null,
                 unitCents,
                 quantity,

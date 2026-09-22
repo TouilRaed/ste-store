@@ -1,4 +1,4 @@
-import type { CartLine } from "@/lib/types";
+import type { CartLine, SelectedOption } from "@/lib/types";
 import { CART_STORAGE_KEY } from "@/lib/brand";
 
 /**
@@ -87,17 +87,21 @@ export function getLoadedServer(): boolean {
 
 export function lineKey(
   productId: string,
-  size: string | null,
-  color: string | null,
+  options: SelectedOption[],
   offerName: string | null = null,
 ): string {
-  // The offer belongs in the key: the same size/colour bought under two
-  // different offers is two lines at two prices, not one merged line.
-  return `${productId}:${size ?? "-"}:${color ?? "-"}:${offerName ?? "-"}`;
+  // Every chosen option belongs in the key, and so does the offer: the same
+  // colour bought under two different offers is two lines at two prices, not
+  // one merged line. Sorted so the key does not depend on click order.
+  const picked = [...options]
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .map((o) => `${o.label}=${o.value}`)
+    .join("|");
+  return `${productId}:${picked || "-"}:${offerName ?? "-"}`;
 }
 
 export function addLine(incoming: Omit<CartLine, "key">): CartLine {
-  const key = lineKey(incoming.productId, incoming.size, incoming.color, incoming.offerName);
+  const key = lineKey(incoming.productId, incoming.options, incoming.offerName);
   const line: CartLine = { ...incoming, key };
   const existing = lines.find((l) => l.key === key);
 

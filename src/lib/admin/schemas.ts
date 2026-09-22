@@ -96,6 +96,41 @@ const offerList = z
   )
   .default([]);
 
+/**
+ * Option groups, posted the same two ways offers are: a JSON string from the
+ * web form, a real array from the mobile app. A choice's image is a URL from
+ * the uploader, or null when the variant has no photo of its own.
+ */
+const optionGroupList = z
+  .preprocess(
+    (value) => {
+      if (typeof value !== "string") return value ?? [];
+      const raw = value.trim();
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return raw;
+      }
+    },
+    z
+      .array(
+        z.object({
+          label: z.string().trim().min(1).max(40),
+          choices: z
+            .array(
+              z.object({
+                name: z.string().trim().min(1).max(60),
+                image: z.preprocess(blankToNull, z.string().trim().max(600).nullable()).default(null),
+              }),
+            )
+            .max(40),
+        }),
+      )
+      .max(6),
+  )
+  .default([]);
+
 export const productInputSchema = z.object({
   slug,
   name: z.string().trim().min(1).max(120),
@@ -114,6 +149,7 @@ export const productInputSchema = z.object({
   is_featured: z.coerce.boolean().default(false),
   is_active: z.coerce.boolean().default(true),
   offers: offerList,
+  option_groups: optionGroupList,
 });
 
 export type ProductInput = z.infer<typeof productInputSchema>;
@@ -164,6 +200,15 @@ export const orderItemSchema = z.object({
   image: z.string().trim().max(600).nullable().optional(),
   size: z.string().trim().max(40).nullable().optional(),
   color: z.string().trim().max(60).nullable().optional(),
+  /**
+   * What the customer picked. The admin does not edit these, but the editor
+   * replaces every line on save — so they have to travel with the line or a
+   * quantity change would erase the customer's own choice.
+   */
+  options: z
+    .array(z.object({ label: z.string().trim().max(40), value: z.string().trim().max(60) }))
+    .max(6)
+    .optional(),
   unit_cents: z.coerce.number().int().min(0).max(100_000_000),
   quantity: z.coerce.number().int().min(1).max(100),
 });

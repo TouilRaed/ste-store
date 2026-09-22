@@ -22,7 +22,7 @@ async function loadOrder(orderNumber: string): Promise<Order | null> {
     const { data } = await admin
       .from("orders")
       .select(
-        "id, order_number, email, full_name, address_line1, address_line2, city, postal_code, country, subtotal_cents, shipping_cents, total_cents, currency, status, created_at, order_items(product_name, product_slug, image, size, color, unit_cents, quantity)",
+        "id, order_number, email, full_name, address_line1, address_line2, city, postal_code, country, subtotal_cents, shipping_cents, total_cents, currency, status, created_at, order_items(product_name, product_slug, image, size, color, options, unit_cents, quantity)",
       )
       .eq("order_number", orderNumber)
       .maybeSingle();
@@ -110,7 +110,10 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
                   <div className="min-w-0 flex-1">
                     <p className="font-display text-base leading-tight">{item.product_name}</p>
                     <p className="eyebrow mt-2 text-ink-muted">
-                      {[item.size, item.color].filter(Boolean).join(" · ") || "Taille unique"} × {item.quantity}
+                      {(item.options ?? []).map((o) => o.value).join(" · ") ||
+                        [item.size, item.color].filter(Boolean).join(" · ") ||
+                        "Modèle unique"}{" "}
+                      × {item.quantity}
                     </p>
                   </div>
                   <p className="text-base tabular-nums">

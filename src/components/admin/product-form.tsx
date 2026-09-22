@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { deleteProductAction, saveProductAction, type ActionResult } from "@/app/admin/actions";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { OffersEditor } from "@/components/admin/offers-editor";
+import { OptionGroupsEditor } from "@/components/admin/option-groups-editor";
 import { TagPicker } from "@/components/admin/tag-picker";
 import { Panel } from "@/components/admin/ui";
 import { PillButton } from "@/components/ui";
@@ -123,23 +124,18 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 ) : null}
               </div>
 
-              <Field label="Tailles" hint="Une par ligne" error={errors.sizes}>
-                <textarea
-                  name="sizes"
-                  rows={4}
-                  defaultValue={product?.sizes.join("\n")}
-                  className={`${inputClass} resize-none font-mono text-[13px]`}
-                />
-              </Field>
-
-              <Field label="Couleurs" hint="Une par ligne" error={errors.colors}>
-                <textarea
-                  name="colors"
-                  rows={4}
-                  defaultValue={product?.colors.join("\n")}
-                  className={`${inputClass} resize-none font-mono text-[13px]`}
-                />
-              </Field>
+              <div className="sm:col-span-2">
+                <span className="eyebrow text-ink-muted">Options</span>
+                <p className="mt-1 mb-3 text-xs leading-relaxed text-ink-muted">
+                  Les déclinaisons du produit — « Couleur », « Type », « Modèle ». Donnez une photo à
+                  chaque option : elle s&apos;affiche dans la galerie quand le client la sélectionne, et
+                  le choix est enregistré avec la commande.
+                </p>
+                <OptionGroupsEditor defaultGroups={product?.option_groups} />
+                {errors.option_groups?.length ? (
+                  <span className="mt-2 block text-xs text-accent-deep">{errors.option_groups[0]}</span>
+                ) : null}
+              </div>
             </div>
           </Panel>
 

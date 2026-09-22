@@ -8,7 +8,7 @@ import { notifyNewOrder } from "@/lib/admin/push";
 import { sendMetaEvent } from "@/lib/meta/capi";
 import { purchaseEventId } from "@/lib/meta/config";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
-import type { CartLine, ProductOffer } from "@/lib/types";
+import type { CartLine, ProductOffer, ProductOptionGroup, SelectedOption } from "@/lib/types";
 import { LAST_ORDER_COOKIE } from "@/lib/order-cookie";
 import { GOVERNORATES, normalisePhone } from "@/lib/tunisia";
 
@@ -19,8 +19,7 @@ export type PlaceOrderResult =
 type IncomingLine = {
   productId: string;
   slug: string;
-  size: string | null;
-  color: string | null;
+  options: SelectedOption[];
   /** Name only — the price behind it is re-read from the product server-side. */
   offerName: string | null;
   quantity: number;
@@ -50,6 +49,37 @@ type ShippingDetails = {
   country: string;
   note: string;
 };
+
+/**
+ * Keeps only the choices the product actually offers.
+ *
+ * Options arrive from the browser like everything else, so an invented
+ * "Couleur: Gratuit" must not reach the order. Each label and value is matched
+ * against the product's own groups; anything unknown is dropped rather than
+ * rejected, so a group deleted mid-session does not fail a live order.
+ */
+function resolveOptions(groups: unknown, incoming: unknown): SelectedOption[] {
+  if (!Array.isArray(groups) || !Array.isArray(incoming)) return [];
+  const known = groups as ProductOptionGroup[];
+
+  return (incoming as SelectedOption[])
+    .map((picked) => {
+      if (!picked || typeof picked.label !== "string" || typeof picked.value !== "string") return null;
+      const group = known.find((g) => g?.label === picked.label);
+      const choice = group?.choices?.find((c) => c?.name === picked.value);
+      return choice ? { label: group!.label, value: choice.name } : null;
+    })
+    .filter((o): o is SelectedOption => o !== null);
+}
+
+function parseOptionsField(raw: string): SelectedOption[] {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as SelectedOption[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Matches a client-supplied offer name against the product's own offers.
@@ -95,8 +125,7 @@ function parseLines(raw: string): IncomingLine[] {
         return {
           productId: String(l.productId ?? ""),
           slug: String(l.slug ?? ""),
-          size: l.size ?? null,
-          color: l.color ?? null,
+          options: Array.isArray(l.options) ? l.options : [],
           offerName: l.offerName ?? null,
           quantity: Math.max(1, Math.min(20, Number(l.quantity) || 0)),
         };
@@ -155,7 +184,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
     ? ((
         await supabase
           .from("products")
-          .select("id, slug, name, price_cents, currency, images, offers")
+          .select("id, slug, name, price_cents, currency, images, offers, option_groups")
           .in("slug", slugs)
           .eq("is_active", true)
       ).data ?? [])
@@ -169,6 +198,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
           currency: p.currency,
           images: p.images,
           offers: p.offers,
+          option_groups: p.option_groups,
         }));
 
   const productIdBySlug = new Map(priced.map((p) => [p.slug, p.id]));
@@ -184,8 +214,7 @@ export async function placeOrder(formData: FormData): Promise<PlaceOrderResult> 
         product_name: product.name,
         product_slug: product.slug,
         image: product.images?.[0] ?? null,
-        size: line.size,
-        color: line.color,
+        options: resolveOptions(product.option_groups, line.options),
         offer_name: offer?.name ?? null,
         unit_cents: offer ? offer.price_cents : product.price_cents,
         quantity: line.quantity,
@@ -332,8 +361,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
 
   const slug = get("slug");
   const quantity = Math.max(1, Math.min(20, Number(get("quantity")) || 1));
-  const size = get("size") || null;
-  const color = get("color") || null;
+  const pickedOptions = parseOptionsField(get("options"));
   const offerName = get("offer_name") || null;
   const district = get("district") || null;
 
@@ -372,7 +400,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
     ? (
         await supabase
           .from("products")
-          .select("id, slug, name, price_cents, currency, images, offers")
+          .select("id, slug, name, price_cents, currency, images, offers, option_groups")
           .eq("slug", slug)
           .eq("is_active", true)
           .maybeSingle()
@@ -394,8 +422,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
     product_name: product.name,
     product_slug: product.slug,
     image: product.images?.[0] ?? null,
-    size,
-    color,
+    options: resolveOptions(product.option_groups, pickedOptions),
     offer_name: codOffer?.name ?? null,
     unit_cents: codUnitCents,
     quantity,

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
 import { ProductBuyPanel } from "@/components/product-buy-panel";
 import { ProductGallery } from "@/components/product-purchase";
+import { ProductSelectionProvider } from "@/components/product-selection";
 import { Reveal } from "@/components/reveal";
 import { Eyebrow, PillLink } from "@/components/ui";
 import { badgesFor, stockNote } from "@/lib/catalog/badges";
@@ -32,6 +33,9 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
 
   return (
     <div className="mx-auto max-w-7xl px-4 pt-16 md:px-8 md:pt-28">
+      {/* Both columns share one selection: picking a colour or a type on the
+          right swaps the photo on the left. */}
+      <ProductSelectionProvider product={product}>
       <div className="grid gap-12 md:grid-cols-2 md:gap-16">
         <Reveal>
           <ProductGallery product={product} />
@@ -78,6 +82,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
           </div>
         </Reveal>
       </div>
+      </ProductSelectionProvider>
 
       {related.length > 0 ? (
         <section className="pt-32 md:pt-48">

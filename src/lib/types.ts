@@ -13,6 +13,28 @@ export type ProductOffer = {
   price_cents: number;
 };
 
+/** One pickable value inside a group, e.g. "Laiton" under "Couleur". */
+export type ProductOptionChoice = {
+  name: string;
+  /** Shown in the gallery when this choice is picked; null keeps the default. */
+  image: string | null;
+};
+
+/**
+ * A way the product varies — "Couleur", "Type", "Modèle". Replaces the flat
+ * `sizes`/`colors` arrays, which had nowhere to hold a picture.
+ */
+export type ProductOptionGroup = {
+  label: string;
+  choices: ProductOptionChoice[];
+};
+
+/** What a customer picked, carried on the cart line and copied onto the order. */
+export type SelectedOption = {
+  label: string;
+  value: string;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -23,8 +45,10 @@ export type Product = {
   compare_at_cents: number | null;
   currency: string;
   images: string[];
+  /** Legacy, kept for orders placed before option groups existed. */
   sizes: string[];
   colors: string[];
+  option_groups: ProductOptionGroup[];
   collection_id: string | null;
   gender: "women" | "men" | "unisex";
   stock: number;
@@ -34,14 +58,13 @@ export type Product = {
 };
 
 export type CartLine = {
-  /** `${productId}:${size}:${color}:${offerName}` — one line per variant. */
+  /** productId + every chosen option + the offer — one line per variant. */
   key: string;
   productId: string;
   slug: string;
   name: string;
   image: string | null;
-  size: string | null;
-  color: string | null;
+  options: SelectedOption[];
   /** Chosen offer, or null when bought at the base price. */
   offerName: string | null;
   unitCents: number;
@@ -52,8 +75,10 @@ export type OrderItem = {
   product_name: string;
   product_slug: string;
   image: string | null;
-  size: string | null;
-  color: string | null;
+  options?: SelectedOption[];
+  /** Legacy columns, still populated on older orders. */
+  size?: string | null;
+  color?: string | null;
   offer_name?: string | null;
   unit_cents: number;
   quantity: number;
