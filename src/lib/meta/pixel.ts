@@ -39,8 +39,34 @@ type TrackOptions = {
   eventId?: string;
 };
 
+/**
+ * Events raised before the pixel script has run.
+ *
+ * `fbq` is defined by the inline snippet, which loads with `afterInteractive`
+ * — i.e. *after* hydration. A screen that tracks on mount (ViewContent on a
+ * product page) therefore fires while `fbq` is still undefined, and would be
+ * dropped. They wait here instead and are flushed once the snippet executes.
+ *
+ * Capped so that a blocked pixel, where the flush never comes, cannot grow
+ * this without bound over a long browsing session.
+ */
+const pending: Array<[string, TrackOptions]> = [];
+const PENDING_LIMIT = 20;
+
+/** Called from the pixel script's onReady. Safe to call more than once. */
+export function flushPixelQueue(): void {
+  if (typeof window === "undefined" || !window.fbq) return;
+  const queued = pending.splice(0, pending.length);
+  for (const [event, options] of queued) trackPixel(event, options);
+}
+
 export function trackPixel(event: string, options: TrackOptions = {}): void {
-  if (!hasMetaPixel || typeof window === "undefined" || !window.fbq) return;
+  if (!hasMetaPixel || typeof window === "undefined") return;
+
+  if (!window.fbq) {
+    if (pending.length < PENDING_LIMIT) pending.push([event, options]);
+    return;
+  }
 
   const currency = (options.currency ?? "TND").toUpperCase();
   const divisor = minorUnitsPer(currency);

@@ -4,6 +4,7 @@ import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { META_PIXEL_ID, hasMetaPixel } from "@/lib/meta/config";
+import { flushPixelQueue } from "@/lib/meta/pixel";
 
 /**
  * Loads the Meta pixel and keeps PageView in step with client-side routing.
@@ -29,7 +30,9 @@ export function MetaPixel() {
 
   return (
     <>
-      <Script id="meta-pixel" strategy="afterInteractive">
+      {/* onReady fires once the snippet has defined fbq — the moment any
+          event raised during hydration can finally be sent. */}
+      <Script id="meta-pixel" strategy="afterInteractive" onReady={flushPixelQueue}>
         {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
