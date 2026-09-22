@@ -71,7 +71,7 @@ export default function CheckoutPage() {
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 pt-32 pb-24 text-center md:pt-48">
         <Eyebrow>Paiement</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
-          Your bag is empty
+          Votre panier est vide
         </h1>
         <div className="mt-10">
           <PillLink href="/shop">Trouver une pièce</PillLink>
@@ -83,9 +83,9 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-16 pb-8 md:px-8 md:pt-28">
       <Reveal>
-        <Eyebrow>Step 2 of 2</Eyebrow>
+        <Eyebrow>Étape 2 sur 2</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
-          Where should it go?
+          Où la livrer ?
         </h1>
       </Reveal>
 
@@ -129,7 +129,7 @@ export default function CheckoutPage() {
                 ))}
 
                 <label className="block sm:col-span-2">
-                  <span className="eyebrow text-ink-muted">Note for the studio (optional)</span>
+                  <span className="eyebrow text-ink-muted">Note pour l&apos;atelier (facultatif)</span>
                   <textarea
                     name="note"
                     rows={3}
@@ -193,9 +193,9 @@ export default function CheckoutPage() {
               </div>
 
               <p className="mt-5 text-center text-sm text-ink-muted">
-                No card is charged here — payment is arranged by email.{" "}
+                Aucune carte n&apos;est débitée ici — vous payez le livreur à la réception.{" "}
                 <Link href="/cart" className="underline underline-offset-4">
-                  Edit bag
+                  Modifier le panier
                 </Link>
               </p>
             </div>

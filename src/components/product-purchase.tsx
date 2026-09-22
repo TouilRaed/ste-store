@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { ProductImage } from "@/components/product-image";
-import { PillButton } from "@/components/ui";
-import { useCart } from "@/lib/cart/cart-context";
 import { formatMoney } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
@@ -162,75 +160,3 @@ export function ProductOptions({
  * Quantity and the cart button. The selection is owned by ProductBuyPanel so
  * the shopper picks an offer once, not once per purchase path.
  */
-export function AddToCart({
-  product,
-  size,
-  color,
-  offerIndex,
-}: {
-  product: Product;
-  size: string | null;
-  color: string | null;
-  offerIndex: number | null;
-}) {
-  const { add } = useCart();
-  const [quantity, setQuantity] = useState(1);
-
-  const offers = product.offers ?? [];
-  const selectedOffer = offerIndex === null ? null : (offers[offerIndex] ?? null);
-  const unitCents = selectedOffer ? selectedOffer.price_cents : product.price_cents;
-
-  const soldOut = product.stock <= 0;
-  const max = Math.max(1, Math.min(product.stock, 8));
-
-  return (
-    <div>
-      <div className="mt-10 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 rounded-full border border-[color:var(--line-strong)] bg-white/60 p-1">
-          <button
-            type="button"
-            aria-label="Diminuer la quantité"
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="h-8 w-8 rounded-full text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep"
-          >
-            −
-          </button>
-          <span className="w-6 text-center text-base tabular-nums">{quantity}</span>
-          <button
-            type="button"
-            aria-label="Augmenter la quantité"
-            onClick={() => setQuantity((q) => Math.min(max, q + 1))}
-            className="h-8 w-8 rounded-full text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep"
-          >
-            +
-          </button>
-        </div>
-
-        <PillButton
-          disabled={soldOut}
-          onClick={() =>
-            add({
-              productId: product.id,
-              slug: product.slug,
-              name: product.name,
-              image: product.images[0] ?? null,
-              size,
-              color,
-              offerName: selectedOffer?.name ?? null,
-              unitCents,
-              quantity,
-            })
-          }
-        >
-          {soldOut ? "Épuisé" : `Ajouter — ${formatMoney(unitCents * quantity, product.currency)}`}
-        </PillButton>
-      </div>
-
-      <p className="mt-5 text-sm text-ink-muted">
-        {soldOut
-          ? "Épuisé pour le moment."
-          : `${product.stock} en stock · paiement à la livraison partout en Tunisie`}
-      </p>
-    </div>
-  );
-}

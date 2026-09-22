@@ -6,6 +6,7 @@ import { placeCodOrder, type CodOrderResult } from "@/app/actions/orders";
 import { PillButton } from "@/components/ui";
 import { formatMoney, shippingFor } from "@/lib/format";
 import { RegionSelect } from "@/components/region-select";
+import { useCart } from "@/lib/cart/cart-context";
 import type { Product } from "@/lib/types";
 
 const inputClass =
@@ -31,6 +32,7 @@ export function CodOrderForm({
   color: string | null;
   offerIndex: number | null;
 }) {
+  const { add } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [result, setResult] = useState<CodOrderResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -169,12 +171,41 @@ export function CodOrderForm({
           <p className="mt-5 rounded-2xl bg-accent-soft px-4 py-3 text-base text-accent-deep">{result.error}</p>
         ) : null}
 
-        <PillButton type="submit" disabled={pending || soldOut} className="mt-6 w-full">
-          {soldOut ? "Épuisé" : pending ? "Envoi…" : "Confirmer la commande"}
-        </PillButton>
+        {/* Both ways of buying sit on one row, sharing the quantity above:
+            order now and pay the courier, or keep shopping with it in the
+            bag. They used to be separated by the whole options block, each
+            with its own quantity stepper that disagreed with the other. */}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <PillButton
+            type="button"
+            tone="paper"
+            disabled={soldOut}
+            onClick={() =>
+              add({
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                image: product.images[0] ?? null,
+                size,
+                color,
+                offerName: selectedOffer?.name ?? null,
+                unitCents,
+                quantity,
+              })
+            }
+          >
+            Ajouter au panier
+          </PillButton>
+
+          <PillButton type="submit" disabled={pending || soldOut} className="flex-1">
+            {soldOut ? "Épuisé" : pending ? "Envoi…" : "Confirmer la commande"}
+          </PillButton>
+        </div>
 
         <p className="mt-4 text-center text-sm text-ink-muted">
-          Paiement à la livraison partout en Tunisie.
+          {soldOut
+            ? "Épuisé pour le moment."
+            : `${product.stock} en stock · paiement à la livraison partout en Tunisie`}
         </p>
       </div>
     </form>

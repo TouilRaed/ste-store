@@ -56,13 +56,13 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
   if (!order) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 pt-32 pb-24 text-center md:pt-48">
-        <Eyebrow>Order {number}</Eyebrow>
+        <Eyebrow>Commande {number}</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.25rem,6vw,4rem)] leading-[0.95] tracking-[-0.02em]">
-          We can&apos;t find that order
+          Commande introuvable
         </h1>
         <p className="mt-6 max-w-sm text-base leading-relaxed text-ink-soft">
-          The receipt link expired on this device. Email the studio with your order number and we&apos;ll
-          resend it.
+          Le lien du reçu a expiré sur cet appareil. Écrivez-nous avec votre numéro de commande
+          et nous vous le renvoyons.
         </p>
         <div className="mt-10">
           <PillLink href="/shop">Retour aux produits</PillLink>
@@ -88,13 +88,13 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
         }))}
       />
       <Reveal className="text-center">
-        <Eyebrow>Order {order.order_number}</Eyebrow>
+        <Eyebrow>Commande {order.order_number}</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
-          Thank you, {order.full_name.split(" ")[0]}
+          Merci, {order.full_name.split(" ")[0]}
         </h1>
         <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-ink-soft">
-          Your order is logged. We&apos;ll email {order.email} within one working day to arrange payment and
-          confirm the ship date.
+          Votre commande est enregistrée. Nous vous appelons sous un jour ouvré pour confirmer
+          l&apos;adresse et la date de livraison. Vous payez le livreur à la réception.
         </p>
       </Reveal>
 
@@ -163,7 +163,7 @@ export default async function OrderPage({ params }: PageProps<"/order/[number]">
 
       <div className="mt-12 flex justify-center">
         <PillLink href="/shop" tone="paper">
-          Keep browsing
+          Continuer mes achats
         </PillLink>
       </div>
     </div>

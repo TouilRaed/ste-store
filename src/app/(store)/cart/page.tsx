@@ -15,10 +15,10 @@ export default function CartPage() {
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 pt-32 pb-24 text-center md:pt-48">
         <Eyebrow>Votre panier</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
-          Nothing in here yet
+          Votre panier est vide
         </h1>
         <p className="mt-6 max-w-sm text-base leading-relaxed text-ink-soft">
-          Twelve pieces are cut and ready. Start with the one you would wear tomorrow.
+          Nos pièces partent en petites séries. Commencez par celle qui manque à votre intérieur.
         </p>
         <div className="mt-10">
           <PillLink href="/shop">Voir la série</PillLink>
@@ -32,7 +32,7 @@ export default function CartPage() {
       <Reveal>
         <Eyebrow>{hydrated ? `${count} ${count === 1 ? "pièce" : "pièces"}` : "Chargement"}</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.02em]">
-          Your bag
+          Votre panier
         </h1>
       </Reveal>
 
@@ -129,7 +129,7 @@ export default function CartPage() {
 
               <div className="mt-8">
                 <PillLink href="/checkout" className="w-full justify-between">
-                  Checkout
+                  Commander
                 </PillLink>
               </div>
 
@@ -137,7 +137,7 @@ export default function CartPage() {
                 href="/shop"
                 className="mt-5 block text-center text-sm text-ink-muted underline underline-offset-4"
               >
-                Keep browsing
+                Continuer mes achats
               </Link>
             </div>
           </div>

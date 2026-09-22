@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CodOrderForm } from "@/components/cod-order-form";
-import { AddToCart, ProductOptions } from "@/components/product-purchase";
+import { ProductOptions } from "@/components/product-purchase";
 import { trackPixel } from "@/lib/meta/pixel";
 import type { Product } from "@/lib/types";
 
@@ -10,11 +10,10 @@ import type { Product } from "@/lib/types";
  * Owns the shopper's choice of size, colour and offer for the whole product
  * page.
  *
- * The picker itself is rendered once, inside the commande (checkout) block —
- * not repeated above the cart button too. It used to appear twice, which let
- * a shopper pick "3 lampes" in one copy and still order at the unit price in
- * the other; sharing one piece of state instead of one rendered picker would
- * have fixed the disagreement but not the redundant UI.
+ * Options are picked once, above the order card, and both ways of buying —
+ * add to bag, or order now for cash on delivery — live inside that card and
+ * share its quantity. Two steppers and two prices on one screen invited the
+ * shopper to set one and read the other.
  */
 export function ProductBuyPanel({ product }: { product: Product }) {
   const [size, setSize] = useState<string | null>(product.sizes[0] ?? null);
@@ -34,8 +33,6 @@ export function ProductBuyPanel({ product }: { product: Product }) {
 
   return (
     <div>
-      <AddToCart product={product} size={size} color={color} offerIndex={offerIndex} />
-
       <ProductOptions
         product={product}
         size={size}
