@@ -53,11 +53,42 @@ type TrackOptions = {
 const pending: Array<[string, TrackOptions]> = [];
 const PENDING_LIMIT = 20;
 
-/** Called from the pixel script's onReady. Safe to call more than once. */
+/** Sends anything queued, if the pixel is ready. Safe to call repeatedly. */
 export function flushPixelQueue(): void {
   if (typeof window === "undefined" || !window.fbq) return;
   const queued = pending.splice(0, pending.length);
   for (const [event, options] of queued) trackPixel(event, options);
+}
+
+/**
+ * Waits for `fbq` to exist, then flushes.
+ *
+ * next/script's `onReady` does not reliably fire for the inline snippet, and
+ * relying on it lost every ViewContent on a cold load — the effect that raises
+ * it runs before the snippet, and nothing ever came back to drain the queue.
+ * Polling for the global is independent of those lifecycle details.
+ *
+ * Gives up after ten seconds, which is the ad-blocker case: the script will
+ * never arrive and the queued events are not worth holding.
+ */
+let waiting: ReturnType<typeof setInterval> | null = null;
+
+function flushWhenReady(): void {
+  if (waiting !== null || typeof window === "undefined") return;
+
+  let attempts = 0;
+  waiting = setInterval(() => {
+    attempts += 1;
+    if (window.fbq) {
+      clearInterval(waiting as ReturnType<typeof setInterval>);
+      waiting = null;
+      flushPixelQueue();
+    } else if (attempts >= 100) {
+      clearInterval(waiting as ReturnType<typeof setInterval>);
+      waiting = null;
+      pending.length = 0;
+    }
+  }, 100);
 }
 
 export function trackPixel(event: string, options: TrackOptions = {}): void {
@@ -65,6 +96,7 @@ export function trackPixel(event: string, options: TrackOptions = {}): void {
 
   if (!window.fbq) {
     if (pending.length < PENDING_LIMIT) pending.push([event, options]);
+    flushWhenReady();
     return;
   }
 
