@@ -99,10 +99,10 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
 
       {products.length === 0 ? (
         <Reveal className="py-32 text-center">
-          <p className="font-display text-3xl">Nothing matches that combination.</p>
-          <p className="mt-4 text-base text-ink-soft">Try clearing a filter.</p>
+          <p className="font-display text-3xl">Aucun produit pour cette sélection.</p>
+          <p className="mt-4 text-base text-ink-soft">Essayez de retirer un filtre.</p>
           <Link href="/shop" className="mt-8 inline-block text-base underline underline-offset-4">
-            Reset
+            Tout afficher
           </Link>
         </Reveal>
       ) : (
