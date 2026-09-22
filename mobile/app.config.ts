@@ -12,7 +12,7 @@ import BRAND from "./brand.json";
  * EXPO_PUBLIC_API_BASE_URL overrides it for local development.
  */
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://ste-store.vercel.app";
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://stedm.net";
 const config: ExpoConfig = {
   name: `${BRAND.NAME} admin`,
   slug: `${BRAND.KEY}-admin`,
