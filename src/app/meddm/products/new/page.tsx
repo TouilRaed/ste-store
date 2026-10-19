@@ -24,7 +24,7 @@ export default async function NewProductPage() {
   return (
     <>
       <Link href="/meddm/products" className="text-[13px] text-ink-soft underline underline-offset-4">
-        ← All products
+        ← Tous les produits
       </Link>
       <div className="mt-6">
         <PageHeading eyebrow="Catalogue" title="Nouvelle pièce" />

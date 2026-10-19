@@ -39,14 +39,14 @@ export default async function AdminLayout({ children }: LayoutProps<"/meddm">) {
               href="/"
               className="rounded-xl px-4 py-2.5 text-[15px] text-ink-soft transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft hover:text-accent-deep"
             >
-              View store
+              Voir la boutique
             </Link>
             <form action={adminLogout} className="lg:w-full">
               <button
                 type="submit"
                 className="w-full rounded-xl border border-[color:var(--line-strong)] px-4 py-2.5 text-[15px] text-ink-soft transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white active:scale-[0.98]"
               >
-                Sign out
+                Se déconnecter
               </button>
             </form>
           </div>

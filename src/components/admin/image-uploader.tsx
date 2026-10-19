@@ -137,9 +137,9 @@ export function ImageUploader({ name, defaultValue = [] }: ImageUploaderProps) {
         }`}
       >
         <p className="text-sm text-ink-soft">
-          {busy > 0 ? `Uploading ${busy} image${busy === 1 ? "" : "s"}…` : "Drop photos here, or click to choose"}
+          {busy > 0 ? `Uploading ${busy} image${busy === 1 ? "" : "s"}…` : "Déposez vos photos ici, ou cliquez pour choisir"}
         </p>
-        <p className="mt-1 text-xs text-ink-muted">JPEG, PNG, WebP or AVIF · up to 5 MB each</p>
+        <p className="mt-1 text-xs text-ink-muted">JPEG, PNG, WebP ou AVIF · 5 Mo maximum par photo</p>
       </div>
 
       <input
@@ -152,7 +152,7 @@ export function ImageUploader({ name, defaultValue = [] }: ImageUploaderProps) {
       />
 
       {error ? <p className="mt-2 text-xs text-accent-deep">{error}</p> : null}
-      <p className="mt-2 text-xs text-ink-muted">First photo is the card image. Drag order with ← →.</p>
+      <p className="mt-2 text-xs text-ink-muted">La première photo illustre la vignette. Réordonnez avec ← →.</p>
     </div>
   );
 }

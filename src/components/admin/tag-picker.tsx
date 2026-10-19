@@ -85,8 +85,8 @@ export function TagPicker({ name, defaultValue = [] }: TagPickerProps) {
       />
 
       <p className="mt-2 text-xs text-ink-muted">
-        Shown on the card. &ldquo;Épuisé&rdquo; and &ldquo;Plus que N&rdquo; are automatic from stock,
-        and &ldquo;Promo&rdquo; from the compare-at price — no need to tag those.
+        Affichées sur la vignette. &laquo;&nbsp;Épuisé&nbsp;&raquo; et &laquo;&nbsp;Plus que N&nbsp;&raquo;
+        découlent du stock, &laquo;&nbsp;Promo&nbsp;&raquo; du prix barré — inutile de les ajouter.
       </p>
     </div>
   );
