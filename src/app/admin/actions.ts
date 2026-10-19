@@ -126,8 +126,10 @@ export async function saveProductAction(
       compare_at_cents: compareMinor,
       currency: formData.get("currency"),
       images: formData.get("images"),
-      sizes: formData.get("sizes"),
-      colors: formData.get("colors"),
+      // No sizes/colors fields any more — option groups replaced them. Reading
+      // them anyway handed zod a null, which its .default([]) does not cover
+      // (that only fills in undefined), so every create from the web form
+      // failed validation while the API path, which omits the keys, passed.
       collection_id: formData.get("collection_id"),
       gender: formData.get("gender"),
       stock: formData.get("stock"),

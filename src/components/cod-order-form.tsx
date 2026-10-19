@@ -160,37 +160,34 @@ export function CodOrderForm({ product }: { product: Product }) {
           <p className="mt-5 rounded-2xl bg-accent-soft px-4 py-3 text-base text-accent-deep">{result.error}</p>
         ) : null}
 
-        {/* Both ways of buying sit on one row, sharing the quantity above:
-            order now and pay the courier, or keep shopping with it in the
-            bag. They used to be separated by the whole options block, each
-            with its own quantity stepper that disagreed with the other. */}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <PillButton
-            type="button"
-            tone="paper"
-            disabled={soldOut}
-            onClick={() =>
-              add({
-                productId: product.id,
-                slug: product.slug,
-                name: product.name,
-                // The variant the shopper is looking at, so the bag shows what
-                // they picked rather than the product's default photo.
-                image: spotlight ?? product.images[0] ?? null,
-                options,
-                offerName: selectedOffer?.name ?? null,
-                unitCents,
-                quantity,
-              })
-            }
-          >
-            Ajouter au panier
-          </PillButton>
+        {/* Buying now is the primary act — pay the courier when it arrives.
+            Adding to the bag sits quietly underneath it, for a shopper who is
+            still collecting pieces. */}
+        <PillButton type="submit" disabled={pending || soldOut} className="mt-6 w-full">
+          {soldOut ? "Épuisé" : pending ? "Envoi…" : "Acheter"}
+        </PillButton>
 
-          <PillButton type="submit" disabled={pending || soldOut} className="flex-1">
-            {soldOut ? "Épuisé" : pending ? "Envoi…" : "Confirmer la commande"}
-          </PillButton>
-        </div>
+        <button
+          type="button"
+          disabled={soldOut}
+          onClick={() =>
+            add({
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              // The variant the shopper is looking at, so the bag shows what
+              // they picked rather than the product's default photo.
+              image: spotlight ?? product.images[0] ?? null,
+              options,
+              offerName: selectedOffer?.name ?? null,
+              unitCents,
+              quantity,
+            })
+          }
+          className="mt-3 block w-full text-center text-sm text-ink-muted underline underline-offset-4 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-ink disabled:opacity-50"
+        >
+          Ajouter au panier
+        </button>
 
         <p className="mt-4 text-center text-sm text-ink-muted">
           {soldOut
