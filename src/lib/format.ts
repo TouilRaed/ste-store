@@ -58,3 +58,23 @@ export function majorInputToMinor(value: unknown, currency = "TND"): number | nu
   if (!Number.isFinite(n)) return Number.NaN;
   return Math.round(n * minorUnitsPer(currency));
 }
+
+/** "19 oct. 2026" — the admin reads in French, so the dates do too. */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** The same date with the time, for an order's own page. */
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

@@ -8,6 +8,7 @@ import { PageHeading, Panel, StatusBadge } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/guard";
 import { AdminError, getOrder, listProducts } from "@/lib/admin/repo";
 import { SETTABLE_ORDER_STATUSES, orderStatusLabel } from "@/lib/admin/schemas";
+import { formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -25,12 +26,12 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
   return (
     <>
       <Link href="/meddm/orders" className="text-[13px] text-ink-soft underline underline-offset-4">
-        ← All orders
+        ← Toutes les commandes
       </Link>
 
-      <div className="mt-6">
+      <div className="mt-5 md:mt-6">
         <PageHeading
-          eyebrow={new Date(order.created_at).toLocaleString("en-GB")}
+          eyebrow={formatDateTime(order.created_at)}
           title={order.order_number}
           action={<StatusBadge status={order.status} />}
         />
@@ -38,10 +39,10 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         <Panel>
-          <div className="p-6 md:p-8">
+          <div className="p-5 md:p-8">
             <p className="eyebrow text-ink-muted">Pièces commandées</p>
             <p className="mt-2 text-sm text-ink-muted">
-              Taille, couleur, quantité et prix — le total se recalcule à l&apos;enregistrement.
+              Quantité et prix — le total se recalcule à l&apos;enregistrement.
             </p>
             <div className="mt-6">
               <OrderItemsEditor order={order} catalogue={catalogue} />
@@ -51,7 +52,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
 
         <div className="flex flex-col gap-6">
           <Panel>
-            <div className="p-6">
+            <div className="p-5 md:p-6">
               <p className="eyebrow text-ink-muted">Statut</p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {SETTABLE_ORDER_STATUSES.map((status) => (
@@ -76,7 +77,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
           </Panel>
 
           <Panel>
-            <div className="p-6">
+            <div className="p-5 md:p-6">
               <p className="eyebrow text-ink-muted">Livraison</p>
               <div className="mt-5">
                 <ShipButton
@@ -91,10 +92,10 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
           </Panel>
 
           <Panel>
-            <div className="p-6">
+            <div className="p-5 md:p-6">
               <p className="eyebrow text-ink-muted">Client et livraison</p>
               <p className="mt-2 text-xs text-ink-muted">
-                Edit anything the customer got wrong, and keep staff notes here.
+                Corrigez ce que le client a mal saisi, et gardez vos notes internes ici.
               </p>
               <div className="mt-6">
                 <OrderEditor order={order} />

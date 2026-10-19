@@ -71,9 +71,9 @@ function toLine(item: OrderItem): Line {
 }
 
 /**
- * Edits what was actually ordered — size, colour, quantity, unit price — and
- * lets a piece be added or dropped. Totals are recomputed on the server from
- * whatever is saved here.
+ * Edits what was actually ordered — quantity and unit price — and lets a piece
+ * be added or dropped. Totals are recomputed on the server from whatever is
+ * saved here.
  */
 export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue: AdminProduct[] }) {
   const [lines, setLines] = useState<Line[]>((order.order_items ?? []).map(toLine));
@@ -122,10 +122,11 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
       <input type="hidden" name="items" value={JSON.stringify(lines)} />
 
       <ul className="space-y-4">
-        {lines.map((line, index) => {
-          const product = catalogue.find((p) => p.slug === line.product_slug);
-          return (
-            <li key={`${line.product_slug}-${index}`} className="flex gap-4 border-t border-[color:var(--line)] pt-4 first:border-0 first:pt-0">
+        {lines.map((line, index) => (
+          <li
+            key={`${line.product_slug}-${index}`}
+            className="flex gap-3 border-t border-[color:var(--line)] pt-4 first:border-0 first:pt-0 md:gap-4"
+          >
               <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-paper-deep">
                 <ProductImage src={line.image} alt="" sizes="64px" className="object-cover" />
               </div>
@@ -150,59 +151,16 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
                   </p>
                 ) : null}
 
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <label className="block">
-                    <span className="eyebrow text-ink-muted">Taille</span>
-                    {product && product.sizes.length > 0 ? (
-                      <select
-                        value={line.size ?? ""}
-                        onChange={(e) => patch(index, { size: e.target.value || null })}
-                        className={fieldClass}
-                      >
-                        <option value="">—</option>
-                        {product.sizes.map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        value={line.size ?? ""}
-                        onChange={(e) => patch(index, { size: e.target.value || null })}
-                        className={fieldClass}
-                      />
-                    )}
-                  </label>
-
-                  <label className="block">
-                    <span className="eyebrow text-ink-muted">Couleur</span>
-                    {product && product.colors.length > 0 ? (
-                      <select
-                        value={line.color ?? ""}
-                        onChange={(e) => patch(index, { color: e.target.value || null })}
-                        className={fieldClass}
-                      >
-                        <option value="">—</option>
-                        {product.colors.map((color) => (
-                          <option key={color} value={color}>
-                            {color}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        value={line.color ?? ""}
-                        onChange={(e) => patch(index, { color: e.target.value || null })}
-                        className={fieldClass}
-                      />
-                    )}
-                  </label>
-
+                {/* Only quantity and price are editable. The size and colour
+                    boxes were left over from before option groups and said the
+                    same thing as the recorded choice above. Whatever a line
+                    already holds rides along in the hidden field untouched. */}
+                <div className="mt-3 grid grid-cols-2 gap-2">
                   <label className="block">
                     <span className="eyebrow text-ink-muted">Quantité</span>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={1}
                       max={100}
                       value={line.quantity}
@@ -227,9 +185,8 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
                   {formatMoney(line.unit_cents * line.quantity, order.currency)}
                 </p>
               </div>
-            </li>
-          );
-        })}
+          </li>
+        ))}
       </ul>
 
       {lines.length === 0 ? (

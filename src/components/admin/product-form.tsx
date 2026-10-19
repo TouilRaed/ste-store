@@ -62,7 +62,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
         <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
           <Panel>
-            <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2 md:p-8">
+            <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 md:p-8">
               <Field label="Nom" error={errors.name} className="sm:col-span-2">
                 <input name="name" defaultValue={product?.name} className={inputClass} />
               </Field>
@@ -141,7 +141,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
           <div className="flex flex-col gap-6">
             <Panel>
-              <div className="grid grid-cols-2 gap-5 p-6">
+              <div className="grid grid-cols-2 gap-5 p-5 md:p-6">
                 <Field label="Prix (DT)" hint="En dinars — ex : 220 ou 89,500" error={errors.price_cents}>
                   <input
                     name="price_dinars"
@@ -167,12 +167,12 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
                 <div className="col-span-2">
                   <span className="eyebrow text-ink-muted">Disponibilité</span>
-                  <label className="mt-2 flex items-center gap-3 text-sm">
+                  <label className="mt-2 flex min-h-11 items-center gap-3 text-sm">
                     <input
                       type="checkbox"
                       checked={disponible}
                       onChange={(e) => setDisponible(e.target.checked)}
-                      className="h-4 w-4 accent-[color:var(--ink)]"
+                      className="h-5 w-5 shrink-0 accent-[color:var(--ink)]"
                     />
                     Disponible
                   </label>
@@ -191,7 +191,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                     defaultValue={product?.collection_id ?? ""}
                     className={inputClass}
                   >
-                    <option value="">— none —</option>
+                    <option value="">— aucune —</option>
                     {collections.map((collection) => (
                       <option key={collection.id} value={collection.id}>
                         {collection.name}
@@ -209,21 +209,21 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 </Field>
 
                 <div className="col-span-2 space-y-3 border-t border-[color:var(--line)] pt-5">
-                  <label className="flex items-center gap-3 text-sm">
+                  <label className="flex min-h-11 items-center gap-3 text-sm">
                     <input
                       type="checkbox"
                       name="is_active"
                       defaultChecked={product?.is_active ?? true}
-                      className="h-4 w-4 accent-[color:var(--ink)]"
+                      className="h-5 w-5 shrink-0 accent-[color:var(--ink)]"
                     />
                     Visible dans la boutique
                   </label>
-                  <label className="flex items-center gap-3 text-sm">
+                  <label className="flex min-h-11 items-center gap-3 text-sm">
                     <input
                       type="checkbox"
                       name="is_featured"
                       defaultChecked={product?.is_featured ?? false}
-                      className="h-4 w-4 accent-[color:var(--ink)]"
+                      className="h-5 w-5 shrink-0 accent-[color:var(--ink)]"
                     />
                     Mis en avant sur l&apos;accueil
                   </label>
@@ -235,15 +235,17 @@ export function ProductForm({ product, collections }: ProductFormProps) {
               <p className="rounded-2xl bg-accent-soft px-4 py-3 text-sm text-accent-deep">{state.error}</p>
             ) : null}
 
-            <div className="flex items-center gap-3">
+            {/* Pinned above the tab bar on a phone: the form runs several
+                screens long, and the way to save it sat at the very bottom. */}
+            <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 -mx-4 flex items-center gap-3 border-t border-[color:var(--line)] bg-paper-deep/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
               <PillButton type="submit" disabled={pending} className="flex-1">
                 {pending ? "Enregistrement…" : product ? "Enregistrer" : "Créer la pièce"}
               </PillButton>
               <Link
                 href="/meddm/products"
-                className="rounded-full border border-[color:var(--line-strong)] bg-white/60 px-5 py-2.5 text-sm text-ink-soft transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white active:scale-[0.98]"
+                className="rounded-full border border-[color:var(--line-strong)] bg-white/60 px-5 py-3 text-sm text-ink-soft transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white active:scale-[0.98]"
               >
-                Cancel
+                Annuler
               </Link>
             </div>
           </div>
@@ -254,14 +256,14 @@ export function ProductForm({ product, collections }: ProductFormProps) {
         <form action={deleteProductAction} className="mt-10 border-t border-[color:var(--line)] pt-6">
           <input type="hidden" name="id" value={product.id} />
           <p className="text-sm text-ink-soft">
-            Deleting removes the piece from the catalogue. Past orders keep their own copy of the name and
-            price.
+            La suppression retire la pièce du catalogue. Les commandes passées gardent leur propre copie
+            du nom et du prix.
           </p>
           <button
             type="submit"
-            className="mt-4 rounded-full border border-[color:var(--line-strong)] px-5 py-2 text-[13px] text-accent-deep transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft active:scale-[0.98]"
+            className="mt-4 rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-[13px] text-accent-deep transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft active:scale-[0.98]"
           >
-            Delete this piece
+            Supprimer cette pièce
           </button>
         </form>
       ) : null}

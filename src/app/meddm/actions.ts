@@ -265,7 +265,10 @@ export async function updateOrderAction(
       email: text("email") ?? undefined,
       phone: text("phone"),
       address_line1: text("address_line1") ?? undefined,
-      address_line2: text("address_line2"),
+      // The editor no longer shows the apartment line, and a key the form
+      // never posts must stay out of the patch: sending null for it would
+      // erase what older orders still carry.
+      ...(formData.has("address_line2") ? { address_line2: text("address_line2") } : {}),
       city: text("city") ?? undefined,
       postal_code: text("postal_code") ?? undefined,
       country: text("country") ?? undefined,

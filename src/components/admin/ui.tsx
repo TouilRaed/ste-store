@@ -21,7 +21,7 @@ export function StatusBadge({ status }: { status: string }) {
 export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div className={`bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)] ${className}`}>
-      <div className="bezel-core rounded-[calc(2rem-0.375rem)] bg-white">{children}</div>
+      <div className="bezel-core h-full rounded-[calc(2rem-0.375rem)] bg-white">{children}</div>
     </div>
   );
 }
@@ -36,14 +36,14 @@ export function PageHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-8">
+      <div className="min-w-0">
         <p className="eyebrow text-ink-muted">{eyebrow}</p>
-        <h1 className="font-display mt-3 text-[clamp(2rem,4vw,3rem)] leading-[0.95] tracking-[-0.02em]">
+        <h1 className="font-display mt-2 text-[clamp(1.75rem,7vw,3rem)] leading-[0.95] tracking-[-0.02em] md:mt-3">
           {title}
         </h1>
       </div>
-      {action}
+      {action ? <div className="w-full md:w-auto">{action}</div> : null}
     </div>
   );
 }
@@ -52,15 +52,15 @@ export function PageHeading({
 export function SetupNotice() {
   return (
     <Panel>
-      <div className="p-8">
+      <div className="p-6 md:p-8">
         <p className="font-display text-2xl">Connectez Supabase d&apos;abord</p>
         <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink-soft">
-          The admin reads and writes with the service-role key. Add{" "}
-          <code className="rounded bg-paper-deep px-1.5 py-0.5">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-          <code className="rounded bg-paper-deep px-1.5 py-0.5">SUPABASE_SERVICE_ROLE_KEY</code> to{" "}
-          <code className="rounded bg-paper-deep px-1.5 py-0.5">.env.local</code>, run{" "}
-          <code className="rounded bg-paper-deep px-1.5 py-0.5">supabase/schema.sql</code>, then restart the
-          server.
+          L&apos;admin lit et écrit avec la clé service-role. Ajoutez{" "}
+          <code className="rounded bg-paper-deep px-1.5 py-0.5">NEXT_PUBLIC_SUPABASE_URL</code> et{" "}
+          <code className="rounded bg-paper-deep px-1.5 py-0.5">SUPABASE_SERVICE_ROLE_KEY</code> dans{" "}
+          <code className="rounded bg-paper-deep px-1.5 py-0.5">.env.local</code>, exécutez{" "}
+          <code className="rounded bg-paper-deep px-1.5 py-0.5">supabase/schema.sql</code>, puis
+          redémarrez le serveur.
         </p>
       </div>
     </Panel>
@@ -73,8 +73,10 @@ export function StatusFilter({ current, basePath }: { current?: string; basePath
     ...ORDER_STATUSES.map((s) => ({ value: s, label: orderStatusLabel(s) })),
   ];
 
+  // One scrolling line on a phone. Wrapping these seven pills stacked three
+  // rows of chrome between the title and the first order.
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {options.map((option) => {
         const active = (current ?? "") === option.value;
         const href = option.value ? `${basePath}?status=${option.value}` : basePath;
@@ -82,7 +84,7 @@ export function StatusFilter({ current, basePath }: { current?: string; basePath
           <Link
             key={option.label}
             href={href}
-            className={`rounded-full border px-4 py-1.5 text-[13px] capitalize transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
+            className={`shrink-0 rounded-full border px-4 py-2 text-[13px] whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
               active
                 ? "border-transparent bg-ink text-paper"
                 : "border-[color:var(--line-strong)] bg-white/60 text-ink-soft hover:bg-white"

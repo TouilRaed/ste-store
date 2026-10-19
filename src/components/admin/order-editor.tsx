@@ -9,14 +9,13 @@ const inputClass =
   "mt-2 w-full rounded-2xl border border-[color:var(--line-strong)] bg-paper/60 px-4 py-3 text-sm outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-accent focus:bg-white";
 
 const FIELDS = [
-  { name: "full_name", label: "Name", span: 2 },
-  { name: "email", label: "Email", span: 2, type: "email" },
-  { name: "phone", label: "Phone", span: 2 },
-  { name: "address_line1", label: "Street address", span: 2 },
-  { name: "address_line2", label: "Apartment, floor", span: 2 },
-  { name: "city", label: "City", span: 1 },
-  { name: "postal_code", label: "Postal code", span: 1 },
-  { name: "country", label: "Country", span: 2 },
+  { name: "full_name", label: "Nom", span: 2 },
+  { name: "email", label: "E-mail", span: 2, type: "email" },
+  { name: "phone", label: "Téléphone", span: 2 },
+  { name: "address_line1", label: "Adresse", span: 2 },
+  { name: "city", label: "Ville", span: 1 },
+  { name: "postal_code", label: "Code postal", span: 1 },
+  { name: "country", label: "Pays", span: 2 },
 ] as const;
 
 /** Edits the customer, address and both notes on an existing order. */
@@ -66,7 +65,7 @@ export function OrderEditor({ order }: { order: Order }) {
             rows={3}
             defaultValue={order.admin_note ?? ""}
             disabled={pending}
-            placeholder="Only visible here — packing details, callbacks, payment arrangements…"
+            placeholder="Visible ici seulement — colisage, rappels, arrangements de paiement…"
             className={`${inputClass} resize-none`}
           />
         </label>
