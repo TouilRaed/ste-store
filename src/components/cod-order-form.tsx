@@ -81,7 +81,6 @@ export function CodOrderForm({ product }: { product: Product }) {
               name="phone"
               inputMode="tel"
               autoComplete="tel"
-              placeholder="99 123 456"
               disabled={pending}
               className={inputClass}
             />
