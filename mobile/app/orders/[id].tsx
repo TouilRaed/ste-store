@@ -194,6 +194,7 @@ export default function OrderDetailScreen() {
       // Carried through untouched: the editor replaces every line on save, so
       // dropping these would erase what the customer chose.
       options: item.options ?? [],
+      offer_name: item.offer_name ?? null,
       size: item.size ?? null,
       color: item.color ?? null,
       unit_cents: item.unit_cents,
@@ -217,6 +218,8 @@ export default function OrderDetailScreen() {
         options: (product.option_groups ?? [])
           .filter((g) => g.choices.length > 0)
           .map((g) => ({ label: g.label, value: g.choices[0].name })),
+        // Added by hand, so it is sold at the base price, not on an offer.
+        offer_name: null,
         size: null,
         color: null,
         unit_cents: product.price_cents,
@@ -359,6 +362,12 @@ export default function OrderDetailScreen() {
                 </View>
                 <View style={styles.itemBody}>
                   <Text style={styles.itemName}>{line.product_name}</Text>
+                  {/* The offer carries the price, so it is read before the
+                      arithmetic: without it the unit price on a multi-piece
+                      offer looks like a mistake. */}
+                  {line.offer_name ? (
+                    <Text style={styles.itemOffer}>Offre : {line.offer_name}</Text>
+                  ) : null}
                   <Text style={styles.meta}>
                     {line.quantity} x {formatMoney(line.unit_cents, order.currency)}
                   </Text>
@@ -570,6 +579,7 @@ const styles = StyleSheet.create({
   itemBody: { flex: 1, paddingHorizontal: 12 },
   itemName: { ...type.bodyStrong, color: theme.ink },
   itemPrice: { ...type.body, color: theme.ink, fontVariant: ["tabular-nums"] },
+  itemOffer: { marginTop: 3, ...type.meta, color: theme.ink },
   meta: { marginTop: 3, ...type.meta, color: theme.inkMuted },
   totalRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
   totalValue: { ...type.body, color: theme.inkSoft, fontVariant: ["tabular-nums"] },

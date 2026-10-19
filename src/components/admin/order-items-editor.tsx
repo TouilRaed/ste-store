@@ -16,6 +16,8 @@ type Line = {
   color: string | null;
   /** Carried through untouched so saving a quantity keeps the choice. */
   options: SelectedOption[];
+  /** The offer this line was bought on, if any. Also carried, never edited. */
+  offer_name: string | null;
   unit_cents: number;
   quantity: number;
 };
@@ -65,6 +67,7 @@ function toLine(item: OrderItem): Line {
     size: item.size ?? null,
     color: item.color ?? null,
     options: item.options ?? [],
+    offer_name: item.offer_name ?? null,
     unit_cents: item.unit_cents,
     quantity: item.quantity,
   };
@@ -104,6 +107,8 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
         options: (product.option_groups ?? [])
           .filter((g) => g.choices.length > 0)
           .map((g) => ({ label: g.label, value: g.choices[0].name })),
+        // Added by hand, so it is sold at the base price, not on an offer.
+        offer_name: null,
         unit_cents: product.price_cents,
         quantity: 1,
       },
@@ -142,6 +147,15 @@ export function OrderItemsEditor({ order, catalogue }: { order: Order; catalogue
                     Retirer
                   </button>
                 </div>
+
+                {/* The offer carries the price, so it is the first thing to
+                    read on a line: without it « 120 DT » for one piece looks
+                    like a mistake instead of « 3 pièces » at 120 DT. */}
+                {line.offer_name ? (
+                  <p className="mt-2 text-sm tabular-nums">
+                    Offre : {line.offer_name} — {formatMoney(line.unit_cents, order.currency)}
+                  </p>
+                ) : null}
 
                 {/* What the customer picked, shown as it was ordered. Not
                     editable here: changing it would rewrite their choice. */}

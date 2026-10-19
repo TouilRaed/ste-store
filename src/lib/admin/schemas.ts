@@ -210,6 +210,8 @@ export const orderItemSchema = z.object({
   image: z.string().trim().max(600).nullable().optional(),
   size: z.string().trim().max(40).nullable().optional(),
   color: z.string().trim().max(60).nullable().optional(),
+  /** The offer the line was bought on, e.g. « 3 pièces ». */
+  offer_name: z.string().trim().max(120).nullable().optional(),
   /**
    * What the customer picked. The admin does not edit these, but the editor
    * replaces every line on save — so they have to travel with the line or a

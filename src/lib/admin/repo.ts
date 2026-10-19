@@ -305,6 +305,7 @@ export async function setOrderItems(id: string, items: OrderItemInput[]): Promis
       image: item.image ?? null,
       size: item.size ?? null,
       color: item.color ?? null,
+      offer_name: item.offer_name ?? null,
       options: item.options ?? [],
       unit_cents: item.unit_cents,
       quantity: item.quantity,
