@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { prepareImage } from "../lib/prepare-image";
 import {
   ActivityIndicator,
   Alert,
@@ -39,7 +40,6 @@ type Draft = {
   price: string;
   compareAt: string;
   currency: string;
-  stock: string;
   collectionId: string | null;
   gender: Product["gender"];
   isActive: boolean;
@@ -80,7 +80,6 @@ function toDraft(product?: Product): Draft {
     price: minorToMajorInput(product?.price_cents, product?.currency ?? "TND"),
     compareAt: minorToMajorInput(product?.compare_at_cents, product?.currency ?? "TND"),
     currency: product?.currency ?? "TND",
-    stock: String(product?.stock ?? "0"),
     collectionId: product?.collection_id ?? null,
     gender: product?.gender ?? "unisex",
     isActive: product?.is_active ?? true,
@@ -122,11 +121,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
     setUploading(true);
     setError(null);
     try {
-      const url = await api.uploadImage({
-        uri: asset.uri,
-        name: asset.fileName ?? `photo-${Date.now()}.jpg`,
-        type: asset.mimeType ?? "image/jpeg",
-      });
+      const url = await api.uploadImage(await prepareImage(asset));
       setDraft((prev) => ({ ...prev, images: [...prev.images, url] }));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de l'envoi");
@@ -166,11 +161,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
     setUploading(true);
     setError(null);
     try {
-      const url = await api.uploadImage({
-        uri: asset.uri,
-        name: asset.fileName ?? `option-${Date.now()}.jpg`,
-        type: asset.mimeType ?? "image/jpeg",
-      });
+      const url = await api.uploadImage(await prepareImage(asset));
       patchChoice(gi, ci, { image: url });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de l'envoi");
@@ -184,14 +175,12 @@ export function ProductForm({ product, collections }: ProductFormProps) {
     const currency = draft.currency.trim().toUpperCase() || "TND";
     const price = majorInputToMinor(draft.price, currency) ?? Number.NaN;
     const compareAt = majorInputToMinor(draft.compareAt, currency);
-    const stock = Number(draft.stock);
 
     if (!draft.name.trim()) return withError("Le nom est obligatoire");
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.slug.trim())) {
       return withError("Le slug doit être en minuscules, séparé par des tirets");
     }
     if (!Number.isInteger(price) || price < 0) return withError("Prix invalide — ex : 220 ou 89,500");
-    if (!Number.isInteger(stock) || stock < 0) return withError("Le stock doit être un nombre entier");
 
     return {
       name: draft.name.trim(),
@@ -217,7 +206,6 @@ export function ProductForm({ product, collections }: ProductFormProps) {
       price_cents: price,
       compare_at_cents: Number.isNaN(compareAt as number) ? null : compareAt,
       currency: draft.currency.trim().toUpperCase() || "TND",
-      stock,
       collection_id: draft.collectionId,
       gender: draft.gender,
       is_active: draft.isActive,
@@ -347,7 +335,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
               ))}
             </View>
             <Text style={styles.photoHint}>
-              Épuisé, « Plus que N » et la promo sont automatiques — inutile de les cocher.
+              La promo découle du prix barré — inutile de l&apos;ajouter.
             </Text>
           </View>
           {/* Option groups — "Couleur", "Type" — each choice with its own
@@ -458,13 +446,6 @@ export function ProductForm({ product, collections }: ProductFormProps) {
             autoCapitalize="characters"
             maxLength={3}
           />
-          <Field
-            label="Stock"
-            value={draft.stock}
-            onChangeText={(v) => set("stock", v)}
-            keyboardType="number-pad"
-          />
-
           <Eyebrow>Offres</Eyebrow>
           <Text style={styles.hint}>
             Lots optionnels proposés en plus du prix de base — ex. « 3 pièces » à 120 DT.

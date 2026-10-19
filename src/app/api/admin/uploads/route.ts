@@ -6,7 +6,13 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 export const PRODUCT_BUCKET = "product-images";
 
-const MAX_BYTES = 5 * 1024 * 1024;
+/**
+ * 4 MB, not 5. The platform in front of this route refuses a request body over
+ * roughly 4.5 MB before any of this code runs, and answers in its own shape —
+ * so a 4.8 MB photo used to fail with a message we never wrote. The cap the
+ * code states is now one it actually gets to enforce.
+ */
+const MAX_BYTES = 4 * 1024 * 1024;
 
 const EXTENSION: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -33,23 +39,23 @@ export const POST = withAdmin(async (request) => {
     const form = (await request.formData()) as unknown as { get(field: string): unknown };
     file = form.get("file");
   } catch {
-    return NextResponse.json({ error: "Expected a multipart upload" }, { status: 400 });
+    return NextResponse.json({ error: "Envoi multipart attendu" }, { status: 400 });
   }
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    return NextResponse.json({ error: "Aucun fichier envoyé" }, { status: 400 });
   }
 
   const extension = EXTENSION[file.type];
   if (!extension) {
     return NextResponse.json(
-      { error: "Only JPEG, PNG, WebP or AVIF images are accepted" },
+      { error: "Formats acceptés : JPEG, PNG, WebP ou AVIF" },
       { status: 415 },
     );
   }
 
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "That image is larger than 5 MB" }, { status: 413 });
+    return NextResponse.json({ error: "Photo trop lourde (4 Mo maximum)" }, { status: 413 });
   }
 
   const path = `${randomUUID()}.${extension}`;
@@ -62,7 +68,7 @@ export const POST = withAdmin(async (request) => {
 
   if (error) {
     console.error("[admin upload] failed:", error.message);
-    return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 502 });
+    return NextResponse.json({ error: "Échec de l'envoi. Réessayez." }, { status: 502 });
   }
 
   const {

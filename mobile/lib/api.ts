@@ -142,13 +142,38 @@ export const api = {
       body,
     });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { url?: string; error?: string }
-      | null;
+    const payload = (await response.json().catch(() => null)) as unknown;
+    const url =
+      payload && typeof payload === "object" && typeof (payload as { url?: unknown }).url === "string"
+        ? (payload as { url: string }).url
+        : null;
 
-    if (!response.ok || !payload?.url) {
-      throw new ApiError(response.status, payload?.error ?? `Upload failed (${response.status})`);
+    if (!response.ok || !url) {
+      throw new ApiError(response.status, uploadErrorMessage(payload, response.status));
     }
-    return payload.url;
+    return url;
   },
 };
+
+/**
+ * The message to show when an upload fails.
+ *
+ * Our own route answers `{ error: "…" }`, but a body too large for the host is
+ * turned away before it gets there and comes back as `{ error: { code,
+ * message } }`. Reading `error` straight out put "[object Object]" in front of
+ * the shop owner in exactly the case they needed telling what went wrong.
+ */
+function uploadErrorMessage(payload: unknown, status: number): string {
+  if (status === 413) return "Photo trop lourde. Choisissez-en une plus légère.";
+
+  if (payload && typeof payload === "object" && "error" in payload) {
+    const error = (payload as { error: unknown }).error;
+    if (typeof error === "string" && error.trim()) return error;
+    if (error && typeof error === "object" && "message" in error) {
+      const message = (error as { message: unknown }).message;
+      if (typeof message === "string" && message.trim()) return message;
+    }
+  }
+
+  return `Échec de l'envoi (${status})`;
+}

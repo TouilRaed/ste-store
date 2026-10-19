@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { prepareImage } from "@/lib/admin/prepare-image";
+import { uploadErrorMessage } from "@/lib/admin/upload-error";
 import type { ProductOptionGroup } from "@/lib/types";
 
 type ChoiceRow = { name: string; image: string | null };
@@ -67,11 +69,15 @@ export function OptionGroupsEditor({
 
     try {
       const body = new FormData();
-      body.set("file", files[0]);
+      body.set("file", await prepareImage(files[0]));
       const response = await fetch("/api/admin/uploads", { method: "POST", body });
-      const data = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
-      if (!response.ok || !data?.url) throw new Error(data?.error ?? `Échec de l'envoi (${response.status})`);
-      updateChoice(where.group, where.choice, { image: data.url });
+      const data = (await response.json().catch(() => null)) as unknown;
+      const url =
+        data && typeof data === "object" && typeof (data as { url?: unknown }).url === "string"
+          ? (data as { url: string }).url
+          : null;
+      if (!response.ok || !url) throw new Error(uploadErrorMessage(data, response.status));
+      updateChoice(where.group, where.choice, { image: url });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de l'envoi");
     } finally {
@@ -148,12 +154,26 @@ export function OptionGroupsEditor({
                       className={rowInputClass}
                     />
 
+                    {choice.image ? (
+                      <button
+                        type="button"
+                        onClick={() => updateChoice(gi, ci, { image: null })}
+                        title="Retirer la photo"
+                        aria-label="Retirer la photo de cette option"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm text-ink-muted hover:bg-accent-soft hover:text-accent-deep"
+                      >
+                        ⨯
+                      </button>
+                    ) : null}
+
                     <button
                       type="button"
                       onClick={() =>
                         updateGroup(gi, { choices: group.choices.filter((_, j) => j !== ci) })
                       }
-                      className="text-sm text-ink-muted underline underline-offset-4 hover:text-accent-deep"
+                      title="Retirer cette option"
+                      aria-label="Retirer cette option"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm text-ink-muted hover:bg-accent-soft hover:text-accent-deep"
                     >
                       ✕
                     </button>
