@@ -77,6 +77,10 @@ export type Product = {
   option_groups: ProductOptionGroup[];
   collection_id: string | null;
   gender: "women" | "men" | "unisex";
+  /**
+   * Still on the row, read by nothing. Quantity is unlimited — pieces are made
+   * to order — so the API fills this in and no screen asks about it.
+   */
   stock: number;
   is_featured: boolean;
   is_active: boolean;
@@ -85,7 +89,7 @@ export type Product = {
   created_at: string;
 };
 
-export type ProductInput = Omit<Product, "id" | "created_at">;
+export type ProductInput = Omit<Product, "id" | "created_at" | "stock">;
 
 export type OrderItem = {
   product_name: string;
@@ -137,7 +141,7 @@ export type AdminStats = {
   };
   revenueCents: number;
   currency: string;
-  products: { total: number; active: number; lowStock: number };
+  products: { total: number; active: number };
   recentOrders: Order[];
 };
 

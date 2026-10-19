@@ -6,19 +6,15 @@ export type Badge = {
   tone: "ink" | "accent" | "paper";
 };
 
-/** Stock level under which the shop starts nudging ("plus que 3"). */
-export const LOW_STOCK_AT = 8;
-
 /**
- * Badges for a product, in priority order: the shop's own tags first, then the
- * ones derived from stock and price so they can never contradict the data.
+ * Badges for a product: the shop's own tags first, then the one derived from
+ * price so it can never contradict the data.
+ *
+ * Nothing here reads stock any more. Every piece is made to order, so there is
+ * no quantity to run out of and no "Épuisé" to show.
  */
 export function badgesFor(product: Product): Badge[] {
   const badges: Badge[] = [];
-
-  if (product.stock <= 0) {
-    return [{ label: "Épuisé", tone: "ink" }];
-  }
 
   for (const tag of product.tags ?? []) {
     badges.push({ label: tag, tone: "paper" });
@@ -30,11 +26,4 @@ export function badgesFor(product: Product): Badge[] {
   }
 
   return badges;
-}
-
-/** The "only N left" nudge, or null when there's plenty. */
-export function stockNote(product: Product): string | null {
-  if (product.stock <= 0) return null;
-  if (product.stock > LOW_STOCK_AT) return null;
-  return product.stock === 1 ? "Dernière pièce" : `Plus que ${product.stock}`;
 }

@@ -132,7 +132,6 @@ export async function saveProductAction(
       // failed validation while the API path, which omits the keys, passed.
       collection_id: formData.get("collection_id"),
       gender: formData.get("gender"),
-      stock: formData.get("stock"),
       tags: formData.get("tags"),
       is_featured: formData.get("is_featured") === "on",
       is_active: formData.get("is_active") === "on",

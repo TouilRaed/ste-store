@@ -37,7 +37,11 @@ export default async function AdminDashboardPage() {
       value: String(stats.products.total),
       hint: `${stats.products.active} en vente`,
     },
-    { label: "Stock faible", value: String(stats.products.lowStock), hint: "8 pièces ou moins" },
+    {
+      label: "Expédiées",
+      value: String(stats.orders.shipped),
+      hint: `${stats.orders.ready} prêtes à partir`,
+    },
   ];
 
   return (

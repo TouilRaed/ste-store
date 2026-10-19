@@ -6,7 +6,7 @@ import { ProductGallery } from "@/components/product-purchase";
 import { ProductSelectionProvider } from "@/components/product-selection";
 import { Reveal } from "@/components/reveal";
 import { Eyebrow, PillLink } from "@/components/ui";
-import { badgesFor, stockNote } from "@/lib/catalog/badges";
+import { badgesFor } from "@/lib/catalog/badges";
 import { getCollections, getProductBySlug, getRelatedProducts } from "@/lib/catalog/queries";
 import { formatMoney } from "@/lib/format";
 import { BRAND } from "@/lib/brand";
@@ -49,7 +49,6 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
                 {badge.label}
               </Eyebrow>
             ))}
-            {stockNote(product) ? <Eyebrow className="text-accent-deep">{stockNote(product)}</Eyebrow> : null}
           </div>
 
           <h1 className="font-display mt-6 text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.95] tracking-[-0.02em]">

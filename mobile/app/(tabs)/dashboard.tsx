@@ -40,7 +40,7 @@ export default function DashboardScreen() {
               { value: String(data.orders.pending), label: "en attente", strong: data.orders.pending > 0 },
               { value: String(data.orders.total), label: "commandes", strong: false },
               { value: String(data.products.active), label: "en vente", strong: false },
-              { value: String(data.products.lowStock), label: "stock bas", strong: data.products.lowStock > 0 },
+              { value: String(data.orders.shipped), label: "expédiées", strong: false },
             ].map((stat) => (
               <View key={stat.label} style={styles.stat}>
                 <Text style={[styles.statValue, stat.strong && { color: theme.blue }]}>{stat.value}</Text>

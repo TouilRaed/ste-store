@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { deleteProductAction, saveProductAction, type ActionResult } from "@/app/meddm/actions";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { OffersEditor } from "@/components/admin/offers-editor";
@@ -50,10 +50,6 @@ function Field({
 export function ProductForm({ product, collections }: ProductFormProps) {
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(saveProductAction, null);
   const errors = state?.fieldErrors ?? {};
-  // "Disponible" replaces a raw stock number: the toggle sets a large or zero
-  // quantity behind the scenes, so the existing "en stock" / "épuisé" logic
-  // elsewhere in the app needs no change.
-  const [disponible, setDisponible] = useState(product ? product.stock > 0 : true);
 
   return (
     <>
@@ -164,26 +160,6 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 
                 {/* The shop only ever sells in dinars — no field to fill in. */}
                 <input type="hidden" name="currency" value="TND" />
-
-                <div className="col-span-2">
-                  <span className="eyebrow text-ink-muted">Disponibilité</span>
-                  <label className="mt-2 flex min-h-11 items-center gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={disponible}
-                      onChange={(e) => setDisponible(e.target.checked)}
-                      className="h-5 w-5 shrink-0 accent-[color:var(--ink)]"
-                    />
-                    Disponible
-                  </label>
-                  {/* Behind the scenes this is still the stock column: a large
-                      number when available, zero when not — the storefront's
-                      "en stock" / "épuisé" logic already reads it that way. */}
-                  <input type="hidden" name="stock" value={disponible ? 999 : 0} />
-                  {errors.stock?.length ? (
-                    <span className="mt-2 block text-xs text-accent-deep">{errors.stock[0]}</span>
-                  ) : null}
-                </div>
 
                 <Field label="Collection" error={errors.collection_id} className="col-span-2">
                   <select

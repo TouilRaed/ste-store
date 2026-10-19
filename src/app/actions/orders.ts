@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { fallbackProducts } from "@/lib/catalog/fallback";
-import { shippingFor } from "@/lib/format";
+import { MAX_QUANTITY, shippingFor } from "@/lib/format";
 import { notifyNewOrder } from "@/lib/admin/push";
 import { sendMetaEvent } from "@/lib/meta/capi";
 import { purchaseEventId } from "@/lib/meta/config";
@@ -127,7 +127,7 @@ function parseLines(raw: string): IncomingLine[] {
           slug: String(l.slug ?? ""),
           options: Array.isArray(l.options) ? l.options : [],
           offerName: l.offerName ?? null,
-          quantity: Math.max(1, Math.min(20, Number(l.quantity) || 0)),
+          quantity: Math.max(1, Math.min(MAX_QUANTITY, Number(l.quantity) || 0)),
         };
       })
       .filter((l) => l.slug.length > 0);
@@ -360,7 +360,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   const get = (key: string) => String(formData.get(key) ?? "").trim();
 
   const slug = get("slug");
-  const quantity = Math.max(1, Math.min(20, Number(get("quantity")) || 1));
+  const quantity = Math.max(1, Math.min(MAX_QUANTITY, Number(get("quantity")) || 1));
   const pickedOptions = parseOptionsField(get("options"));
   const offerName = get("offer_name") || null;
   const district = get("district") || null;

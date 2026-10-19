@@ -67,7 +67,7 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
   return (
     <div className="mx-auto max-w-7xl px-4 pt-16 pb-8 md:px-8 md:pt-28">
       <Reveal>
-        <Eyebrow>{products.length} {products.length === 1 ? "pièce" : "pièces"} en stock</Eyebrow>
+        <Eyebrow>{products.length} {products.length === 1 ? "pièce" : "pièces"}</Eyebrow>
         <h1 className="font-display mt-6 text-[clamp(2.5rem,7vw,5.5rem)] leading-[0.92] tracking-[-0.02em]">
           {activeCollection ? activeCollection.name : "Tous les produits"}
         </h1>

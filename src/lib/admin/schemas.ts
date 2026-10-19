@@ -1,6 +1,13 @@
 import { z } from "zod";
 
 /**
+ * What goes in the stock column now that quantity is unlimited. Nothing reads
+ * it to decide whether a piece can be bought; it is kept so rows written
+ * before the change, and the column's NOT NULL, still hold.
+ */
+export const UNLIMITED_STOCK = 100_000;
+
+/**
  * The shop's real workflow. "paid" is gone: nothing is paid before delivery in
  * a cash-on-delivery shop, so the status never meant anything here.
  *
@@ -144,7 +151,10 @@ export const productInputSchema = z.object({
   colors: lines.default([]),
   collection_id: optionalUuid,
   gender: z.enum(["women", "men", "unisex"]).default("unisex"),
-  stock: z.coerce.number().int().min(0).max(100_000),
+  // Quantity is unlimited: pieces are made to order, so nothing runs out.
+  // The column stays, and keeps a number nothing reads for availability any
+  // more, so older rows and the API's own callers still validate.
+  stock: z.coerce.number().int().min(0).max(100_000).default(UNLIMITED_STOCK),
   tags: lines.default([]),
   is_featured: z.coerce.boolean().default(false),
   is_active: z.coerce.boolean().default(true),

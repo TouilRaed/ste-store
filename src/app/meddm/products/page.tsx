@@ -50,25 +50,22 @@ export default async function AdminProductsPage() {
 
                   <div className="min-w-0 flex-1">
                     <p className="font-display truncate text-base leading-tight">{product.name}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      <span
-                        className={`eyebrow rounded-full px-2.5 py-1 ${
-                          product.stock > 0 ? "bg-[#e7efe4] text-sage" : "bg-accent-soft text-accent-deep"
-                        }`}
-                      >
-                        {product.stock > 0 ? "Disponible" : "Rupture"}
-                      </span>
-                      {!product.is_active ? (
-                        <span className="eyebrow rounded-full bg-paper-sand px-2.5 py-1 text-ink-muted">
-                          Masqué
-                        </span>
-                      ) : null}
-                      {product.is_featured ? (
-                        <span className="eyebrow rounded-full bg-accent-soft px-2.5 py-1 text-accent-deep">
-                          En avant
-                        </span>
-                      ) : null}
-                    </div>
+                    {!product.is_active || product.is_featured ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {!product.is_active ? (
+                          <span className="eyebrow rounded-full bg-paper-sand px-2.5 py-1 text-ink-muted">
+                            Masqué
+                          </span>
+                        ) : null}
+                        {product.is_featured ? (
+                          <span className="eyebrow rounded-full bg-accent-soft px-2.5 py-1 text-accent-deep">
+                            En avant
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-xs text-ink-muted">/{product.slug}</p>
+                    )}
                   </div>
 
                   <span className="shrink-0 text-sm tabular-nums">

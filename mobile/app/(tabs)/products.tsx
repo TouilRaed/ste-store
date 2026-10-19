@@ -53,7 +53,7 @@ export default function ProductsScreen() {
                     {product.name}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    {product.stock > 0 ? `${product.stock} en stock` : "Épuisé"}
+                    /{product.slug}
                   </Text>
 
                   {!product.is_active || product.is_featured ? (

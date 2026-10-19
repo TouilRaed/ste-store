@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { placeCodOrder, type CodOrderResult } from "@/app/actions/orders";
 import { PillButton } from "@/components/ui";
-import { formatMoney, shippingFor } from "@/lib/format";
+import { MAX_QUANTITY, formatMoney, shippingFor } from "@/lib/format";
 import { RegionSelect } from "@/components/region-select";
 import { useCart } from "@/lib/cart/cart-context";
 import { useProductSelection } from "@/components/product-selection";
@@ -35,8 +35,6 @@ export function CodOrderForm({ product }: { product: Product }) {
   const subtotal = unitCents * quantity;
   const shipping = shippingFor(subtotal);
   const total = subtotal + shipping;
-
-  const soldOut = product.stock <= 0;
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,7 +131,7 @@ export function CodOrderForm({ product }: { product: Product }) {
             <button
               type="button"
               aria-label="Plus"
-              onClick={() => setQuantity((q) => Math.min(Math.max(1, product.stock), q + 1))}
+              onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
               className="h-8 w-8 rounded-full text-ink-soft hover:bg-paper-deep"
             >
               +
@@ -163,13 +161,12 @@ export function CodOrderForm({ product }: { product: Product }) {
         {/* Buying now is the primary act — pay the courier when it arrives.
             Adding to the bag sits quietly underneath it, for a shopper who is
             still collecting pieces. */}
-        <PillButton type="submit" disabled={pending || soldOut} className="mt-6 w-full">
-          {soldOut ? "Épuisé" : pending ? "Envoi…" : "Acheter"}
+        <PillButton type="submit" disabled={pending} className="mt-6 w-full">
+          {pending ? "Envoi…" : "Acheter"}
         </PillButton>
 
         <button
           type="button"
-          disabled={soldOut}
           onClick={() =>
             add({
               productId: product.id,
@@ -190,9 +187,7 @@ export function CodOrderForm({ product }: { product: Product }) {
         </button>
 
         <p className="mt-4 text-center text-sm text-ink-muted">
-          {soldOut
-            ? "Épuisé pour le moment."
-            : `${product.stock} en stock · paiement à la livraison partout en Tunisie`}
+          Paiement à la livraison partout en Tunisie
         </p>
       </div>
     </form>

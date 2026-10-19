@@ -7,6 +7,13 @@
 /** 8 DT delivery on every order, whatever the basket comes to. */
 export const SHIPPING_FLAT_CENTS = 8_000;
 
+/**
+ * Most of one piece a single order may ask for. Nothing is limited by what is
+ * on a shelf — pieces are made to order — so this is only a guard against a
+ * mistyped basket, and the buy panel and the server clamp to the same number.
+ */
+export const MAX_QUANTITY = 20;
+
 /** Currencies whose minor unit is 1/1000 rather than 1/100. */
 const THREE_DECIMAL = new Set(["TND", "DZD", "LYD", "IQD", "JOD", "KWD", "BHD", "OMR"]);
 

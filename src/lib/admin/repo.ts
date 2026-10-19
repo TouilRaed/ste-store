@@ -244,7 +244,7 @@ export type AdminStats = {
   };
   revenueCents: number;
   currency: string;
-  products: { total: number; active: number; lowStock: number };
+  products: { total: number; active: number };
   recentOrders: Order[];
 };
 
@@ -274,7 +274,6 @@ export async function getStats(): Promise<AdminStats> {
     products: {
       total: products.length,
       active: products.filter((p) => p.is_active).length,
-      lowStock: products.filter((p) => p.stock <= 8).length,
     },
     recentOrders: orders.slice(0, 6),
   };

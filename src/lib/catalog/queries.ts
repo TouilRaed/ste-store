@@ -109,7 +109,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
  * leave a near-empty row, so it tops up with the same cut, then anything else.
  */
 export async function getRelatedProducts(product: Product, limit = 3): Promise<Product[]> {
-  const all = (await getProducts({})).filter((p) => p.id !== product.id && p.stock > 0);
+  const all = (await getProducts({})).filter((p) => p.id !== product.id);
 
   const picked: Product[] = [];
   const take = (candidates: Product[]) => {

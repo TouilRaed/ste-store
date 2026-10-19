@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ProductImage } from "@/components/product-image";
-import { badgesFor, stockNote } from "@/lib/catalog/badges";
+import { badgesFor } from "@/lib/catalog/badges";
 import { formatMoney } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
@@ -23,7 +23,6 @@ const TONE = {
 export function ProductCard({ product, className = "", priority }: ProductCardProps) {
   const onSale = product.compare_at_cents != null && product.compare_at_cents > product.price_cents;
   const badges = badgesFor(product).slice(0, 2);
-  const note = stockNote(product);
 
   return (
     <Link href={`/product/${product.slug}`} className={`group block ${className}`}>
@@ -44,10 +43,6 @@ export function ProductCard({ product, className = "", priority }: ProductCardPr
               </span>
             ))}
           </div>
-        ) : null}
-
-        {note ? (
-          <span className="eyebrow absolute right-0 bottom-0 bg-ink px-2.5 py-1.5 text-paper">{note}</span>
         ) : null}
       </div>
 
