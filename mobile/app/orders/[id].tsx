@@ -19,6 +19,7 @@ import {
   minorToMajorInput,
   shippingFor,
 } from "../../lib/format";
+import { telUrl, whatsappUrl } from "../../lib/phone";
 import { theme, type } from "../../lib/theme";
 import {
   SETTABLE_ORDER_STATUSES,
@@ -95,9 +96,16 @@ export default function OrderDetailScreen() {
   const catalogue = useAsync(() => api.products(), picking ? "open" : "");
 
   const order = data?.order;
-  // Bare digits with country code, e.g. "21653773703" — what tel:/wa.me expect,
-  // not the "+216 XX XXX XXX" display form the order stores.
-  const phoneDigits = (order?.phone ?? "").replace(/\D/g, "");
+
+  // Stripping punctuation is not enough on its own: an order that stored the
+  // bare local "53773703" would have dialled tel:+53773703. `lib/phone` puts
+  // the country code back, the same way the web admin does.
+  const callUrl = telUrl(order?.phone);
+  const firstName = (order?.full_name ?? "").trim().split(/\s+/)[0] ?? "";
+  const chatUrl = whatsappUrl(
+    order?.phone,
+    `${firstName ? `Bonjour ${firstName}, ` : "Bonjour, "}nous vous contactons au sujet de votre commande ${order?.order_number ?? ""} chez Sté DM.`,
+  );
 
   /**
    * Hands the parcel to Intigo through the same admin endpoint the web uses.
@@ -267,6 +275,30 @@ export default function OrderDetailScreen() {
             </View>
             <StatusBadge status={order.status} />
           </View>
+
+          {/* A cash-on-delivery order is confirmed by phone before the parcel
+              moves, so reaching the customer comes first. Hidden rather than
+              shown disabled when the order carries no number: there would be
+              nothing for the button to do. */}
+          {callUrl || chatUrl ? (
+            <View style={styles.contactRow}>
+              {callUrl ? (
+                <Button
+                  label="Appeler"
+                  onPress={() => Linking.openURL(callUrl)}
+                  style={styles.contactButton}
+                />
+              ) : null}
+              {chatUrl ? (
+                <Button
+                  label="WhatsApp"
+                  variant="outline"
+                  onPress={() => Linking.openURL(chatUrl)}
+                  style={styles.contactButton}
+                />
+              ) : null}
+            </View>
+          ) : null}
 
           <View style={styles.divider} />
 
@@ -488,29 +520,6 @@ export default function OrderDetailScreen() {
               loading={savingEdit}
               style={styles.button}
             />
-
-            {/*
-              Both use the customer's phone as stored — the same "+216 XX XXX XXX"
-              form the confirmation call uses — stripped to digits for tel:/wa.me.
-              Hidden rather than shown-disabled when there is no phone: nothing to
-              call or message, so there is nothing useful the button could do.
-            */}
-            {phoneDigits ? (
-              <View style={styles.contactRow}>
-                <Button
-                  label="Appeler"
-                  variant="outline"
-                  onPress={() => Linking.openURL(`tel:+${phoneDigits}`)}
-                  style={styles.contactButton}
-                />
-                <Button
-                  label="WhatsApp"
-                  variant="outline"
-                  onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)}
-                  style={styles.contactButton}
-                />
-              </View>
-            ) : null}
 
             {/* Cash-on-delivery orders carry no email at all, and a mailto:
                 built from a missing one opens the mail app addressed to

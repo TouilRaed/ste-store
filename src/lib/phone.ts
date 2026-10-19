@@ -14,7 +14,10 @@ const COUNTRY_CODE = "216";
 const LOCAL_LENGTH = 8;
 
 function digitsOf(input: string | null | undefined): string {
-  return String(input ?? "").replace(/\D/g, "");
+  const digits = String(input ?? "").replace(/\D/g, "");
+  // "00216…" is the same number written with the international prefix spelled
+  // out instead of a "+". Left in, it dials nothing.
+  return digits.startsWith("00") ? digits.slice(2) : digits;
 }
 
 /** Digits with the country code in front. "53773703" → "21653773703". */
