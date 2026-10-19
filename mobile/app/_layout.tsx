@@ -40,15 +40,17 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       {ready ? (
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: theme.paper },
-            headerTitleStyle: { color: theme.ink, fontSize: 16 },
-            headerTintColor: theme.ink,
+            // The header carries the brand colour so the app reads as one
+            // tool rather than a stack of white cards.
+            headerStyle: { backgroundColor: theme.blue },
+            headerTitleStyle: { color: theme.white, fontSize: 17, fontWeight: "600" },
+            headerTintColor: theme.white,
             headerShadowVisible: false,
-            contentStyle: { backgroundColor: theme.paperDeep },
+            contentStyle: { backgroundColor: theme.canvas },
           }}
         >
           <Stack.Screen name="login" options={{ headerShown: false }} />

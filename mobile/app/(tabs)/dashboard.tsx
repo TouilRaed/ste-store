@@ -2,10 +2,18 @@ import { Link } from "expo-router";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../../lib/api";
 import { formatDate, formatMoney } from "../../lib/format";
-import { theme } from "../../lib/theme";
+import { theme, type } from "../../lib/theme";
 import { useAsync } from "../../lib/use-async";
-import { Card, Eyebrow, Loading, Message, StatusBadge, useBottomInset } from "../../components/ui";
+import { Loading, Message, SectionTitle, StatusBadge, useBottomInset } from "../../components/ui";
 
+/**
+ * What the shop owner wants on opening the app, in that order: how much has
+ * been sold, what needs doing, and what just came in.
+ *
+ * The revenue figure gets the brand colour and the whole width; the four
+ * equal tiles it used to share that space with made the number compete with
+ * "Stock faible" for attention.
+ */
 export default function DashboardScreen() {
   const { data, error, loading, refreshing, refresh } = useAsync(() => api.stats());
   const paddingBottom = useBottomInset();
@@ -15,61 +23,67 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       contentContainerStyle={[styles.container, { paddingBottom }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.ink} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.blue} />}
     >
       {error ? <Message tone="error">{error}</Message> : null}
 
       {data ? (
         <>
-          <View style={styles.grid}>
+          <View style={styles.hero}>
+            <Text style={styles.heroLabel}>Chiffre d&apos;affaires</Text>
+            <Text style={styles.heroValue}>{formatMoney(data.revenueCents, data.currency)}</Text>
+            <Text style={styles.heroHint}>Commandes annulées non comptées</Text>
+          </View>
+
+          <View style={styles.stats}>
             {[
-              { label: "Chiffre d'affaires", value: formatMoney(data.revenueCents, data.currency), hint: "excl. cancelled" },
-              { label: "Commandes", value: String(data.orders.total), hint: `${data.orders.pending} en attente` },
-              { label: "Produits", value: String(data.products.total), hint: `${data.products.active} active` },
-              { label: "Stock faible", value: String(data.products.lowStock), hint: "8 or fewer" },
-            ].map((tile) => (
-              <Card key={tile.label} style={styles.tile}>
-                <Eyebrow>{tile.label}</Eyebrow>
-                <Text style={styles.tileValue}>{tile.value}</Text>
-                <Text style={styles.tileHint}>{tile.hint}</Text>
-              </Card>
+              { value: String(data.orders.pending), label: "en attente", strong: data.orders.pending > 0 },
+              { value: String(data.orders.total), label: "commandes", strong: false },
+              { value: String(data.products.active), label: "en vente", strong: false },
+              { value: String(data.products.lowStock), label: "stock bas", strong: data.products.lowStock > 0 },
+            ].map((stat) => (
+              <View key={stat.label} style={styles.stat}>
+                <Text style={[styles.statValue, stat.strong && { color: theme.blue }]}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
             ))}
           </View>
 
           <View style={styles.sectionHead}>
-            <Eyebrow>Latest orders</Eyebrow>
+            <SectionTitle>Dernières commandes</SectionTitle>
           </View>
 
-          <Card>
+          <View style={styles.list}>
             {data.recentOrders.length === 0 ? (
-              <Text style={styles.empty}>No orders yet.</Text>
+              <Text style={styles.empty}>Aucune commande pour l&apos;instant.</Text>
             ) : (
               data.recentOrders.map((order, index) => (
                 <Link key={order.id} href={`/orders/${order.id}`} asChild>
                   <Pressable
                     style={({ pressed }) => [
-                      styles.row,
                       index > 0 && styles.rowDivider,
-                      pressed && { backgroundColor: theme.paperDeep },
+                      pressed && { backgroundColor: theme.blueWash },
                     ]}
                   >
+                    <View style={styles.row}>
                     <View style={styles.rowMain}>
                       <Text style={styles.rowNumber}>{order.order_number}</Text>
-                      <Text style={styles.rowMeta}>
+                      <Text style={styles.rowMeta} numberOfLines={1}>
                         {order.full_name} · {formatDate(order.created_at)}
                       </Text>
                     </View>
                     <View style={styles.rowRight}>
-                      <StatusBadge status={order.status} />
                       <Text style={styles.rowTotal}>
                         {formatMoney(order.total_cents, order.currency)}
                       </Text>
+                      <StatusBadge status={order.status} />
+                    </View>
                     </View>
                   </Pressable>
                 </Link>
               ))
             )}
-          </Card>
+          </View>
         </>
       ) : null}
     </ScrollView>
@@ -78,17 +92,47 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 },
-  tile: { width: "50%", flexGrow: 1, flexBasis: "45%", margin: 6, padding: 18 },
-  tileValue: { marginTop: 12, fontSize: 26, color: theme.ink, fontVariant: ["tabular-nums"] },
-  tileHint: { marginTop: 4, fontSize: 11, color: theme.inkMuted },
-  sectionHead: { marginTop: 28, marginBottom: 12, paddingHorizontal: 6 },
-  row: { flexDirection: "row", alignItems: "center", padding: 16 },
-  rowDivider: { borderTopWidth: 1, borderTopColor: theme.line },
-  rowMain: { flex: 1, paddingRight: 12 },
-  rowNumber: { fontSize: 14, letterSpacing: 1, color: theme.ink },
-  rowMeta: { marginTop: 4, fontSize: 12, color: theme.inkMuted },
-  rowRight: { alignItems: "flex-end" },
-  rowTotal: { marginTop: 6, fontSize: 14, color: theme.ink, fontVariant: ["tabular-nums"] },
-  empty: { padding: 24, fontSize: 14, color: theme.inkSoft },
+  hero: {
+    backgroundColor: theme.blue,
+    borderRadius: 16,
+    padding: 20,
+  },
+  heroLabel: { ...type.meta, color: "rgba(255,255,255,0.8)" },
+  heroValue: {
+    marginTop: 6,
+    fontSize: 34,
+    fontWeight: "700",
+    color: theme.white,
+    fontVariant: ["tabular-nums"],
+  },
+  heroHint: { marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.7)" },
+  stats: {
+    flexDirection: "row",
+    marginTop: 12,
+    backgroundColor: theme.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.line,
+    paddingVertical: 14,
+  },
+  stat: { flex: 1, alignItems: "center" },
+  statValue: { fontSize: 20, fontWeight: "600", color: theme.ink, fontVariant: ["tabular-nums"] },
+  statLabel: { marginTop: 2, fontSize: 12, color: theme.inkMuted },
+  list: {
+    marginTop: 10,
+    backgroundColor: theme.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.line,
+    overflow: "hidden",
+  },
+  sectionHead: { marginTop: 22, marginBottom: 2 },
+  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
+  rowDivider: { borderTopWidth: 1, borderTopColor: theme.lineSoft },
+  rowMain: { flex: 1, minWidth: 0 },
+  rowNumber: { ...type.mono, color: theme.ink },
+  rowMeta: { marginTop: 3, ...type.meta, color: theme.inkMuted },
+  rowRight: { alignItems: "flex-end", gap: 3, flexShrink: 0 },
+  rowTotal: { ...type.bodyStrong, color: theme.ink, fontVariant: ["tabular-nums"] },
+  empty: { padding: 20, ...type.body, color: theme.inkMuted },
 });

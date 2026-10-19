@@ -19,7 +19,7 @@ import {
   minorToMajorInput,
   shippingFor,
 } from "../../lib/format";
-import { theme } from "../../lib/theme";
+import { theme, type } from "../../lib/theme";
 import {
   SETTABLE_ORDER_STATUSES,
   orderStatusLabel,
@@ -33,7 +33,8 @@ import {
   Button,
   Card,
   Chip,
-  Eyebrow,
+  Label,
+  SectionTitle,
   Field,
   Loading,
   Message,
@@ -261,7 +262,7 @@ export default function OrderDetailScreen() {
         <Card style={styles.card}>
           <View style={styles.headRow}>
             <View>
-              <Eyebrow>{formatDateTime(order.created_at)}</Eyebrow>
+              <Label>{formatDateTime(order.created_at)}</Label>
               <Text style={styles.number}>{order.order_number}</Text>
             </View>
             <StatusBadge status={order.status} />
@@ -269,7 +270,7 @@ export default function OrderDetailScreen() {
 
           <View style={styles.divider} />
 
-          <Eyebrow>Livraison</Eyebrow>
+          <Label>Livraison</Label>
           {order.tracking_code ? (
             <View>
               <Text style={styles.meta}>Expédiée · Intigo</Text>
@@ -298,7 +299,7 @@ export default function OrderDetailScreen() {
 
           <View style={styles.divider} />
 
-          <Eyebrow>Statut</Eyebrow>
+          <Label>Statut</Label>
           <View style={styles.chips}>
             {SETTABLE_ORDER_STATUSES.map((status) => (
               <Chip
@@ -313,9 +314,9 @@ export default function OrderDetailScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Eyebrow>Pieces commandees</Eyebrow>
+          <SectionTitle>Pièces commandées</SectionTitle>
           <Text style={styles.lineHint}>
-            Taille, couleur, quantite et prix. Le total se recalcule a l&apos;enregistrement.
+            Quantité et prix. Le total se recalcule à l&apos;enregistrement.
           </Text>
 
           {currentLines.map((line, index) => (
@@ -341,20 +342,6 @@ export default function OrderDetailScreen() {
               </View>
 
               <View style={styles.lineFields}>
-                <View style={styles.lineHalf}>
-                  <Field
-                    label="Taille"
-                    value={line.size ?? ""}
-                    onChangeText={(v) => patchLine(index, { size: v.trim() ? v : null })}
-                  />
-                </View>
-                <View style={styles.lineHalf}>
-                  <Field
-                    label="Couleur"
-                    value={line.color ?? ""}
-                    onChangeText={(v) => patchLine(index, { color: v.trim() ? v : null })}
-                  />
-                </View>
                 <View style={styles.lineHalf}>
                   <Field
                     label="Quantité"
@@ -383,7 +370,7 @@ export default function OrderDetailScreen() {
 
           {picking ? (
             <View style={styles.pickerBlock}>
-              <Eyebrow>Ajouter une piece</Eyebrow>
+              <Label>Ajouter une pièce</Label>
               {catalogue.loading ? (
                 <Loading />
               ) : (
@@ -444,7 +431,7 @@ export default function OrderDetailScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Eyebrow>Customer &amp; delivery</Eyebrow>
+          <Label>Customer &amp; delivery</Label>
 
           <View style={styles.editBlock}>
             <Field label="Nom" value={draft.full_name ?? ""} onChangeText={(v) => setField("full_name", v)} />
@@ -547,10 +534,19 @@ export default function OrderDetailScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { padding: 16 },
-  card: { padding: 20, marginBottom: 16 },
+  // Sections, not floating cards: a hairline box on white, so the eye runs
+  // down the order rather than hopping between shadows.
+  card: {
+    padding: 18,
+    marginBottom: 14,
+    backgroundColor: theme.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.line,
+  },
   headRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
-  number: { marginTop: 6, fontSize: 22, letterSpacing: 1, color: theme.ink },
-  divider: { height: 1, backgroundColor: theme.line, marginVertical: 18 },
+  number: { marginTop: 4, fontSize: 24, fontWeight: "700", color: theme.ink, fontVariant: ["tabular-nums"] },
+  divider: { height: 1, backgroundColor: theme.lineSoft, marginVertical: 16 },
   trackingCode: {
     marginTop: 6,
     fontSize: 15,
@@ -558,28 +554,28 @@ const styles = StyleSheet.create({
     color: theme.ink,
   },
   shipButton: { marginTop: 12 },
-  chips: { flexDirection: "row", flexWrap: "wrap", marginTop: 14, rowGap: 8 },
-  itemRow: { flexDirection: "row", alignItems: "center", marginTop: 16 },
-  thumb: { width: 48, height: 62, borderRadius: 10, overflow: "hidden", backgroundColor: theme.paperDeep },
+  chips: { flexDirection: "row", flexWrap: "wrap", marginTop: 12, rowGap: 8 },
+  itemRow: { flexDirection: "row", alignItems: "center", marginTop: 14 },
+  thumb: { width: 46, height: 58, borderRadius: 10, overflow: "hidden", backgroundColor: theme.canvas },
   image: { width: "100%", height: "100%" },
   itemBody: { flex: 1, paddingHorizontal: 12 },
-  itemName: { marginTop: 8, fontSize: 15, color: theme.ink },
-  itemPrice: { fontSize: 14, color: theme.ink, fontVariant: ["tabular-nums"] },
-  meta: { marginTop: 4, fontSize: 12, color: theme.inkMuted },
+  itemName: { ...type.bodyStrong, color: theme.ink },
+  itemPrice: { ...type.body, color: theme.ink, fontVariant: ["tabular-nums"] },
+  meta: { marginTop: 3, ...type.meta, color: theme.inkMuted },
   totalRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
-  totalValue: { fontSize: 14, color: theme.ink, fontVariant: ["tabular-nums"] },
-  grandRow: { marginTop: 16, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 14 },
-  grandLabel: { fontSize: 17, color: theme.ink },
-  grandValue: { fontSize: 20, color: theme.ink, fontVariant: ["tabular-nums"] },
-  address: { marginTop: 10, fontSize: 14, lineHeight: 21, color: theme.inkSoft },
+  totalValue: { ...type.body, color: theme.inkSoft, fontVariant: ["tabular-nums"] },
+  grandRow: { marginTop: 14, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 14 },
+  grandLabel: { ...type.sectionTitle, color: theme.ink },
+  grandValue: { fontSize: 22, fontWeight: "700", color: theme.ink, fontVariant: ["tabular-nums"] },
+  address: { marginTop: 8, ...type.body, lineHeight: 22, color: theme.inkSoft },
   button: { marginTop: 12 },
   contactRow: { flexDirection: "row", gap: 10, marginTop: 12 },
   contactButton: { flex: 1, paddingHorizontal: 12 },
-  editBlock: { marginTop: 18 },
-  lineBlock: { marginTop: 18, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 14 },
-  lineFields: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 12 },
+  editBlock: { marginTop: 16 },
+  lineBlock: { marginTop: 16, borderTopWidth: 1, borderTopColor: theme.lineSoft, paddingTop: 14 },
+  lineFields: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 },
   lineHalf: { flexBasis: "47%", flexGrow: 1 },
   lineRemove: { marginTop: 4 },
-  pickerBlock: { marginTop: 18 },
-  lineHint: { marginTop: 8, fontSize: 12, lineHeight: 18, color: theme.inkMuted },
+  pickerBlock: { marginTop: 16 },
+  lineHint: { marginTop: 8, ...type.meta, lineHeight: 19, color: theme.inkMuted },
 });

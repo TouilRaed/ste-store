@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { api, ApiError } from "../lib/api";
 import { majorInputToMinor, minorToMajorInput } from "../lib/format";
-import { radius, theme } from "../lib/theme";
+import { radius, theme, type } from "../lib/theme";
 import type { Collection, Product, ProductInput, ProductOptionGroup } from "../lib/types";
 import { Button, Card, Chip, Eyebrow, Field, Message, Toggle, useBottomInset } from "./ui";
 
@@ -308,7 +308,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 <Image source={{ uri: url }} style={styles.photoImage} />
                 {index === 0 ? (
                   <View style={styles.coverTag}>
-                    <Text style={styles.coverText}>Cover</Text>
+                    <Text style={styles.coverText}>Vignette</Text>
                   </View>
                 ) : null}
                 <Pressable
@@ -325,7 +325,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
               {uploading ? <ActivityIndicator color={theme.ink} /> : <Text style={styles.photoAddText}>+</Text>}
             </Pressable>
           </View>
-          <Text style={styles.photoHint}>First photo is the card image. Up to 5 MB each.</Text>
+          <Text style={styles.photoHint}>La première photo illustre la vignette. 5 Mo maximum par photo.</Text>
 
           <View style={styles.tagBlock}>
             <Eyebrow>Étiquettes</Eyebrow>
@@ -556,7 +556,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
         {product ? (
           <>
             <Text style={styles.deleteHint}>
-              Past orders keep their own copy of the name and price, so deleting is safe.
+              Les commandes passées gardent leur copie du nom et du prix : la suppression est sans risque.
             </Text>
             <Button
               label="Supprimer cette pièce"
@@ -575,10 +575,17 @@ export function ProductForm({ product, collections }: ProductFormProps) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { padding: 16 },
-  card: { padding: 20, marginBottom: 16 },
+  card: {
+    padding: 18,
+    marginBottom: 14,
+    backgroundColor: theme.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.line,
+  },
   chips: { flexDirection: "row", flexWrap: "wrap", marginTop: 12, rowGap: 8 },
   photoRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 12 },
-  photo: { width: 78, height: 104, borderRadius: 14, overflow: "hidden", backgroundColor: theme.paperDeep },
+  photo: { width: 78, height: 104, borderRadius: 14, overflow: "hidden", backgroundColor: theme.canvas },
   photoImage: { width: "100%", height: "100%" },
   coverTag: {
     position: "absolute",
@@ -589,7 +596,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
-  coverText: { fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: theme.ink },
+  coverText: { fontSize: 10, color: theme.ink },
   photoRemove: {
     position: "absolute",
     right: 4,
@@ -601,7 +608,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  photoRemoveText: { fontSize: 15, lineHeight: 17, color: theme.accentDeep },
+  photoRemoveText: { fontSize: 15, lineHeight: 17, color: theme.blueDeep },
   optionBlock: { marginTop: 8, marginBottom: 18 },
   optionGroup: {
     marginTop: 12,
@@ -617,7 +624,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: theme.lineStrong,
+    borderColor: theme.line,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -632,17 +639,17 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: theme.lineStrong,
+    borderColor: theme.line,
     alignItems: "center",
     justifyContent: "center",
   },
   photoAddText: { fontSize: 24, color: theme.inkMuted },
-  photoHint: { marginTop: 8, fontSize: 11, color: theme.inkMuted },
+  photoHint: { marginTop: 8, ...type.meta, lineHeight: 18, color: theme.inkMuted },
   spacer: { height: 18 },
   tagBlock: { marginTop: 22 },
-  divider: { height: 1, backgroundColor: theme.line, marginVertical: 18 },
+  divider: { height: 1, backgroundColor: theme.lineSoft, marginVertical: 18 },
   save: { marginTop: 8 },
-  deleteHint: { marginTop: 28, fontSize: 12, lineHeight: 18, color: theme.inkMuted, textAlign: "center" },
+  deleteHint: { marginTop: 28, ...type.meta, lineHeight: 19, color: theme.inkMuted, textAlign: "center" },
   delete: { marginTop: 12 },
-  hint: { marginTop: 6, marginBottom: 4, fontSize: 12, lineHeight: 18, color: theme.inkMuted },
+  hint: { marginTop: 6, marginBottom: 4, ...type.meta, lineHeight: 19, color: theme.inkMuted },
 });

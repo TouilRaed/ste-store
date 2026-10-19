@@ -45,7 +45,7 @@ export async function apiFetch<T>(path: string, opts: Options = {}): Promise<T> 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...opts, headers, body });
   } catch {
-    throw new ApiError(0, `Can't reach ${API_BASE_URL}. Check the address in Settings.`);
+    throw new ApiError(0, `Serveur injoignable (${API_BASE_URL}). Vérifiez l'adresse dans Réglages.`);
   }
 
   if (response.status === 401 && (opts.auth ?? true)) {

@@ -10,49 +10,64 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TOUCH_MIN, cardShadow, radius, statusTone, theme } from "../lib/theme";
+import { TOUCH_MIN, radius, statusTone, theme, type } from "../lib/theme";
 import { orderStatusLabel } from "../lib/types";
 
 /**
  * Bottom padding for a scrolling screen.
  *
  * Android runs edge-to-edge, so the gesture bar sits *over* the app rather
- * than beside it. A fixed paddingBottom leaves the last card half-swallowed by
- * it; adding the inset keeps the final row reachable on every device.
+ * than beside it. A fixed paddingBottom leaves the last row half-swallowed by
+ * it; adding the inset keeps the final one reachable on every device.
  */
-export function useBottomInset(base = 40): number {
+export function useBottomInset(base = 32): number {
   return base + useSafeAreaInsets().bottom;
 }
 
-export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
-  return <View style={[styles.card, style]}>{children}</View>;
+/** A white panel on the canvas. Hairline border, no shadow. */
+export function Panel({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  return <View style={[styles.panel, style]}>{children}</View>;
 }
 
-export function Eyebrow({ children }: { children: ReactNode }) {
-  return <Text style={styles.eyebrow}>{children}</Text>;
+/** Kept for screens still calling it; a Card is just a Panel now. */
+export const Card = Panel;
+
+/**
+ * A small label above a value. Sentence case, in muted ink — the app used to
+ * set these in tracked-out capitals, which shouted every field name at a
+ * reader who already knows what they are looking at.
+ */
+export function Label({ children }: { children: ReactNode }) {
+  return <Text style={styles.label}>{children}</Text>;
 }
+
+/** Older name for the same thing. */
+export const Eyebrow = Label;
 
 export function Title({ children }: { children: ReactNode }) {
   return <Text style={styles.title}>{children}</Text>;
 }
 
+export function SectionTitle({ children }: { children: ReactNode }) {
+  return <Text style={styles.sectionTitle}>{children}</Text>;
+}
+
+/** Order status: a coloured dot and the word, inline with the row. */
 export function StatusBadge({ status }: { status: string }) {
-  const tone = statusTone[status] ?? { bg: theme.paperSand, fg: theme.inkMuted };
+  const tone = statusTone[status] ?? { dot: theme.inkMuted, label: theme.inkMuted };
   return (
-    <View style={[styles.badge, { backgroundColor: tone.bg }]}>
-      <Text style={[styles.badgeText, { color: tone.fg }]}>{orderStatusLabel(status)}</Text>
+    <View style={styles.status}>
+      <View style={[styles.statusDot, { backgroundColor: tone.dot }]} />
+      <Text style={[styles.statusText, { color: tone.label }]}>{orderStatusLabel(status)}</Text>
     </View>
   );
 }
 
 export function Tag({ label, tone = "muted" }: { label: string; tone?: "muted" | "accent" }) {
-  const palette =
-    tone === "accent"
-      ? { bg: theme.accentSoft, fg: theme.accentDeep }
-      : { bg: theme.paperSand, fg: theme.inkMuted };
+  const accent = tone === "accent";
   return (
-    <View style={[styles.badge, { backgroundColor: palette.bg }]}>
-      <Text style={[styles.badgeText, { color: palette.fg }]}>{label}</Text>
+    <View style={[styles.tag, accent && { backgroundColor: theme.blueWash }]}>
+      <Text style={[styles.tagText, accent && { color: theme.blueDeep }]}>{label}</Text>
     </View>
   );
 }
@@ -89,7 +104,6 @@ export function Button({
         isDanger && styles.buttonDanger,
         busy && styles.buttonDisabled,
         pressed && (isSolid ? styles.buttonSolidPressed : styles.buttonOutlinePressed),
-        pressed && styles.buttonPressed,
         style,
       ]}
     >
@@ -98,7 +112,7 @@ export function Button({
       <Text
         style={[
           styles.buttonText,
-          isSolid ? { color: theme.white } : { color: isDanger ? theme.danger : theme.accent },
+          isSolid ? { color: theme.white } : { color: isDanger ? theme.danger : theme.blue },
           loading && styles.buttonTextHidden,
         ]}
         numberOfLines={1}
@@ -108,7 +122,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           style={StyleSheet.absoluteFill}
-          color={isSolid ? theme.white : isDanger ? theme.danger : theme.accent}
+          color={isSolid ? theme.white : isDanger ? theme.danger : theme.blue}
         />
       ) : null}
     </Pressable>
@@ -130,7 +144,7 @@ export function Chip({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: active }}
-      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.buttonPressed]}
+      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.chipPressed]}
     >
       <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
         {label}
@@ -146,7 +160,7 @@ export function Field({
 }: TextInputProps & { label: string; hint?: string }) {
   return (
     <View style={styles.field}>
-      <Eyebrow>{label}</Eyebrow>
+      {label ? <Label>{label}</Label> : null}
       <TextInput
         placeholderTextColor={theme.inkMuted}
         {...props}
@@ -183,9 +197,10 @@ export function Toggle({
 }
 
 export function Message({ tone = "info", children }: { tone?: "info" | "error"; children: ReactNode }) {
+  const bad = tone === "error";
   return (
-    <View style={[styles.message, tone === "error" && { backgroundColor: theme.accentSoft }]}>
-      <Text style={[styles.messageText, tone === "error" && { color: theme.accentDeep }]}>{children}</Text>
+    <View style={[styles.message, bad && { backgroundColor: theme.dangerWash }]}>
+      <Text style={[styles.messageText, bad && { color: theme.danger }]}>{children}</Text>
     </View>
   );
 }
@@ -193,115 +208,108 @@ export function Message({ tone = "info", children }: { tone?: "info" | "error"; 
 export function Loading() {
   return (
     <View style={styles.center}>
-      <ActivityIndicator color={theme.ink} />
+      <ActivityIndicator color={theme.blue} />
     </View>
   );
 }
 
+/** A hairline between rows, inset past a leading image or avatar. */
+export function Divider({ inset = 0 }: { inset?: number }) {
+  return <View style={[styles.divider, { marginLeft: inset }]} />;
+}
+
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.white,
-    borderRadius: radius.card,
+  panel: {
+    backgroundColor: theme.surface,
+    borderRadius: radius.panel,
     borderWidth: 1,
     borderColor: theme.line,
-    ...cardShadow,
   },
-  eyebrow: {
-    fontSize: 11,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    color: theme.inkMuted,
-    fontWeight: "500",
-  },
-  title: {
-    fontSize: 30,
-    lineHeight: 34,
-    letterSpacing: -0.6,
-    color: theme.ink,
-    marginTop: 8,
-  },
-  badge: {
+  label: { ...type.label, color: theme.inkMuted },
+  title: { ...type.screenTitle, color: theme.ink },
+  sectionTitle: { ...type.sectionTitle, color: theme.ink },
+  status: { flexDirection: "row", alignItems: "center", gap: 6 },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusText: { ...type.meta },
+  tag: {
     alignSelf: "flex-start",
     borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: theme.canvas,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
   },
-  badgeText: {
-    fontSize: 10,
-    letterSpacing: 1.6,
-    textTransform: "uppercase",
-    fontWeight: "600",
-  },
+  tagText: { fontSize: 12, color: theme.inkMuted },
   button: {
     minHeight: TOUCH_MIN,
-    borderRadius: radius.pill,
+    borderRadius: radius.field,
     paddingVertical: 13,
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonSolid: { backgroundColor: theme.accent },
-  buttonOutline: { backgroundColor: theme.white, borderWidth: 1, borderColor: theme.lineStrong },
+  buttonSolid: { backgroundColor: theme.blue },
+  buttonOutline: { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.line },
   // Destructive actions used to render identically to a plain outline button,
   // so "Supprimer" looked like any other secondary choice.
-  buttonDanger: { backgroundColor: theme.dangerSoft, borderColor: theme.danger },
+  buttonDanger: { backgroundColor: theme.dangerWash, borderColor: theme.danger },
   buttonDisabled: { opacity: 0.45 },
-  buttonPressed: { transform: [{ scale: 0.98 }] },
-  buttonSolidPressed: { backgroundColor: theme.accentDeep },
-  buttonOutlinePressed: { backgroundColor: theme.paperDeep },
-  buttonText: { fontSize: 16, fontWeight: "500" },
+  buttonSolidPressed: { backgroundColor: theme.blueDeep },
+  buttonOutlinePressed: { backgroundColor: theme.canvas },
+  buttonText: { ...type.bodyStrong },
   buttonTextHidden: { opacity: 0 },
   chip: {
-    minHeight: 40,
+    minHeight: 38,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: theme.lineStrong,
-    backgroundColor: theme.white,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    borderColor: theme.line,
+    backgroundColor: theme.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  chipActive: { backgroundColor: theme.accent, borderColor: theme.accent },
-  chipText: { fontSize: 14, color: theme.inkSoft, textTransform: "capitalize" },
+  chipActive: { backgroundColor: theme.blue, borderColor: theme.blue },
+  chipPressed: { backgroundColor: theme.canvas },
+  chipText: { ...type.meta, color: theme.inkSoft },
   chipTextActive: { color: theme.white, fontWeight: "600" },
-  field: { marginBottom: 18 },
+  field: { marginBottom: 16 },
   input: {
-    marginTop: 8,
+    marginTop: 6,
     borderWidth: 1,
-    borderColor: theme.lineStrong,
+    borderColor: theme.line,
     borderRadius: radius.field,
-    backgroundColor: theme.paper,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
+    backgroundColor: theme.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    fontSize: 15,
     color: theme.ink,
   },
-  inputMultiline: { minHeight: 96, textAlignVertical: "top" },
-  hint: { marginTop: 6, fontSize: 11, color: theme.inkMuted },
-  toggleRow: { flexDirection: "row", alignItems: "center", minHeight: TOUCH_MIN, paddingVertical: 12 },
+  inputMultiline: { minHeight: 92, textAlignVertical: "top" },
+  hint: { marginTop: 5, ...type.meta, color: theme.inkMuted },
+  toggleRow: { flexDirection: "row", alignItems: "center", minHeight: TOUCH_MIN, paddingVertical: 10 },
   togglePressed: { opacity: 0.6 },
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 7,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.lineStrong,
+    borderColor: theme.line,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
-  checkboxOn: { backgroundColor: theme.accent, borderColor: theme.accent },
-  checkmark: { color: theme.paper, fontSize: 13, lineHeight: 16 },
-  toggleLabel: { fontSize: 15, color: theme.ink },
+  checkboxOn: { backgroundColor: theme.blue, borderColor: theme.blue },
+  checkmark: { color: theme.white, fontSize: 13, lineHeight: 16 },
+  toggleLabel: { ...type.body, color: theme.ink },
   message: {
-    backgroundColor: theme.paperDeep,
+    backgroundColor: theme.canvas,
     borderRadius: radius.field,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 12,
   },
-  messageText: { fontSize: 13, color: theme.inkSoft, lineHeight: 19 },
+  messageText: { ...type.meta, color: theme.inkSoft, lineHeight: 19 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 48 },
+  divider: { height: 1, backgroundColor: theme.lineSoft },
 });

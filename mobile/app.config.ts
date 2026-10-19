@@ -31,7 +31,7 @@ const config: ExpoConfig = {
     // register against, so getExpoPushTokenAsync() fails on-device.
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
-      backgroundColor: "#FDFBF7",
+      backgroundColor: "#FFFFFF",
       foregroundImage: "./assets/android-icon-foreground.png",
       backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",

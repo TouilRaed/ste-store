@@ -4,8 +4,8 @@ import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { clearToken } from "../../lib/auth";
 import { lastPushError, registerForOrderPushes, unregisterOrderPushes } from "../../lib/push";
 import { API_BASE_URL } from "../../lib/constants";
-import { theme } from "../../lib/theme";
-import { Button, Card, Eyebrow, Message, useBottomInset } from "../../components/ui";
+import { theme, type } from "../../lib/theme";
+import { Button, Label, Message, SectionTitle, useBottomInset } from "../../components/ui";
 
 export default function SettingsScreen() {
   const [pushState, setPushState] = useState<string | null>(null);
@@ -43,8 +43,8 @@ ${token.slice(0, 32)}…`
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
-      <Card style={styles.card}>
-        <Eyebrow>Serveur</Eyebrow>
+      <View style={styles.group}>
+        <SectionTitle>Serveur</SectionTitle>
         <Text style={styles.value}>{API_BASE_URL}</Text>
         <Text style={styles.hint}>
           L&apos;adresse de la boutique que cette application pilote.
@@ -52,17 +52,17 @@ ${token.slice(0, 32)}…`
 
         <View style={styles.divider} />
 
-        <Eyebrow>Boutique</Eyebrow>
+        <Label>Boutique</Label>
         <Button
           label="Ouvrir la boutique"
           variant="outline"
           onPress={() => Linking.openURL(API_BASE_URL)}
           style={styles.button}
         />
-      </Card>
+      </View>
 
-      <Card style={styles.card}>
-        <Eyebrow>Notifications</Eyebrow>
+      <View style={styles.group}>
+        <SectionTitle>Notifications</SectionTitle>
         <Text style={styles.hint}>
           Une notification arrive à chaque nouvelle commande. Si rien n&apos;arrive, lancez la
           vérification : elle indique précisément ce qui bloque.
@@ -75,25 +75,32 @@ ${token.slice(0, 32)}…`
           style={styles.button}
         />
         {pushState ? <Message tone="info">{pushState}</Message> : null}
-      </Card>
+      </View>
 
-      <Card style={styles.card}>
-        <Eyebrow>Session</Eyebrow>
+      <View style={styles.group}>
+        <SectionTitle>Session</SectionTitle>
         <Text style={styles.hint}>
           Le jeton est conservé dans le trousseau du téléphone et expire au bout de 30 jours. La
           déconnexion arrête aussi les notifications sur cet appareil.
         </Text>
         <Button label="Se déconnecter" variant="danger" onPress={signOut} style={styles.button} />
-      </Card>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  card: { padding: 20, marginBottom: 16 },
-  value: { marginTop: 10, fontSize: 15, color: theme.ink },
-  hint: { marginTop: 10, fontSize: 12, lineHeight: 18, color: theme.inkMuted },
-  divider: { height: 1, backgroundColor: theme.line, marginVertical: 20 },
-  button: { marginTop: 16 },
+  group: {
+    backgroundColor: theme.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.line,
+    padding: 18,
+    marginBottom: 14,
+  },
+  value: { marginTop: 8, ...type.body, color: theme.ink },
+  hint: { marginTop: 8, ...type.meta, lineHeight: 19, color: theme.inkMuted },
+  divider: { height: 1, backgroundColor: theme.lineSoft, marginVertical: 18 },
+  button: { marginTop: 14 },
 });

@@ -25,7 +25,7 @@ async function ensureAndroidChannel() {
     name: "New orders",
     importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 200, 250],
-    lightColor: theme.accent,
+    lightColor: theme.blue,
     sound: "default",
   });
 }

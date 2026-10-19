@@ -1,32 +1,48 @@
-/** Mirrors the web palette in src/app/globals.css. */
+import type { TextStyle } from "react-native";
+
+/**
+ * The admin app is a tool, not a shopfront.
+ *
+ * It gets used standing up, one-handed, between other things — so the screen
+ * is white, the type is compact, and the one saturated colour is the blue from
+ * the DM mark, spent only on what the shop owner acts on: the header they are
+ * in, the active tab, the button that commits.
+ *
+ * The storefront's cream and serif stay on the storefront. Dressing a work
+ * tool in them made every screen a floating card on a pale wash.
+ */
 export const theme = {
-  paper: "#FFFFFF",
-  paperDeep: "#F3F6FC",
-  paperSand: "#E6EDFA",
-  ink: "#0D1526",
-  inkSoft: "#3D4A63",
-  inkMuted: "#74809A",
-  accent: "#1D4ED8",
-  accentDeep: "#1A3FAE",
-  accentSoft: "#E8EFFD",
-  sage: "#2F7A5A",
+  /** Surfaces. `canvas` is behind lists, `surface` is the list itself. */
+  surface: "#FFFFFF",
+  canvas: "#F6F7F9",
+  /** The mark's blue. Headers, the active tab, the committing button. */
+  blue: "#1D4ED8",
+  blueDeep: "#1A3FAE",
+  /** Row selection and quiet blue fills. */
+  blueWash: "#EEF3FF",
+  ink: "#101828",
+  inkSoft: "#475467",
+  inkMuted: "#667085",
+  line: "#E3E8EF",
+  lineSoft: "#EFF2F6",
+  white: "#FFFFFF",
   /** Destructive actions — deleting a line, cancelling an order. */
   danger: "#B42318",
-  dangerSoft: "#FDECEA",
-  line: "rgba(13,21,38,0.10)",
-  lineStrong: "rgba(13,21,38,0.18)",
-  white: "#FFFFFF",
+  dangerWash: "#FEF3F2",
+  /** Money in, order delivered. */
+  good: "#067647",
 } as const;
 
 export const radius = {
-  card: 18,
-  field: 16,
+  /** Panels and inputs share one radius; pills are for status only. */
+  panel: 14,
+  field: 12,
   pill: 999,
 } as const;
 
 export const spacing = {
-  screen: 20,
-  gap: 16,
+  screen: 16,
+  gap: 12,
 } as const;
 
 /**
@@ -36,17 +52,31 @@ export const spacing = {
  */
 export const TOUCH_MIN = 48;
 
-/** Soft, diffused shadow — never a hard dark drop. */
-export const cardShadow = {
-  boxShadow: "0px 12px 28px rgba(13, 21, 38, 0.08)",
-  elevation: 2,
-} as const;
+/**
+ * Type scale. Two sizes carry the app — 15 for everything readable, 13 for
+ * what supports it — with weight and colour doing the rest. Order numbers and
+ * money are tabular so columns line up down a list.
+ */
+export const type = {
+  screenTitle: { fontSize: 22, fontWeight: "600" },
+  sectionTitle: { fontSize: 17, fontWeight: "600" },
+  body: { fontSize: 15, fontWeight: "400" },
+  bodyStrong: { fontSize: 15, fontWeight: "600" },
+  meta: { fontSize: 13, fontWeight: "400" },
+  label: { fontSize: 13, fontWeight: "500" },
+  mono: { fontSize: 15, fontWeight: "600", fontVariant: ["tabular-nums"] },
+} satisfies Record<string, TextStyle>;
 
-export const statusTone: Record<string, { bg: string; fg: string }> = {
-  pending: { bg: theme.accentSoft, fg: theme.accentDeep },
-  confirmed: { bg: "#E4F1EA", fg: theme.sage },
-  ready: { bg: "#EFE9DD", fg: "#7A6741" },
-  shipped: { bg: "#DDE7FA", fg: theme.accentDeep },
-  delivered: { bg: theme.accent, fg: "#FFFFFF" },
-  cancelled: { bg: theme.paperSand, fg: theme.inkMuted },
+/**
+ * Order status as a dot and a word. The old version filled a pill per status,
+ * which turned a list of orders into a row of competing colours; the work is
+ * reading the list, not the badges.
+ */
+export const statusTone: Record<string, { dot: string; label: string }> = {
+  pending: { dot: "#F79009", label: theme.inkSoft },
+  confirmed: { dot: theme.blue, label: theme.inkSoft },
+  ready: { dot: "#7A5AF8", label: theme.inkSoft },
+  shipped: { dot: "#0BA5EC", label: theme.inkSoft },
+  delivered: { dot: theme.good, label: theme.inkSoft },
+  cancelled: { dot: theme.inkMuted, label: theme.inkMuted },
 };
