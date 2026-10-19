@@ -71,12 +71,12 @@ export async function adminLogin(_prev: ActionResult | null, formData: FormData)
     maxAge: SESSION_SECONDS,
   });
 
-  redirect("/admin");
+  redirect("/meddm");
 }
 
 export async function adminLogout() {
   (await cookies()).delete(ADMIN_COOKIE);
-  redirect("/admin/login");
+  redirect("/meddm/login");
 }
 
 /**
@@ -159,18 +159,18 @@ export async function saveProductAction(
     return { ok: false, error: toMessage(error) };
   }
 
-  revalidatePath("/admin/products");
+  revalidatePath("/meddm/products");
   revalidatePath("/shop");
-  redirect("/admin/products");
+  redirect("/meddm/products");
 }
 
 export async function deleteProductAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (id) await deleteProduct(id);
-  revalidatePath("/admin/products");
+  revalidatePath("/meddm/products");
   revalidatePath("/shop");
-  redirect("/admin/products");
+  redirect("/meddm/products");
 }
 
 /** Appends -2, -3… on a name collision rather than surfacing a raw 409. */
@@ -217,8 +217,8 @@ export async function saveCollectionAction(
     return { ok: false, error: toMessage(error) };
   }
 
-  revalidatePath("/admin/collections");
-  revalidatePath("/admin/products");
+  revalidatePath("/meddm/collections");
+  revalidatePath("/meddm/products");
   revalidatePath("/shop");
   return { ok: true };
 }
@@ -227,10 +227,10 @@ export async function deleteCollectionAction(formData: FormData): Promise<void> 
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (id) await deleteCollection(id);
-  revalidatePath("/admin/collections");
-  revalidatePath("/admin/products");
+  revalidatePath("/meddm/collections");
+  revalidatePath("/meddm/products");
   revalidatePath("/shop");
-  redirect("/admin/collections");
+  redirect("/meddm/collections");
 }
 
 export async function setOrderStatusAction(formData: FormData): Promise<void> {
@@ -241,8 +241,8 @@ export async function setOrderStatusAction(formData: FormData): Promise<void> {
   if (!id || !parsed.success) return;
 
   await updateOrderStatus(id, parsed.data.status);
-  revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/meddm/orders");
+  revalidatePath(`/meddm/orders/${id}`);
 }
 
 export async function updateOrderAction(
@@ -282,8 +282,8 @@ export async function updateOrderAction(
     }
 
     await updateOrder(id, parsed.data);
-    revalidatePath(`/admin/orders/${id}`);
-    revalidatePath("/admin/orders");
+    revalidatePath(`/meddm/orders/${id}`);
+    revalidatePath("/meddm/orders");
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toMessage(error) };
@@ -317,8 +317,8 @@ export async function updateOrderItemsAction(
     }
 
     await setOrderItems(id, parsed.data.items);
-    revalidatePath(`/admin/orders/${id}`);
-    revalidatePath("/admin/orders");
+    revalidatePath(`/meddm/orders/${id}`);
+    revalidatePath("/meddm/orders");
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toMessage(error) };

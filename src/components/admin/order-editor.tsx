@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateOrderAction, type ActionResult } from "@/app/admin/actions";
+import { updateOrderAction, type ActionResult } from "@/app/meddm/actions";
 import { PillButton } from "@/components/ui";
 import type { Order } from "@/lib/types";
 

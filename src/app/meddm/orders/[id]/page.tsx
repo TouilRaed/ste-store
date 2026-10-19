@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { setOrderStatusAction } from "@/app/admin/actions";
+import { setOrderStatusAction } from "@/app/meddm/actions";
 import { OrderEditor } from "@/components/admin/order-editor";
 import { ShipButton } from "@/components/admin/ship-button";
 import { OrderItemsEditor } from "@/components/admin/order-items-editor";
@@ -11,7 +11,7 @@ import { SETTABLE_ORDER_STATUSES, orderStatusLabel } from "@/lib/admin/schemas";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminOrderPage({ params }: PageProps<"/admin/orders/[id]">) {
+export default async function AdminOrderPage({ params }: PageProps<"/meddm/orders/[id]">) {
   await requireAdminPage();
   const { id } = await params;
 
@@ -24,7 +24,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
 
   return (
     <>
-      <Link href="/admin/orders" className="text-[13px] text-ink-soft underline underline-offset-4">
+      <Link href="/meddm/orders" className="text-[13px] text-ink-soft underline underline-offset-4">
         ← All orders
       </Link>
 

@@ -12,7 +12,7 @@ function dateLabel(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export default async function AdminOrdersPage({ searchParams }: PageProps<"/admin/orders">) {
+export default async function AdminOrdersPage({ searchParams }: PageProps<"/meddm/orders">) {
   await requireAdminPage();
 
   if (!isAdminDataReady()) {
@@ -35,7 +35,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
       <PageHeading
         eyebrow={`${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
         title="Commandes"
-        action={<StatusFilter current={status} basePath="/admin/orders" />}
+        action={<StatusFilter current={status} basePath="/meddm/orders" />}
       />
 
       <Panel>
@@ -46,7 +46,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
             {orders.map((order) => (
               <li key={order.id}>
                 <Link
-                  href={`/admin/orders/${order.id}`}
+                  href={`/meddm/orders/${order.id}`}
                   className="grid gap-3 px-6 py-5 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep/60 md:grid-cols-[8rem_1fr_auto_auto_auto] md:items-center md:gap-6"
                 >
                   <span className="font-mono text-[13px] tracking-wider">{order.order_number}</span>

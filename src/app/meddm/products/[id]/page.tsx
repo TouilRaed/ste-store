@@ -7,7 +7,7 @@ import { AdminError, getProduct, listCollections } from "@/lib/admin/repo";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditProductPage({ params }: PageProps<"/admin/products/[id]">) {
+export default async function EditProductPage({ params }: PageProps<"/meddm/products/[id]">) {
   await requireAdminPage();
   const { id } = await params;
 
@@ -20,7 +20,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
 
   return (
     <>
-      <Link href="/admin/products" className="text-[13px] text-ink-soft underline underline-offset-4">
+      <Link href="/meddm/products" className="text-[13px] text-ink-soft underline underline-offset-4">
         ← All products
       </Link>
       <div className="mt-6">

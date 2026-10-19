@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
       <div className="mt-10">
         <div className="mb-5 flex items-center justify-between">
           <p className="eyebrow text-ink-muted">Dernières commandes</p>
-          <Link href="/admin/orders" className="text-[13px] text-ink-soft underline underline-offset-4">
+          <Link href="/meddm/orders" className="text-[13px] text-ink-soft underline underline-offset-4">
             All orders
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
               {stats.recentOrders.map((order) => (
                 <li key={order.id}>
                   <Link
-                    href={`/admin/orders/${order.id}`}
+                    href={`/meddm/orders/${order.id}`}
                     className="flex flex-wrap items-center gap-4 px-6 py-4 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep/60"
                   >
                     <span className="font-mono text-[13px] tracking-wider">{order.order_number}</span>

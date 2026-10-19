@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { adminLogin, type ActionResult } from "@/app/admin/actions";
+import { adminLogin, type ActionResult } from "@/app/meddm/actions";
 import { PillButton } from "@/components/ui";
 
 export function AdminLoginForm() {

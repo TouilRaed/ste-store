@@ -6,7 +6,7 @@ import type { Collection, Product } from "@/lib/types";
  * Once the env vars are set, every query reads from Postgres instead.
  *
  * Categories are the shop's own: home decoration. The catalogue itself is
- * empty — products are added through /admin.
+ * empty — products are added through /meddm.
  */
 
 export const fallbackCollections: Collection[] = [

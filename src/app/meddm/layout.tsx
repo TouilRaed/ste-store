@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { adminLogout } from "@/app/admin/actions";
+import { adminLogout } from "@/app/meddm/actions";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { SpinningLogo } from "@/components/spinning-logo";
 import { hasAdminCookie } from "@/lib/admin/auth";
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+export default async function AdminLayout({ children }: LayoutProps<"/meddm">) {
   const authed = await hasAdminCookie();
 
   // The login page renders bare — the shell only appears once signed in.
@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           <div className="flex items-center gap-3">
             <SpinningLogo size={32} speed={8} />
             <div className="min-w-0">
-              <Link href="/admin" className="block truncate text-[15px]">
+              <Link href="/meddm" className="block truncate text-[15px]">
                 {BRAND.NAME}
               </Link>
               <span className="eyebrow text-accent-deep">Admin</span>

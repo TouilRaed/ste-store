@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { deleteProductAction, saveProductAction, type ActionResult } from "@/app/admin/actions";
+import { deleteProductAction, saveProductAction, type ActionResult } from "@/app/meddm/actions";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { OffersEditor } from "@/components/admin/offers-editor";
 import { OptionGroupsEditor } from "@/components/admin/option-groups-editor";
@@ -240,7 +240,7 @@ export function ProductForm({ product, collections }: ProductFormProps) {
                 {pending ? "Enregistrement…" : product ? "Enregistrer" : "Créer la pièce"}
               </PillButton>
               <Link
-                href="/admin/products"
+                href="/meddm/products"
                 className="rounded-full border border-[color:var(--line-strong)] bg-white/60 px-5 py-2.5 text-sm text-ink-soft transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white active:scale-[0.98]"
               >
                 Cancel

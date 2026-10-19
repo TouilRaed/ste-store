@@ -6,7 +6,7 @@ import { BRAND } from "@/lib/brand";
 export const metadata = { title: "Connexion" };
 
 export default async function AdminLoginPage() {
-  if (await hasAdminCookie()) redirect("/admin");
+  if (await hasAdminCookie()) redirect("/meddm");
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-paper-deep px-4">

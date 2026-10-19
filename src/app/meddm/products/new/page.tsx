@@ -23,7 +23,7 @@ export default async function NewProductPage() {
 
   return (
     <>
-      <Link href="/admin/products" className="text-[13px] text-ink-soft underline underline-offset-4">
+      <Link href="/meddm/products" className="text-[13px] text-ink-soft underline underline-offset-4">
         ← All products
       </Link>
       <div className="mt-6">

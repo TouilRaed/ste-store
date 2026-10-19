@@ -28,7 +28,7 @@ export default async function AdminProductsPage() {
       <PageHeading
         eyebrow={`${products.length} produit${products.length === 1 ? "" : "s"}`}
         title="Produits"
-        action={<PillLink href="/admin/products/new">Nouvelle pièce</PillLink>}
+        action={<PillLink href="/meddm/products/new">Nouvelle pièce</PillLink>}
       />
 
       <Panel>
@@ -39,7 +39,7 @@ export default async function AdminProductsPage() {
             {products.map((product) => (
               <li key={product.id}>
                 <Link
-                  href={`/admin/products/${product.id}`}
+                  href={`/meddm/products/${product.id}`}
                   className="flex flex-wrap items-center gap-4 px-6 py-4 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-paper-deep/60"
                 >
                   <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-xl bg-paper-deep">

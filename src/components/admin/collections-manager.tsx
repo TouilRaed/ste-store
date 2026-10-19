@@ -5,7 +5,7 @@ import {
   deleteCollectionAction,
   saveCollectionAction,
   type ActionResult,
-} from "@/app/admin/actions";
+} from "@/app/meddm/actions";
 import { Panel } from "@/components/admin/ui";
 import { PillButton } from "@/components/ui";
 import type { Collection } from "@/lib/types";

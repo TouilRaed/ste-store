@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { updateOrderItemsAction, type ActionResult } from "@/app/admin/actions";
+import { updateOrderItemsAction, type ActionResult } from "@/app/meddm/actions";
 import { ProductImage } from "@/components/product-image";
 import { PillButton } from "@/components/ui";
 import { formatMoney, majorInputToMinor, minorToMajorInput, shippingFor } from "@/lib/format";
