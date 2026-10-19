@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { META_GRAPH_VERSION, META_PIXEL_ID } from "@/lib/meta/config";
 import { minorUnitsPer } from "@/lib/format";
+import { internationalPhone } from "@/lib/phone";
 
 /**
  * Server half of the Meta integration: the Conversions API.
@@ -50,14 +51,12 @@ function hashedName(value: string | null | undefined): string | null {
 
 /**
  * Digits with the country code and no punctuation, which is the only phone
- * shape Meta matches on. Orders store "+216 20 123 456"; an eight-digit local
- * number gets Tunisia's 216 put back in front of it.
+ * shape Meta matches on.
  */
 function hashedPhone(value: string | null | undefined): string | null {
-  const digits = String(value ?? "").replace(/\D/g, "");
+  const digits = internationalPhone(value);
   if (digits.length === 0) return null;
-  const withCountry = digits.length === 8 ? `216${digits}` : digits;
-  return sha256(withCountry);
+  return sha256(digits);
 }
 
 type MetaUserData = {

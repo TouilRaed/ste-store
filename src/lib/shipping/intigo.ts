@@ -1,6 +1,7 @@
 import "server-only";
 
 import { minorUnitsPer } from "@/lib/format";
+import { localPhone } from "@/lib/phone";
 import type { Order } from "@/lib/types";
 
 /**
@@ -196,17 +197,6 @@ export async function defaultPickupIndex(): Promise<number> {
 function codPrice(order: Order): number {
   const divisor = minorUnitsPer(order.currency ?? "TND");
   return Number((order.total_cents / divisor).toFixed(3));
-}
-
-/**
- * Intigo wants a bare local number. Orders store the display form
- * ("+216 53 773 703"), and sending that — even with spaces stripped — is
- * rejected as `phone1: Phone must be at least 8 digits`, because the "+" and
- * the 216 country code are not digits it counts.
- */
-function localPhone(input: string | null | undefined): string {
-  const digits = String(input ?? "").replace(/\D/g, "");
-  return digits.startsWith("216") ? digits.slice(3) : digits;
 }
 
 function describeParcel(order: Order): string {

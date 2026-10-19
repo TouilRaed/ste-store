@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setOrderStatusAction } from "@/app/meddm/actions";
+import { ContactActions } from "@/components/admin/contact-actions";
 import { OrderEditor } from "@/components/admin/order-editor";
 import { ShipButton } from "@/components/admin/ship-button";
 import { OrderItemsEditor } from "@/components/admin/order-items-editor";
@@ -35,6 +36,24 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
           title={order.order_number}
           action={<StatusBadge status={order.status} />}
         />
+      </div>
+
+      {/* Before anything else: a cash-on-delivery order is confirmed by phone,
+          so the way to do that sits above the order rather than four panels
+          down inside the customer's details. */}
+      <div className="mb-6">
+        <Panel>
+          <div className="p-5 md:p-6">
+            <p className="eyebrow text-ink-muted">Contacter le client</p>
+            <div className="mt-4">
+              <ContactActions
+                phone={order.phone ?? null}
+                orderNumber={order.order_number}
+                fullName={order.full_name}
+              />
+            </div>
+          </div>
+        </Panel>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
