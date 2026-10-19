@@ -64,9 +64,16 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
             ) : null}
           </div>
 
-          <p className="mt-8 max-w-md text-base leading-relaxed text-ink-soft">{product.description}</p>
+          {/* The order card comes before the description: on a phone the
+              description pushed the offers and the form below the fold, so a
+              buyer had to scroll past prose to find out how to buy. */}
+          <div className="mt-8">
+            <ProductBuyPanel product={product} />
+          </div>
 
-          <ProductBuyPanel product={product} />
+          <p className="mt-12 max-w-md text-base leading-relaxed text-ink-soft">
+            {product.description}
+          </p>
 
           <div className="mt-14 border-t border-[color:var(--line)] pt-8">
             <p className="eyebrow text-ink-muted">Caractéristiques</p>
