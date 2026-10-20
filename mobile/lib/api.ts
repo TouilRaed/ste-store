@@ -106,6 +106,10 @@ export const api = {
     }),
 
   /** Replaces every line; the server recomputes subtotal, shipping and total. */
+  /** Removes an order and its lines. There is no undo. */
+  deleteOrder: (id: string) =>
+    apiFetch<{ ok: true }>(`/api/admin/orders/${id}`, { method: "DELETE" }),
+
   setOrderItems: (id: string, items: OrderItemInput[]) =>
     apiFetch<{ order: Order }>(`/api/admin/orders/${id}/items`, { method: "PUT", body: { items } }),
 

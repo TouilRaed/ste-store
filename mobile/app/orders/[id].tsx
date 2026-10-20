@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -89,6 +90,8 @@ export default function OrderDetailScreen() {
   // Lines are edited locally, then saved as a whole set.
   const [lines, setLines] = useState<OrderItemInput[] | null>(null);
   const [savingLines, setSavingLines] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [linesError, setLinesError] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
 
@@ -227,6 +230,34 @@ export default function OrderDetailScreen() {
       },
     ]);
     setPicking(false);
+  }
+
+  /**
+   * Asks first, then deletes. An order cannot be restored, so the question is
+   * a real one — it names the order and the cancel is the default.
+   */
+  function confirmDelete() {
+    if (!order) return;
+    Alert.alert(
+      `Supprimer ${order.order_number} ?`,
+      "La commande et ses lignes seront effacées définitivement.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { text: "Supprimer", style: "destructive", onPress: () => void runDelete(order.id) },
+      ],
+    );
+  }
+
+  async function runDelete(id: string) {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteOrder(id);
+      router.replace("/orders");
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Impossible de supprimer cette commande");
+      setDeleting(false);
+    }
   }
 
   async function saveLines() {
@@ -542,6 +573,22 @@ export default function OrderDetailScreen() {
               />
             ) : null}
           </View>
+        </Card>
+
+        <Card style={styles.card}>
+          <Label>Supprimer</Label>
+          <Text style={styles.lineHint}>
+            Pour une commande de test ou une commande qui n&apos;a jamais abouti. Le chiffre
+            d&apos;affaires est recalculé sans elle.
+          </Text>
+          {deleteError ? <Message tone="error">{deleteError}</Message> : null}
+          <Button
+            label="Supprimer la commande"
+            variant="danger"
+            loading={deleting}
+            onPress={confirmDelete}
+            style={styles.button}
+          />
         </Card>
 
       </ScrollView>

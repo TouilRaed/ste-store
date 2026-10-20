@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setOrderStatusAction } from "@/app/meddm/actions";
 import { ContactActions } from "@/components/admin/contact-actions";
+import { DeleteOrder } from "@/components/admin/delete-order";
 import { OrderEditor } from "@/components/admin/order-editor";
 import { ShipButton } from "@/components/admin/ship-button";
 import { OrderItemsEditor } from "@/components/admin/order-items-editor";
@@ -118,6 +119,20 @@ export default async function AdminOrderPage({ params }: PageProps<"/meddm/order
               </p>
               <div className="mt-6">
                 <OrderEditor order={order} />
+              </div>
+            </div>
+          </Panel>
+
+          {/* Last on the page, where a destructive action belongs. */}
+          <Panel>
+            <div className="p-5 md:p-6">
+              <p className="eyebrow text-ink-muted">Supprimer</p>
+              <p className="mt-2 text-xs text-ink-muted">
+                Pour une commande de test ou une commande qui n'a jamais abouti. Le chiffre d'affaires
+                et les compteurs sont recalculés sans elle.
+              </p>
+              <div className="mt-5">
+                <DeleteOrder orderId={order.id} orderNumber={order.order_number} />
               </div>
             </div>
           </Panel>

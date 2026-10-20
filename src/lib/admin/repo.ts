@@ -96,6 +96,21 @@ export async function deleteProduct(id: string): Promise<void> {
   if (error) throw new AdminError(500, error.message);
 }
 
+/**
+ * Removes an order and everything on it. Used to clear test orders and ones
+ * that never became a sale; there is no undo, so the callers ask first.
+ */
+export async function deleteOrder(id: string): Promise<void> {
+  const db = client();
+  const order = await getOrder(id);
+
+  const { error: itemsError } = await db.from("order_items").delete().eq("order_id", order.id);
+  if (itemsError) throw new AdminError(500, itemsError.message);
+
+  const { error } = await db.from("orders").delete().eq("id", order.id);
+  if (error) throw new AdminError(500, error.message);
+}
+
 export async function listCollections(): Promise<Collection[]> {
   const { data, error } = await client()
     .from("collections")
