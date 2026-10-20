@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { MetaPixel } from "@/components/meta-pixel";
 import { BRAND } from "@/lib/brand";
@@ -19,7 +19,6 @@ const playfair = Playfair_Display({
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   openGraph: {
@@ -41,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper">
         {children}

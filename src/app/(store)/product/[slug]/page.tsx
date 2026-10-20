@@ -7,9 +7,26 @@ import { ProductSelectionProvider } from "@/components/product-selection";
 import { Reveal } from "@/components/reveal";
 import { Eyebrow, PillLink } from "@/components/ui";
 import { badgesFor } from "@/lib/catalog/badges";
-import { getCollections, getProductBySlug, getRelatedProducts } from "@/lib/catalog/queries";
+import { getCollections, getProductBySlug, getProducts, getRelatedProducts } from "@/lib/catalog/queries";
 import { formatMoney } from "@/lib/format";
 import { BRAND } from "@/lib/brand";
+
+/**
+ * Served from the cache and refreshed in the background. An edit in the admin
+ * revalidates this path at once, so the ten minutes only bound how long a
+ * change made directly in the database can go unnoticed.
+ */
+export const revalidate = 600;
+
+/**
+ * Builds a page per piece in the catalogue, so a visitor gets one straight
+ * from the cache. A piece added afterwards is still rendered on its first
+ * visit and cached from then on.
+ */
+export async function generateStaticParams() {
+  const products = await getProducts({});
+  return products.map((product) => ({ slug: product.slug }));
+}
 
 export async function generateMetadata({ params }: PageProps<"/product/[slug]">): Promise<Metadata> {
   const { slug } = await params;

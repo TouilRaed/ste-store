@@ -1,10 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { adminLogout } from "@/app/meddm/actions";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { SpinningLogo } from "@/components/spinning-logo";
 import { hasAdminCookie } from "@/lib/admin/auth";
 import { BRAND } from "@/lib/brand";
+
+// Order numbers and JSON are set in mono, and only here: loading it in the
+// root layout shipped the face to every shopper for nothing.
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: "Admin", template: `%s · ${BRAND.NAME} admin` },
@@ -20,10 +25,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/meddm">) {
   const authed = await hasAdminCookie();
 
   // The login page renders bare — the shell only appears once signed in.
-  if (!authed) return <div className="flex min-h-[100dvh] flex-col">{children}</div>;
+  if (!authed)
+    return <div className={`${geistMono.variable} flex min-h-[100dvh] flex-col`}>{children}</div>;
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-paper-deep lg:flex-row">
+    <div className={`${geistMono.variable} flex min-h-[100dvh] flex-col bg-paper-deep lg:flex-row`}>
       {/* Phone: one slim bar, brand on the left and the account links on the
           right. The sections live in the bottom bar instead. */}
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[color:var(--line)] bg-white px-4 py-2.5 lg:hidden">

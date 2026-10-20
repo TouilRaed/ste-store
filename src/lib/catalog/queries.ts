@@ -1,7 +1,7 @@
 import "server-only";
 
 import { fallbackCollections, fallbackProducts } from "@/lib/catalog/fallback";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseCatalogueClient } from "@/lib/supabase/server";
 import type { Collection, Product } from "@/lib/types";
 
 const PRODUCT_COLUMNS =
@@ -39,7 +39,7 @@ function filterFallback(filters: ProductFilters): Product[] {
 }
 
 export async function getCollections(): Promise<Collection[]> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getSupabaseCatalogueClient();
   if (!supabase) return fallbackCollections;
 
   const { data, error } = await supabase
@@ -52,7 +52,7 @@ export async function getCollections(): Promise<Collection[]> {
 }
 
 export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getSupabaseCatalogueClient();
   if (!supabase) return filterFallback(filters);
 
   let query = supabase.from("products").select(PRODUCT_COLUMNS).eq("is_active", true);
@@ -75,7 +75,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
 }
 
 export async function getFeaturedProducts(limit = 4): Promise<Product[]> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getSupabaseCatalogueClient();
   if (!supabase) return fallbackProducts.filter((p) => p.is_featured).slice(0, limit);
 
   const { data, error } = await supabase
@@ -90,7 +90,7 @@ export async function getFeaturedProducts(limit = 4): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getSupabaseCatalogueClient();
   if (!supabase) return fallbackProducts.find((p) => p.slug === slug) ?? null;
 
   const { data, error } = await supabase

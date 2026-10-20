@@ -5,6 +5,9 @@ import { SpinningLogo } from "@/components/spinning-logo";
 import { PillLink } from "@/components/ui";
 import { getCollections, getProducts } from "@/lib/catalog/queries";
 
+/** Cached like the product pages; an admin write revalidates it. */
+export const revalidate = 600;
+
 export default async function HomePage() {
   const [all, collections] = await Promise.all([getProducts({}), getCollections()]);
 

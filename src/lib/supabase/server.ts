@@ -39,6 +39,20 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient | null> 
 }
 
 /**
+ * Read-only client for the public catalogue, with no cookies attached.
+ *
+ * Touching cookies opts a page out of caching, so a page that only reads the
+ * catalogue had to be re-rendered for every visitor. The catalogue is the same
+ * for all of them, and anonymous read is all these queries ever needed.
+ */
+export function getSupabaseCatalogueClient(): SupabaseClient | null {
+  if (!isSupabaseConfigured) return null;
+  return createClient(url!, anonKey!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/**
  * Elevated client that bypasses RLS. Server-only: never import this into a
  * Client Component and never expose the key to the browser.
  */

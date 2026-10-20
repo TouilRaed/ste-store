@@ -9,6 +9,11 @@ import { flushPixelQueue } from "@/lib/meta/pixel";
 /**
  * Loads the Meta pixel and keeps PageView in step with client-side routing.
  *
+ * It loads after the page has finished, not during: fbevents.js and its config
+ * are 215 KB of third-party script, which on a phone over mobile data was the
+ * heaviest thing on the page. Nothing is lost by waiting — the queue in
+ * `trackPixel` holds any event raised before the snippet defines fbq.
+ *
  * The inline snippet fires the first PageView itself; App Router navigations
  * never reload the page, so every later one is sent from the effect below.
  * Renders nothing at all when NEXT_PUBLIC_META_PIXEL_ID is unset.
@@ -32,7 +37,7 @@ export function MetaPixel() {
     <>
       {/* onReady fires once the snippet has defined fbq — the moment any
           event raised during hydration can finally be sent. */}
-      <Script id="meta-pixel" strategy="afterInteractive" onReady={flushPixelQueue}>
+      <Script id="meta-pixel" strategy="lazyOnload" onReady={flushPixelQueue}>
         {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};

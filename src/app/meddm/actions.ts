@@ -18,6 +18,7 @@ import {
   createCollection,
   createProduct,
   deleteCollection,
+  deleteOrder,
   deleteProduct,
   productSlugExists,
   setOrderItems,
@@ -47,6 +48,14 @@ function toMessage(error: unknown): string {
   if (error instanceof AdminError) return error.message;
   console.error("[admin action]", error);
   return "Erreur serveur inattendue";
+}
+
+/**
+ * Clears the cached storefront after a catalogue write. The shop, the home
+ * page and every product page read the same rows, so they go together.
+ */
+function revalidateStorefront() {
+  revalidatePath("/", "layout");
 }
 
 export async function adminLogin(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -159,8 +168,17 @@ export async function saveProductAction(
   }
 
   revalidatePath("/meddm/products");
-  revalidatePath("/shop");
+  revalidateStorefront();
   redirect("/meddm/products");
+}
+
+export async function deleteOrderAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (id) await deleteOrder(id);
+  revalidatePath("/meddm/orders");
+  revalidatePath("/meddm");
+  redirect("/meddm/orders");
 }
 
 export async function deleteProductAction(formData: FormData): Promise<void> {
@@ -168,7 +186,7 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (id) await deleteProduct(id);
   revalidatePath("/meddm/products");
-  revalidatePath("/shop");
+  revalidateStorefront();
   redirect("/meddm/products");
 }
 
@@ -218,7 +236,7 @@ export async function saveCollectionAction(
 
   revalidatePath("/meddm/collections");
   revalidatePath("/meddm/products");
-  revalidatePath("/shop");
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -228,7 +246,7 @@ export async function deleteCollectionAction(formData: FormData): Promise<void> 
   if (id) await deleteCollection(id);
   revalidatePath("/meddm/collections");
   revalidatePath("/meddm/products");
-  revalidatePath("/shop");
+  revalidateStorefront();
   redirect("/meddm/collections");
 }
 
