@@ -41,7 +41,8 @@
 
   --font-display: var(--font-playfair);
   --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
+  /* Loaded by the admin shell alone, so the storefront keeps the fallback. */
+  --font-mono: var(--font-geist-mono, ui-monospace, monospace);
 
   --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-drape: cubic-bezier(0.16, 1, 0.3, 1);
@@ -81,6 +82,19 @@
     font-weight: 500;
     /* A high-contrast serif does not want the tight tracking a grotesk does. */
     letter-spacing: -0.015em;
+  }
+
+  /*
+   * Field labels in the Arabic order card. The eyebrow above sets 11px with
+   * 0.22em of tracking, which suits Latin capitals and ruins Arabic: the
+   * script is cursive, so tracking prises joined letters apart, and 11px is
+   * too small to read a word that carries no capitals to anchor it.
+   */
+  .label-ar {
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: normal;
+    font-weight: 500;
   }
 
   .eyebrow {

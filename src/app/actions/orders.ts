@@ -372,11 +372,11 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
   const note = get("note");
 
   const fieldErrors: Record<string, string> = {};
-  if (!fullName) fieldErrors.full_name = "Le nom est obligatoire";
+  if (!fullName) fieldErrors.full_name = "الاسم ضروري";
 
   const phone = normalisePhone(rawPhone);
-  if (!rawPhone) fieldErrors.phone = "Le téléphone est obligatoire";
-  else if (!phone) fieldErrors.phone = "Ce numéro tunisien ne semble pas valide";
+  if (!rawPhone) fieldErrors.phone = "رقم الهاتف ضروري";
+  else if (!phone) fieldErrors.phone = "هذا الرقم غير صحيح";
 
   // Accept either Intigo's spelling or our bundled one — the form uses Intigo's
   // list when reachable and falls back to ours when it is not.
@@ -386,12 +386,12 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
     governorate.length > 0 &&
     (GOVERNORATES.some((g) => fold(g) === fold(governorate)) || governorate.length <= 40);
   if (!knownGouvernorat) {
-    fieldErrors.governorate = "Choisissez un gouvernorat";
+    fieldErrors.governorate = "اختر الولاية";
   }
-  if (!address) fieldErrors.address_line1 = "L'adresse est obligatoire";
+  if (!address) fieldErrors.address_line1 = "العنوان ضروري";
 
   if (Object.keys(fieldErrors).length > 0) {
-    return { ok: false, error: "Vérifiez les champs en surbrillance.", fieldErrors };
+    return { ok: false, error: "تحقق من الخانات المحددة.", fieldErrors };
   }
 
   const supabase = await getSupabaseServerClient();
@@ -407,7 +407,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
       ).data
     : (fallbackProducts.find((p) => p.slug === slug) ?? null);
 
-  if (!product) return { ok: false, error: "Ce produit n'est plus disponible." };
+  if (!product) return { ok: false, error: "هذا المنتج غير متوفر." };
 
   const codOffer = resolveOffer(product.offers, offerName);
   const codUnitCents = codOffer ? codOffer.price_cents : product.price_cents;
@@ -452,7 +452,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
 
     if (error) {
       console.error("[placeCodOrder] insert failed:", error.message);
-      return { ok: false, error: "We couldn't save that order. Please try again." };
+      return { ok: false, error: "تعذّر تسجيل الطلب. أعد المحاولة." };
     }
 
     const { error: itemError } = await supabase
@@ -463,7 +463,7 @@ export async function placeCodOrder(formData: FormData): Promise<CodOrderResult>
       console.error("[placeCodOrder] item insert failed:", itemError.message);
       const admin = getSupabaseAdminClient();
       if (admin) await admin.from("orders").delete().eq("id", orderId);
-      return { ok: false, error: "We couldn't save that order. Please try again." };
+      return { ok: false, error: "تعذّر تسجيل الطلب. أعد المحاولة." };
     }
 
     await notifyNewOrder({

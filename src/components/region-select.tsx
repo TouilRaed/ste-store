@@ -77,10 +77,10 @@ export function RegionSelect({
   if (offline) {
     return (
       <label className="block">
-        <span className="eyebrow text-ink-muted">Gouvernorat</span>
+        <span className="label-ar text-ink-muted">الولاية</span>
         <select name="governorate" defaultValue="" disabled={disabled} className={className}>
           <option value="" disabled>
-            Choisir…
+            اختر…
           </option>
           {GOVERNORATES.map((g) => (
             <option key={g} value={g}>
@@ -98,7 +98,7 @@ export function RegionSelect({
   return (
     <>
       <label className="block">
-        <span className="eyebrow text-ink-muted">Gouvernorat</span>
+        <span className="label-ar text-ink-muted">الولاية</span>
         {/* The server stores the name, so post that rather than the id. */}
         <input type="hidden" name="governorate" value={cityName} />
         <select
@@ -113,7 +113,7 @@ export function RegionSelect({
           className={className}
         >
           <option value="" disabled>
-            {cities ? "Choisir…" : "Chargement…"}
+            {cities ? "اختر…" : "جاري التحميل…"}
           </option>
           {(cities ?? []).map((city) => (
             <option key={city.id} value={city.id}>
@@ -127,7 +127,7 @@ export function RegionSelect({
       </label>
 
       <label className="block">
-        <span className="eyebrow text-ink-muted">Délégation</span>
+        <span className="label-ar text-ink-muted">المعتمدية</span>
         <select
           name="district"
           defaultValue=""
@@ -136,10 +136,10 @@ export function RegionSelect({
         >
           <option value="" disabled>
             {cityId === null
-              ? "Choisir un gouvernorat"
+              ? "اختر الولاية أولا"
               : districts
-                ? "Choisir…"
-                : "Chargement…"}
+                ? "اختر…"
+                : "جاري التحميل…"}
           </option>
           {(districts ?? []).map((district) => (
             <option key={district.id} value={district.name}>

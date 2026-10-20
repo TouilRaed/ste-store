@@ -18,6 +18,10 @@ const inputClass =
  * cart, no account: the piece, a phone number and an address.
  */
 /**
+ * The card is laid out right to left: the labels are in Arabic, which is what
+ * the buyers read, and a right-to-left form puts each label where they start
+ * rather than where a French one would.
+ *
  * Cash-on-delivery form. Size, colour and offer are chosen once in
  * ProductOptions above and passed in — rendering a second set of selectors
  * let a shopper pick "3 lampes" in one place and the unit price in the other.
@@ -54,21 +58,17 @@ export function CodOrderForm({ product }: { product: Product }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)]">
+    <form
+      onSubmit={onSubmit}
+      dir="rtl"
+      className="bezel rounded-[2rem] p-1.5 ring-1 ring-[color:var(--line)]"
+    >
       <div className="bezel-core rounded-[calc(2rem-0.375rem)] bg-white p-6 md:p-7">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="eyebrow text-ink-muted">Commander — paiement à la livraison</p>
-          <span className="eyebrow rounded-full bg-accent-soft px-3 py-1 text-accent-deep">COD</span>
-        </div>
+        <p className="text-base text-ink">اطلب الآن</p>
 
-        <p className="mt-3 text-base leading-relaxed text-ink-soft">
-          Vous payez le livreur à la réception. Aucune carte, aucun compte — laissez votre numéro et
-          nous vous appelons pour confirmer.
-        </p>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">
-            <span className="eyebrow text-ink-muted">Nom et prénom</span>
+            <span className="label-ar text-ink-muted">الاسم واللقب</span>
             <input name="full_name" autoComplete="name" disabled={pending} className={inputClass} />
             {fieldErrors.full_name ? (
               <span className="mt-2 block text-sm text-accent-deep">{fieldErrors.full_name}</span>
@@ -76,11 +76,13 @@ export function CodOrderForm({ product }: { product: Product }) {
           </label>
 
           <label className="block">
-            <span className="eyebrow text-ink-muted">Téléphone</span>
+            <span className="label-ar text-ink-muted">رقم الهاتف</span>
+            {/* A phone number reads left to right even inside an Arabic form. */}
             <input
               name="phone"
               inputMode="tel"
               autoComplete="tel"
+              dir="ltr"
               disabled={pending}
               className={inputClass}
             />
@@ -97,11 +99,11 @@ export function CodOrderForm({ product }: { product: Product }) {
           />
 
           <label className="block sm:col-span-2">
-            <span className="eyebrow text-ink-muted">Adresse</span>
+            <span className="label-ar text-ink-muted">العنوان</span>
             <input
               name="address_line1"
               autoComplete="street-address"
-              placeholder="Rue, immeuble, étage"
+              placeholder="النهج، رقم المنزل، الطابق"
               disabled={pending}
               className={inputClass}
             />
@@ -111,7 +113,7 @@ export function CodOrderForm({ product }: { product: Product }) {
           </label>
 
           <label className="block sm:col-span-2">
-            <span className="eyebrow text-ink-muted">Note (optionnel)</span>
+            <span className="label-ar text-ink-muted">ملاحظة (اختياري)</span>
             <input name="note" disabled={pending} className={inputClass} />
           </label>
         </div>
@@ -120,7 +122,7 @@ export function CodOrderForm({ product }: { product: Product }) {
           <div className="flex items-center gap-1 rounded-full border border-[color:var(--line-strong)] bg-white/60 p-1">
             <button
               type="button"
-              aria-label="Moins"
+              aria-label="إنقاص الكمية"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               className="h-8 w-8 rounded-full text-ink-soft hover:bg-paper-deep"
             >
@@ -129,7 +131,7 @@ export function CodOrderForm({ product }: { product: Product }) {
             <span className="w-6 text-center text-base tabular-nums">{quantity}</span>
             <button
               type="button"
-              aria-label="Plus"
+              aria-label="زيادة الكمية"
               onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
               className="h-8 w-8 rounded-full text-ink-soft hover:bg-paper-deep"
             >
@@ -137,15 +139,15 @@ export function CodOrderForm({ product }: { product: Product }) {
             </button>
           </div>
 
-          <dl className="ml-auto text-right text-sm text-ink-muted">
+          <dl className="ms-auto text-end text-sm text-ink-muted">
             <div className="flex justify-end gap-3">
-              <dt>Livraison</dt>
+              <dt>التوصيل</dt>
               <dd className="tabular-nums">
-                {shipping === 0 ? "Offerte" : formatMoney(shipping, product.currency)}
+                {shipping === 0 ? "مجاني" : formatMoney(shipping, product.currency)}
               </dd>
             </div>
             <div className="mt-1 flex items-baseline justify-end gap-3">
-              <dt className="text-ink-soft">Total</dt>
+              <dt className="text-ink-soft">المجموع</dt>
               <dd className="font-display text-lg text-ink tabular-nums">
                 {formatMoney(total, product.currency)}
               </dd>
@@ -161,7 +163,7 @@ export function CodOrderForm({ product }: { product: Product }) {
             Adding to the bag sits quietly underneath it, for a shopper who is
             still collecting pieces. */}
         <PillButton type="submit" disabled={pending} className="mt-6 w-full">
-          {pending ? "Envoi…" : "Acheter"}
+          {pending ? "جاري الإرسال…" : "اشتري الآن"}
         </PillButton>
 
         <button
@@ -182,11 +184,11 @@ export function CodOrderForm({ product }: { product: Product }) {
           }
           className="mt-3 block w-full text-center text-sm text-ink-muted underline underline-offset-4 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-ink disabled:opacity-50"
         >
-          Ajouter au panier
+          أضف إلى السلة
         </button>
 
         <p className="mt-4 text-center text-sm text-ink-muted">
-          Paiement à la livraison partout en Tunisie
+          الدفع عند الاستلام في كامل تونس
         </p>
       </div>
     </form>
